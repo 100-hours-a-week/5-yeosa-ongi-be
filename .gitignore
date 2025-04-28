@@ -23,6 +23,10 @@ Thumbs.db
 # 환경 파일 (보안 중요)
 .env
 
+# Spring Boot 설정파일
+application.yml
+application.properties
+
 # 테스트 결과
 test-output/
 
