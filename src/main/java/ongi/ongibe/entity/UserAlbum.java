@@ -10,16 +10,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import java.time.LocalDateTime;
-import jdk.jfr.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ongi.ongibe.NotificationType;
-import org.springframework.data.util.QTypeContributor;
+import ongi.ongibe.UserAlbumRole;
 
 @Entity
 @AllArgsConstructor
@@ -27,10 +23,10 @@ import org.springframework.data.util.QTypeContributor;
 @Getter
 @Setter
 @Builder
-public class Notification {
+public class UserAlbum {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,21 +34,10 @@ public class Notification {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id", nullable = false)
-    private User actorUser;
+    @JoinColumn(name = "album_id", nullable = false)
+    private Album album;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type;
-
-    private Long refId;
-
-    @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
-
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @Column(length = 20, nullable = false)
+    private UserAlbumRole role;
 }

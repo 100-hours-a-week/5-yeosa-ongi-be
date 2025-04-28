@@ -9,8 +9,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name="users")
@@ -34,7 +38,16 @@ public class User {
     private Long id;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OAuthToken> oAuthTokens;
+    private List<OAuthToken> oAuthTokens = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserAlbum> userAlbums;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Picture> pictures;
 
     @Column(nullable = false, length = 20)
     private String provider;
@@ -52,11 +65,10 @@ public class User {
     private String email;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
-    @Column(nullable = false)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
