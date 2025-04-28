@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -57,11 +58,10 @@ public class Picture {
     private double latitude;
     private double longitude;
 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime deletedAt;
 
-    @PrePersist
-    protected void prePresist() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

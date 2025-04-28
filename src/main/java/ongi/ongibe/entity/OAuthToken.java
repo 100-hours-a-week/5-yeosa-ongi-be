@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @AllArgsConstructor
@@ -46,9 +48,10 @@ public class OAuthToken {
 
     private LocalDateTime refreshTokenExpiresAt;
 
-    @Timestamp
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @Timestamp
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

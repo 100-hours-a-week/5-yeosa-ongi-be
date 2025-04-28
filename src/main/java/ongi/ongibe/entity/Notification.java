@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.NotificationType;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.util.QTypeContributor;
 
 @Entity
@@ -49,10 +50,7 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    @CreationTimestamp
+    @Column(updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
 }
