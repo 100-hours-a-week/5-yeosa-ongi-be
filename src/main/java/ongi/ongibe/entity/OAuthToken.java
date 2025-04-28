@@ -2,6 +2,8 @@ package ongi.ongibe.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.Provider;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -35,8 +38,9 @@ public class OAuthToken {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, length = 50)
-    private String provider;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Provider provider;
 
     @Lob
     private String accessToken;

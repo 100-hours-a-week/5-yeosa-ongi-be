@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,6 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.UserStatus;
+import ongi.ongibe.Provider;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -47,10 +46,11 @@ public class User {
     private List<UserAlbum> userAlbums;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Picture> pictures;
+    private List<Picture> pictures = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String provider;
+    private Provider provider;
 
     @Column(nullable = false, length = 50)
     private String providerId;

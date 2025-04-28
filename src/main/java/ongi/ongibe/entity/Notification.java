@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.NotificationType;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.util.QTypeContributor;
 
 @Entity
 @AllArgsConstructor
