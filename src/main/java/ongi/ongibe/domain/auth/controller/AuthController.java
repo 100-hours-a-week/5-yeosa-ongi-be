@@ -1,9 +1,10 @@
-package ongi.ongibe.domain.user.controller;
+package ongi.ongibe.domain.auth.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -16,11 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class AuthController {
 
-    @Value("${kakao.auth.client}")
-    private String clientId;
+    @Value("${spring.kakao.auth.client}")
+    private String client;
 
-    @Value("${kakao.auth.redirect}")
-    private String redirectURI;
+    @Value("${spring.kakao.auth.redirect}")
+    private String redirect;
 
     private static final String KAKAO_AUTH_BASE_URL = "https://kauth.kakao.com/oauth/authorize";
 
@@ -29,8 +30,8 @@ public class AuthController {
         try {
             String redirectUrl = KAKAO_AUTH_BASE_URL
                     + "?response_type=code"
-                    + "&client_id=" + clientId
-                    + "&redirect_uri=" + redirectURI;
+                    + "&client_id=" + client
+                    + "&redirect_uri=" + redirect;
 
             response.sendRedirect(redirectUrl);
         } catch (IOException e) {

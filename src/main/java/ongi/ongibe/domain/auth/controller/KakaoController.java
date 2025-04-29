@@ -1,4 +1,4 @@
-package ongi.ongibe.domain.user.controller;
+package ongi.ongibe.domain.auth.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -15,5 +15,4 @@ public class KakaoController {
     public ResponseEntity<?> kakaoLogin(@RequestParam("code") String accessCode, HttpServletResponse response) {
         return ResponseEntity.ok().build();
     }
-
 }
