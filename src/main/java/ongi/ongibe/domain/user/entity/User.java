@@ -1,4 +1,4 @@
-package ongi.ongibe.entity;
+package ongi.ongibe.domain.user.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -18,8 +18,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ongi.ongibe.UserStatus;
-import ongi.ongibe.Provider;
+import ongi.ongibe.domain.auth.OAuthProvider;
+import ongi.ongibe.domain.Notification;
+import ongi.ongibe.domain.auth.entity.OAuthToken;
+import ongi.ongibe.domain.Picture;
+import ongi.ongibe.domain.UserAlbum;
+import ongi.ongibe.domain.user.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -50,7 +54,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Provider provider;
+    private OAuthProvider provider;
 
     @Column(nullable = false, length = 50)
     private String providerId;
@@ -72,5 +76,5 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    private UserStatus userStatus;
+    private UserStatus userStatus = UserStatus.ACTIVE;
 }

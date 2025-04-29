@@ -1,4 +1,4 @@
-package ongi.ongibe.entity;
+package ongi.ongibe.domain.auth.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,13 +12,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
-import jdk.jfr.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ongi.ongibe.Provider;
+import ongi.ongibe.domain.auth.OAuthProvider;
+import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -40,7 +40,7 @@ public class OAuthToken {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Provider provider;
+    private OAuthProvider provider;
 
     @Lob
     private String accessToken;

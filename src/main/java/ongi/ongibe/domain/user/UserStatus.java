@@ -1,4 +1,4 @@
-package ongi.ongibe;
+package ongi.ongibe.domain.user;
 
 public enum UserStatus {
     ACTIVE, RESIGNED

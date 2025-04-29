@@ -1,4 +1,4 @@
-package ongi.ongibe.entity;
+package ongi.ongibe.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,16 +10,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import java.time.LocalDateTime;
-import jdk.jfr.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ongi.ongibe.NotificationType;
-import org.hibernate.annotations.CreationTimestamp;
+import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.user.entity.User;
 
 @Entity
 @AllArgsConstructor
@@ -27,7 +24,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @Getter
 @Setter
 @Builder
-public class Notification {
+public class UserAlbum {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,18 +35,10 @@ public class Notification {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id", nullable = false)
-    private User actorUser;
+    @JoinColumn(name = "album_id", nullable = false)
+    private Album album;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type;
-
-    private Long refId;
-
-    @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
-
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    @Column(length = 20, nullable = false)
+    private UserAlbumRole role;
 }

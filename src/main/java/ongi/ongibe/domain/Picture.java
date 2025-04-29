@@ -1,6 +1,5 @@
-package ongi.ongibe.entity;
+package ongi.ongibe.domain;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,22 +8,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.With;
+import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Where;
 
 @Entity
@@ -33,29 +25,43 @@ import org.hibernate.annotations.Where;
 @Getter
 @Setter
 @Builder
-@SQLDelete(sql = "update album set delete_at = NOW() where id = ?")
-@Where(clause = "delete_at is null")
-public class Album {
+@SQLDelete(sql = "UPDATE picture SET deleted_at = NOW() WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
+public class Picture {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserAlbum> userAlbums;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id", nullable = false)
+    private Album album;
 
-    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Picture> pictures = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "place_id", nullable = false)
+    private Place place;
 
-    @OneToOne
-    @JoinColumn(name = "thumbnail_picture_id")
-    private Picture thumbnailPicture;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    private String name;
+    @Column(length = 512)
+    private String pictureURL;
+
+    @Column(length = 8)
+    private String tag;
+    private boolean isDuplicated = false;
+    private boolean isShaky = false;
+    private float qualityScore;
+
+    private LocalDateTime takeAt;
+    private double latitude;
+    private double longitude;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime deletedAt;
+
 }
