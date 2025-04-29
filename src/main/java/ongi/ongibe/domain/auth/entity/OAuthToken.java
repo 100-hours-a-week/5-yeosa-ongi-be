@@ -1,4 +1,4 @@
-package ongi.ongibe.security;
+package ongi.ongibe.domain.auth.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
