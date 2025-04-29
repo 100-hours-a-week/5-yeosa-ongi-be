@@ -13,28 +13,33 @@ import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
 import ongi.ongibe.domain.auth.dto.KakaoLoginResponseDTO;
 import ongi.ongibe.domain.auth.dto.KakaoTokenResponseDTO;
+import ongi.ongibe.domain.auth.dto.RefreshAccessTokenResponseDTO;
 import ongi.ongibe.domain.auth.entity.OAuthToken;
 import ongi.ongibe.domain.auth.repository.OAuthTokenRepository;
 import ongi.ongibe.domain.auth.repository.RefreshTokenRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.exception.InvalidTokenException;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
 
+    private final RestTemplate restTemplate;
     @Value("${spring.kakao.auth.client}")
     private String clientId;
 
@@ -140,5 +145,53 @@ public class AuthService {
         } catch (Exception e) {
             throw new RuntimeException("ID 토큰 파싱 실패", e);
         }
+    }
+
+    @Transactional
+    public RefreshAccessTokenResponseDTO reissueAccessToken(String refreshToken) {
+        // 1. 리프레시 토큰 검증
+        Long userId = jwtTokenProvider.validateAndExtractUserId(refreshToken);
+
+        // 2. 레디스에서 유저 ID로 저장된 리프레시 토큰 조회
+        String storedRefreshToken = refreshTokenRepository.findByUserId(userId);
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+        }
+
+        // 3. 새 AccessToken 발급
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
+
+        return RefreshAccessTokenResponseDTO.builder()
+                .code("TOKEN_REFRESH_SUCCESS")
+                .message("토큰이 재발급되었습니다.")
+                .accessToken(newAccessToken)
+                .build();
+    }
+
+
+    @Transactional
+    public void logout(String authorizationHeader, String refreshToken) {
+        String accessToken = extractAccessToken(authorizationHeader);
+
+        // access token 유효성 검사
+        if (!jwtTokenProvider.validateToken(accessToken)) {
+            throw new InvalidTokenException("유효한 access token이 아닙니다.");
+        }
+
+        Long userId = jwtTokenProvider.validateAndExtractUserId(accessToken);
+
+        // Redis에서 refresh token 삭제
+        String storedRefreshToken = refreshTokenRepository.findByUserId(userId);
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            throw new InvalidTokenException("refresh token이 유효하지 않습니다.");
+        }
+        refreshTokenRepository.delete(userId);
+    }
+
+    private String extractAccessToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("AccessToken이 없습니다.");
+        }
+        return authorizationHeader.substring(7);
     }
 }

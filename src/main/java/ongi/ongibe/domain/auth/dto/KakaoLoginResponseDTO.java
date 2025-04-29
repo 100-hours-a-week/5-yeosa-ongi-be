@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class KakaoLoginResponseDTO {
-    private String code; // ex) "USER_ALREADY_REGISTERED" 또는 "USER_REGISTERED"
+    private String code;
     private String accessToken;
     private int refreshTokenExpiresIn;
     private String refreshToken;
