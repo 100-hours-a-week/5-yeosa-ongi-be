@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.user.entity.User;
 
 @Entity
