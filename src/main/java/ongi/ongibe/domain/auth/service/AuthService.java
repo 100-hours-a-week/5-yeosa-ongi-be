@@ -1,12 +1,24 @@
 package ongi.ongibe.domain.auth.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
+import ongi.ongibe.domain.auth.dto.KakaoLoginResponseDTO;
 import ongi.ongibe.domain.auth.dto.KakaoTokenResponseDTO;
+import ongi.ongibe.domain.auth.entity.OAuthToken;
+import ongi.ongibe.domain.auth.repository.OAuthTokenRepository;
+import ongi.ongibe.domain.auth.repository.RefreshTokenRepository;
+import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,18 +41,66 @@ public class AuthService {
     @Value("${spring.kakao.auth.redirect}")
     private String redirectUri;
 
+    private final UserRepository userRepository;
+    private final OAuthTokenRepository oauthTokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
+
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 
-    public KakaoIdTokenPayloadDTO kakaoLogin(String code) {
-        // Step 1: Access token + ID token 요청
+    @Transactional
+    public KakaoLoginResponseDTO kakaoLogin(String code) {
+        //access token, refresh token 요청
         KakaoTokenResponseDTO tokenResponse = getToken(code);
-
-        // Step 2: ID token 디코딩 및 유저 정보 파싱
+        //id token 파싱
         KakaoIdTokenPayloadDTO userInfo = parseIdToken(tokenResponse.getId_token());
-
         log.info("카카오 사용자 정보: email={}, nickname={}", userInfo.getEmail(), userInfo.getNickname());
 
-        return userInfo;
+        Optional<User> optionalUser = userRepository.findByProviderId(userInfo.getSub());
+        boolean isNewUser = false;
+        User user;
+        if (optionalUser.isPresent()) {
+            user = optionalUser.get();
+        } else {
+            String newNickname = "user_" + UUID.randomUUID().toString().substring(0, 5);
+            user = userRepository.save(User.builder()
+                    .provider(OAuthProvider.KAKAO)
+                    .providerId(userInfo.getSub())
+                    .nickname(newNickname)
+                    .profileImage(userInfo.getPicture())
+                    .email(userInfo.getEmail())
+                    .build());
+            isNewUser = true;
+        }
+
+        OAuthToken oAuthToken = OAuthToken.builder()
+                .user(user)
+                .provider(OAuthProvider.KAKAO)
+                .accessToken(tokenResponse.getAccess_token())
+                .refreshToken(tokenResponse.getRefresh_token())
+                .accessTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.getExpires_in()))
+                .refreshTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.getRefresh_token_expires_in()))
+                .build();
+        oauthTokenRepository.save(oAuthToken);
+
+        String ongiAccessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        String ongiRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+        refreshTokenRepository.save(user.getId(), ongiRefreshToken, 14 * 24 * 60 * 60L);
+
+
+        return KakaoLoginResponseDTO.builder()
+                .code(isNewUser ? "USER_REGISTERED" : "USER_ALREADY_REGISTERED")
+                .accessToken(ongiAccessToken)
+                .refreshToken(ongiRefreshToken)
+                .refreshTokenExpiresIn(60*60*24*14)
+                .user(KakaoLoginResponseDTO.UserInfo.builder()
+                        .userId(user.getId())
+                        .nickname(user.getNickname())
+                        .profileImageURL(user.getProfileImage())
+                        .cacheTtl(300)
+                        .build())
+                .build();
+
     }
 
     private KakaoTokenResponseDTO getToken(String code) {
@@ -62,7 +122,6 @@ public class AuthService {
                 request,
                 String.class
         );
-
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(response.getBody(), KakaoTokenResponseDTO.class);
