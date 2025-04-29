@@ -1,19 +1,18 @@
 package ongi.ongibe.domain.auth.dto;
 
-import java.util.Properties;
 import lombok.Getter;
-import org.springframework.context.annotation.Profile;
 
 public class KakaoDTO {
 
     @Getter
     public static class OAuthToken {
-        private String access_token;
         private String token_type;
-        private String refresh_token;
+        private String access_token;
+        private String id_token;
         private int expires_in;
-        private String scope;
+        private String refresh_token;
         private int refresh_token_expires_in;
+        private String scope;
     }
 
     @Getter
