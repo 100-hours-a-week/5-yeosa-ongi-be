@@ -13,6 +13,7 @@ import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -39,9 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (Exception e) {
-                log.error("토큰처리 중 에러발생, {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            } catch (ResponseStatusException e) {
+                response.setContentType("application/json");
+                response.setStatus(e.getStatusCode().value());
+                String message = e.getReason();
+
+                String code = message.contains("만료") ? "ACCESS_TOKEN_EXPIRED" : "INVALID_TOKEN";
+                String json = String.format("""
+                                        {
+                                        "code": "%s",
+                                        "message": "%s",
+                                        "data": null
+                                        }
+                                        """, code, message);
+                response.getWriter().write(json);
                 return;
             }
         }
