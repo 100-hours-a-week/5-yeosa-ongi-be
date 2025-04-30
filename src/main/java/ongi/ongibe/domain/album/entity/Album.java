@@ -1,4 +1,4 @@
-package ongi.ongibe.domain;
+package ongi.ongibe.domain.album.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.domain.Picture;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -27,8 +28,8 @@ import org.hibernate.annotations.Where;
 @Getter
 @Setter
 @Builder
-@SQLDelete(sql = "update album set delete_at = NOW() where id = ?")
-@Where(clause = "delete_at is null")
+@SQLDelete(sql = "update album set deleted_at = NOW() where id = ?")
+@Where(clause = "deleted_at is null")
 public class Album {
 
     @Id

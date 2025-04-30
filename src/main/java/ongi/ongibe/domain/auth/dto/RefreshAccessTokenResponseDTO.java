@@ -8,7 +8,5 @@ import lombok.Setter;
 @Setter
 @Builder
 public class RefreshAccessTokenResponseDTO {
-    private String code;
-    private String message;
     private String accessToken;
 }

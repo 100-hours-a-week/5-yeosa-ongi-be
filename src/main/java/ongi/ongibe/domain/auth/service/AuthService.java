@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.common.ApiResponse;
 import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
 import ongi.ongibe.domain.auth.dto.KakaoLoginResponseDTO;
@@ -54,7 +55,7 @@ public class AuthService {
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 
     @Transactional
-    public KakaoLoginResponseDTO kakaoLogin(String code) {
+    public ApiResponse<KakaoLoginResponseDTO> kakaoLogin(String code) {
         //access token, refresh token 요청
         KakaoTokenResponseDTO tokenResponse = getToken(code);
         //id token 파싱
@@ -92,9 +93,7 @@ public class AuthService {
         String ongiRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
         refreshTokenRepository.save(user.getId(), ongiRefreshToken, 14 * 24 * 60 * 60L);
 
-
-        return KakaoLoginResponseDTO.builder()
-                .code(isNewUser ? "USER_REGISTERED" : "USER_ALREADY_REGISTERED")
+        KakaoLoginResponseDTO kakaoLoginResponseDTO =  KakaoLoginResponseDTO.builder()
                 .accessToken(ongiAccessToken)
                 .refreshToken(ongiRefreshToken)
                 .refreshTokenExpiresIn(60*60*24*14)
@@ -106,6 +105,11 @@ public class AuthService {
                         .build())
                 .build();
 
+        return ApiResponse.<KakaoLoginResponseDTO>builder()
+                .code(isNewUser ? "USER_REGISTERED" : "USER_ALREADY_REGISTERED")
+                .message(isNewUser ? "회원가입을 완료했습니다. 로그인을 완료했습니다." : "로그인을 완료했습니다.")
+                .data(kakaoLoginResponseDTO)
+                .build();
     }
 
     private KakaoTokenResponseDTO getToken(String code) {
@@ -148,7 +152,7 @@ public class AuthService {
     }
 
     @Transactional
-    public RefreshAccessTokenResponseDTO reissueAccessToken(String refreshToken) {
+    public ApiResponse<RefreshAccessTokenResponseDTO> reissueAccessToken(String refreshToken) {
         // 1. 리프레시 토큰 검증
         Long userId = jwtTokenProvider.validateAndExtractUserId(refreshToken);
 
@@ -161,10 +165,14 @@ public class AuthService {
         // 3. 새 AccessToken 발급
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
 
-        return RefreshAccessTokenResponseDTO.builder()
+        RefreshAccessTokenResponseDTO refreshAccessTokenResponseDTO = RefreshAccessTokenResponseDTO.builder()
+                .accessToken(newAccessToken)
+                .build();
+
+        return ApiResponse.<RefreshAccessTokenResponseDTO>builder()
                 .code("TOKEN_REFRESH_SUCCESS")
                 .message("토큰이 재발급되었습니다.")
-                .accessToken(newAccessToken)
+                .data(refreshAccessTokenResponseDTO)
                 .build();
     }
 
