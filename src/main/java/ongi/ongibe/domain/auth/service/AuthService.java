@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
 import ongi.ongibe.domain.auth.dto.KakaoLoginResponseDTO;
@@ -55,7 +55,7 @@ public class AuthService {
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 
     @Transactional
-    public ApiResponse<KakaoLoginResponseDTO> kakaoLogin(String code) {
+    public BaseApiResponse<KakaoLoginResponseDTO> kakaoLogin(String code) {
         //access token, refresh token 요청
         KakaoTokenResponseDTO tokenResponse = getToken(code);
         //id token 파싱
@@ -105,7 +105,7 @@ public class AuthService {
                         .build())
                 .build();
 
-        return ApiResponse.<KakaoLoginResponseDTO>builder()
+        return BaseApiResponse.<KakaoLoginResponseDTO>builder()
                 .code(isNewUser ? "USER_REGISTERED" : "USER_ALREADY_REGISTERED")
                 .message(isNewUser ? "회원가입을 완료했습니다. 로그인을 완료했습니다." : "로그인을 완료했습니다.")
                 .data(kakaoLoginResponseDTO)
@@ -152,7 +152,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ApiResponse<RefreshAccessTokenResponseDTO> reissueAccessToken(String refreshToken) {
+    public BaseApiResponse<RefreshAccessTokenResponseDTO> reissueAccessToken(String refreshToken) {
         // 1. 리프레시 토큰 검증
         Long userId = jwtTokenProvider.validateAndExtractUserId(refreshToken);
 
@@ -169,7 +169,7 @@ public class AuthService {
                 .accessToken(newAccessToken)
                 .build();
 
-        return ApiResponse.<RefreshAccessTokenResponseDTO>builder()
+        return BaseApiResponse.<RefreshAccessTokenResponseDTO>builder()
                 .code("TOKEN_REFRESH_SUCCESS")
                 .message("토큰이 재발급되었습니다.")
                 .data(refreshAccessTokenResponseDTO)

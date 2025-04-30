@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
@@ -19,14 +19,9 @@ import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
-import ongi.ongibe.domain.user.repository.UserRepository;
-import ongi.ongibe.global.security.config.CustomUserDetails;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,7 +36,7 @@ public class AlbumService {
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public ApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
+    public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
         List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
@@ -53,7 +48,7 @@ public class AlbumService {
                 .nextYearMonth(nextYearMonth)
                 .hasNext(hasNext)
                 .build();
-        return ApiResponse.<MonthlyAlbumResponseDTO>builder()
+        return BaseApiResponse.<MonthlyAlbumResponseDTO>builder()
                 .code("MONTHLY_ALBUM_SUCCESS")
                 .message("앨범 조회 성공")
                 .data(monthlyAlbumResponseDTO)
@@ -83,7 +78,7 @@ public class AlbumService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
+    public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
         Album album = getAlbumifMember(albumId);
 
         Map<Place, Picture> bestPictureinPlace = new HashMap<>();
@@ -105,7 +100,7 @@ public class AlbumService {
                         .build())
                 .toList();
 
-        return ApiResponse.<List<AlbumSummaryResponseDTO>>builder()
+        return BaseApiResponse.<List<AlbumSummaryResponseDTO>>builder()
                 .code("ALBUM_SUMMARY_SUCCESS")
                 .message("앨범 요약 조회 성공")
                 .data(response)
@@ -113,7 +108,7 @@ public class AlbumService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
+    public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
         Album album = getAlbumifMember(albumId);
 
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
@@ -135,7 +130,7 @@ public class AlbumService {
                 .picture(pictureInfos)
                 .build();
 
-        return ApiResponse.<AlbumDetailResponseDTO>builder()
+        return BaseApiResponse.<AlbumDetailResponseDTO>builder()
                 .code("ALBUM_ACCESS_SUCCESS")
                 .message("앨범 조회 성공")
                 .data(responseDTO)

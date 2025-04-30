@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(staticName = "success")
 @Builder
-public class ApiResponse<T> {
+public class BaseApiResponse<T> {
     private String code;
     private String message;
     private T data;
