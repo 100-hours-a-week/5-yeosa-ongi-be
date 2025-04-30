@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class KakaoLoginResponseDTO {
-    private String code;
     private String accessToken;
     private int refreshTokenExpiresIn;
     private String refreshToken;

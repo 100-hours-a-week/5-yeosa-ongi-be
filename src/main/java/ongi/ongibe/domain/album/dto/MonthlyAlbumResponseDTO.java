@@ -12,18 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MonthlyAlbumResponseDTO {
-    private String code;
-    private String message;
-    private AlbumData albumData;
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AlbumData {
-        private List<AlbumInfo> albumInfo;
-        private String nextYearMonth;
-    }
+    private List<AlbumInfo> albumInfo;
+    private String nextYearMonth;
+    private boolean hasNext;
 
     @Getter
     @Builder
