@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
@@ -22,6 +23,7 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.config.CustomUserDetails;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -82,15 +84,8 @@ public class AlbumService {
 
     @Transactional(readOnly = true)
     public ApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+        Album album = getAlbumifMember(albumId);
 
-        boolean isMember = album.getUserAlbums().stream()
-                .anyMatch(ua -> ua.getUser().getId().equals(securityUtil.getCurrentUserId()));
-
-        if (!isMember){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
-        }
         Map<Place, Picture> bestPictureinPlace = new HashMap<>();
 
         for (Picture picture : album.getPictures()) {
@@ -115,6 +110,51 @@ public class AlbumService {
                 .message("앨범 요약 조회 성공")
                 .data(response)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
+        Album album = getAlbumifMember(albumId);
+
+        List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
+                .map(p -> AlbumDetailResponseDTO.PictureInfo.builder()
+                        .pictureId(p.getId())
+                        .pictureURL(p.getPictureURL())
+                        .latitude(p.getLatitude())
+                        .longitude(p.getLongitude())
+                        .tag(p.getTag())
+                        .qualityScore(p.getQualityScore())
+                        .isDuplicated(p.isDuplicated())
+                        .isShaky(p.isShaky())
+                        .takeAt(p.getTakeAt())
+                        .build())
+                .toList();
+
+        AlbumDetailResponseDTO responseDTO = AlbumDetailResponseDTO.builder()
+                .title(album.getName())
+                .picture(pictureInfos)
+                .build();
+
+        return ApiResponse.<AlbumDetailResponseDTO>builder()
+                .code("ALBUM_ACCESS_SUCCESS")
+                .message("앨범 조회 성공")
+                .data(responseDTO)
+                .build();
+    }
+
+    private Album getAlbumifMember(Long albumId) {
+        Album album = getAlbum(albumId);
+        boolean isMember = album.getUserAlbums().stream()
+                .anyMatch(ua -> ua.getUser().getId().equals(securityUtil.getCurrentUserId()));
+        if (!isMember){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
+        }
+        return album;
+    }
+
+    private Album getAlbum(Long albumId) {
+        return albumRepository.findById(albumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
     }
 
 }

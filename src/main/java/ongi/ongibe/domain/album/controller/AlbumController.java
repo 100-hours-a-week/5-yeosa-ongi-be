@@ -3,6 +3,7 @@ package ongi.ongibe.domain.album.controller;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.service.AlbumService;
@@ -28,6 +29,12 @@ public class AlbumController {
     @GetMapping("/{albumId}/summary")
     public ResponseEntity<ApiResponse<List<AlbumSummaryResponseDTO>>> getAlbumSummary(@RequestParam Long albumId) {
         ApiResponse<List<AlbumSummaryResponseDTO>> response = albumService.getAlbumSummary(albumId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{albumId}")
+    public ResponseEntity<ApiResponse<AlbumDetailResponseDTO>> getAlbumDetail(@RequestParam Long albumId) {
+        ApiResponse<AlbumDetailResponseDTO> response = albumService.getAlbumDetail(albumId);
         return ResponseEntity.ok(response);
     }
 }
