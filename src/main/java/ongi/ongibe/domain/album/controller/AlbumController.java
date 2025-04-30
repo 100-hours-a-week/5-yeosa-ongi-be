@@ -1,7 +1,9 @@
 package ongi.ongibe.domain.album.controller;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.service.AlbumService;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,12 @@ public class AlbumController {
     @GetMapping("/monthly")
     public ResponseEntity<ApiResponse<MonthlyAlbumResponseDTO>> getMonthlyAlbum(@RequestParam(required = false) String yearMonth) {
         ApiResponse<MonthlyAlbumResponseDTO> response = albumService.getMonthlyAlbum(yearMonth);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{albumId}/summary")
+    public ResponseEntity<ApiResponse<List<AlbumSummaryResponseDTO>>> getAlbumSummary(@RequestParam Long albumId) {
+        ApiResponse<List<AlbumSummaryResponseDTO>> response = albumService.getAlbumSummary(albumId);
         return ResponseEntity.ok(response);
     }
 }

@@ -1,14 +1,21 @@
 package ongi.ongibe.domain.album.service;
 
-import jakarta.transaction.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
+import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
@@ -19,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -26,11 +34,11 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class AlbumService {
 
-    private final UserRepository userRepository;
     private final UserAlbumRepository userAlbumRepository;
+    private final AlbumRepository albumRepository;
     private final SecurityUtil securityUtil;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
@@ -72,5 +80,41 @@ public class AlbumService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+
+        boolean isMember = album.getUserAlbums().stream()
+                .anyMatch(ua -> ua.getUser().getId().equals(securityUtil.getCurrentUserId()));
+
+        if (!isMember){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
+        }
+        Map<Place, Picture> bestPictureinPlace = new HashMap<>();
+
+        for (Picture picture : album.getPictures()) {
+            Place place = picture.getPlace();
+            Picture currentBestPicture = bestPictureinPlace.get(place);
+            if (currentBestPicture == null || currentBestPicture.getQualityScore() < picture.getQualityScore()) {
+                bestPictureinPlace.put(place, picture);
+            }
+        }
+
+        List<AlbumSummaryResponseDTO> response = bestPictureinPlace.values().stream()
+                .map(pic -> AlbumSummaryResponseDTO.builder()
+                        .pictureId(pic.getId())
+                        .pictureURL(pic.getPictureURL())
+                        .latitude(pic.getLatitude())
+                        .longitude(pic.getLongitude())
+                        .build())
+                .toList();
+
+        return ApiResponse.<List<AlbumSummaryResponseDTO>>builder()
+                .code("ALBUM_SUMMARY_SUCCESS")
+                .message("앨범 요약 조회 성공")
+                .data(response)
+                .build();
+    }
 
 }
