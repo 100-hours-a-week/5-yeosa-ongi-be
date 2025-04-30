@@ -3,7 +3,7 @@ package ongi.ongibe.domain.auth.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.auth.dto.RefreshAccessTokenRequestDTO;
 import ongi.ongibe.domain.auth.dto.RefreshAccessTokenResponseDTO;
 import ongi.ongibe.domain.auth.dto.RefreshTokenRequestDTO;
@@ -49,13 +49,13 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<RefreshAccessTokenResponseDTO>> refreshAccessToken(@RequestBody RefreshAccessTokenRequestDTO request) {
-        ApiResponse<RefreshAccessTokenResponseDTO> response = authService.reissueAccessToken(request.getRefreshToken());
+    public ResponseEntity<BaseApiResponse<RefreshAccessTokenResponseDTO>> refreshAccessToken(@RequestBody RefreshAccessTokenRequestDTO request) {
+        BaseApiResponse<RefreshAccessTokenResponseDTO> response = authService.reissueAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> logout(
+    public ResponseEntity<BaseApiResponse<Void>> logout(
             @RequestHeader("Authorization") String authorizationHeader,
             @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
 
@@ -64,6 +64,6 @@ public class AuthController {
         }
 
         authService.logout(authorizationHeader, refreshTokenRequest.getRefreshToken());
-        return ResponseEntity.ok(ApiResponse.success("LOGOUT_SUCCESS", "로그아웃이 완료되었습니다.", null));
+        return ResponseEntity.ok(BaseApiResponse.success("LOGOUT_SUCCESS", "로그아웃이 완료되었습니다.", null));
     }
 }

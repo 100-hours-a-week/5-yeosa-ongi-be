@@ -1,7 +1,7 @@
 package ongi.ongibe.domain.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.common.ApiResponse;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +17,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/statistics")
-    public ResponseEntity<ApiResponse<UserTotalStateResponseDTO>> getUserTotalState() {
-        ApiResponse<UserTotalStateResponseDTO> response = userService.getUserTotalState();
+    public ResponseEntity<BaseApiResponse<UserTotalStateResponseDTO>> getUserTotalState() {
+        BaseApiResponse<UserTotalStateResponseDTO> response = userService.getUserTotalState();
         return ResponseEntity.ok(response);
     }
 }

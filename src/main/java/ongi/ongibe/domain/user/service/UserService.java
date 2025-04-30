@@ -1,18 +1,14 @@
 package ongi.ongibe.domain.user.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.common.ApiResponse;
-import ongi.ongibe.domain.album.entity.Place;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
-import ongi.ongibe.domain.album.service.AlbumService;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
-import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +24,7 @@ public class UserService {
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public ApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
+    public BaseApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
         User user = securityUtil.getCurrentUser();
 
         List<UserTotalStateResponseDTO.PictureCoordinate> coordinateList =
@@ -47,7 +43,7 @@ public class UserService {
                 .pictureCoordinates(coordinateList)
                 .build();
 
-        return ApiResponse.<UserTotalStateResponseDTO>builder()
+        return BaseApiResponse.<UserTotalStateResponseDTO>builder()
                 .code("USER_TOTAL_STATISTICS_SUCCESS")
                 .message("유저 통계 조회 성공")
                 .data(userTotalStateResponseDTO)
