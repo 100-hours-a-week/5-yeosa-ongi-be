@@ -9,10 +9,11 @@ import ongi.ongibe.common.ApiResponse;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.UserAlbum;
-import ongi.ongibe.domain.album.entity.UserAlbumRepository;
+import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.config.CustomUserDetails;
+import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -27,20 +28,11 @@ public class AlbumService {
 
     private final UserRepository userRepository;
     private final UserAlbumRepository userAlbumRepository;
+    private final SecurityUtil securityUtil;
 
     @Transactional
     public ApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
-        }
-
-        Long userId = userDetails.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다.")
-                );
-
+        User user = securityUtil.getCurrentUser();
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
         List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
 
@@ -79,5 +71,6 @@ public class AlbumService {
                         .build())
                 .toList();
     }
+
 
 }
