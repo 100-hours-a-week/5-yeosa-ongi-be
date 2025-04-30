@@ -18,7 +18,7 @@ public class AlbumController {
     private final AlbumService albumService;
 
     @GetMapping("/monthly")
-    public ResponseEntity<ApiResponse<MonthlyAlbumResponseDTO>> getMonthlyAlbum(@RequestParam String yearMonth) {
+    public ResponseEntity<ApiResponse<MonthlyAlbumResponseDTO>> getMonthlyAlbum(@RequestParam(required = false) String yearMonth) {
         ApiResponse<MonthlyAlbumResponseDTO> response = albumService.getMonthlyAlbum(yearMonth);
         return ResponseEntity.ok(response);
     }
