@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 
 @Entity
@@ -28,7 +29,7 @@ import org.hibernate.annotations.Where;
 @Setter
 @Builder
 @SQLDelete(sql = "update album set deleted_at = NOW() where id = ?")
-@Where(clause = "deleted_at is null")
+@SQLRestriction("deleted_at IS NULL")
 public class Album {
 
     @Id
