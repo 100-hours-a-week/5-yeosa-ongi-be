@@ -17,6 +17,7 @@ import lombok.Setter;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 
 @Entity
@@ -26,7 +27,7 @@ import org.hibernate.annotations.Where;
 @Setter
 @Builder
 @SQLDelete(sql = "UPDATE picture SET deleted_at = NOW() WHERE id = ?")
-@Where(clause = "deleted_at IS NULL")
+@SQLRestriction("deleted_at IS NULL")
 public class Picture {
 
     @Id
