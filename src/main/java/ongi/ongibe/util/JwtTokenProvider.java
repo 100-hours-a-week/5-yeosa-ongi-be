@@ -42,16 +42,16 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(Long userId) {
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .setExpiration(Date.from(Instant.now().plusSeconds(ACCESS_TOKEN_VALIDITY)))
+                .subject(String.valueOf(userId))
+                .expiration(Date.from(Instant.now().plusSeconds(ACCESS_TOKEN_VALIDITY)))
                 .signWith(signingKey)
                 .compact();
     }
 
     public String generateRefreshToken(Long userId) {
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .setExpiration(Date.from(Instant.now().plusSeconds(REFRESH_TOKEN_VALIDITY)))
+                .subject(String.valueOf(userId))
+                .expiration(Date.from(Instant.now().plusSeconds(REFRESH_TOKEN_VALIDITY)))
                 .signWith(signingKey)
                 .compact();
     }
