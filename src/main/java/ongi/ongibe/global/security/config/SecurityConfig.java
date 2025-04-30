@@ -22,15 +22,16 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 인증 없이 접근 가능한 URL만 포함
     private static final String[] ALLOWED_URLS = {
             "/swagger-ui/**",
             "/swagger-resources/**",
             "/v3/api-docs/**",
             "/auth/login/kakao",
             "/auth/login/kakao/**",
-            "/api/auth/**",
-            "/api/**"
+            "/api/auth/**"
     };
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
