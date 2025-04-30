@@ -1,4 +1,4 @@
-package ongi.ongibe.domain;
+package ongi.ongibe.domain.album.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.UserAlbumRole;
-import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.user.entity.User;
 
 @Entity
