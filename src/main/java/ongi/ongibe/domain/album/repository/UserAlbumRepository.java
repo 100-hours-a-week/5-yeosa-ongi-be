@@ -10,4 +10,6 @@ public interface UserAlbumRepository extends JpaRepository<UserAlbum, Long> {
 
     List<UserAlbum> findAllByUser(User user);
     boolean existsByUserAndAlbum_CreatedAtBefore(User user, LocalDateTime dateTime);
+
+    int countByUser(User user);
 }
