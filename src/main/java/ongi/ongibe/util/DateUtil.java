@@ -9,13 +9,25 @@ public class DateUtil {
 
     private static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
 
+    private static YearMonth parseOrNow(String yearMonth){
+        if (yearMonth == null || yearMonth.isBlank()){
+            return YearMonth.now();
+        }
+        return YearMonth.parse(yearMonth, yearMonthFormatter);
+    }
+
     public static LocalDateTime getStartOfMonth(String yearMonth) {
-        YearMonth ym = YearMonth.parse(yearMonth, yearMonthFormatter);
+        YearMonth ym = parseOrNow(yearMonth);
         return ym.atDay(1).atStartOfDay();
     }
 
     public static LocalDateTime getEndOfMonth(String yearMonth) {
-        YearMonth ym = YearMonth.parse(yearMonth, yearMonthFormatter);
+        YearMonth ym = parseOrNow(yearMonth);
         return ym.atEndOfMonth().atTime(LocalTime.MAX);
+    }
+
+    public static String getPreviousYearMonth(String yearMonth) {
+        YearMonth ym = parseOrNow(yearMonth);
+        return ym.minusMonths(1).format(yearMonthFormatter);
     }
 }
