@@ -27,17 +27,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            if (jwtTokenProvider.validateToken(token)) {
-                Long userId = jwtTokenProvider.validateAndExtractUserId(token);
+            try{
+                if (jwtTokenProvider.validateToken(token)) {
+                    Long userId = jwtTokenProvider.validateAndExtractUserId(token);
 
-                // 사용자 인증 객체 생성
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userId, null, List.of());
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userId, null, List.of());
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }
