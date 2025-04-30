@@ -21,7 +21,7 @@ import lombok.Setter;
 import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.Notification;
 import ongi.ongibe.domain.auth.entity.OAuthToken;
-import ongi.ongibe.domain.Picture;
+import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.user.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
