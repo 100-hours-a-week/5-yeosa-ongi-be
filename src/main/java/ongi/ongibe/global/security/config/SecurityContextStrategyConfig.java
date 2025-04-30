@@ -9,6 +9,6 @@ public class SecurityContextStrategyConfig {
 
     @PostConstruct
     public void setStrategy() {
-        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_THREADLOCAL);
     }
 }
