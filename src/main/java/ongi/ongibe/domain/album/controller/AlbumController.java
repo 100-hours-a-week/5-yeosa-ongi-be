@@ -13,6 +13,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.service.AlbumService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,14 +40,14 @@ public class AlbumController {
 
     @Operation(summary = "앨범 요약 조회", description = "앨범 ID 기반으로 요약 정보 조회")
     @GetMapping("/{albumId}/summary")
-    public ResponseEntity<BaseApiResponse<List<AlbumSummaryResponseDTO>>> getAlbumSummary(@RequestParam Long albumId) {
+    public ResponseEntity<BaseApiResponse<List<AlbumSummaryResponseDTO>>> getAlbumSummary(@PathVariable Long albumId) {
         BaseApiResponse<List<AlbumSummaryResponseDTO>> response = albumService.getAlbumSummary(albumId);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "앨범 상세 조회", description = "앨범 ID 기반으로 상세 정보 조회")
     @GetMapping("/{albumId}")
-    public ResponseEntity<BaseApiResponse<AlbumDetailResponseDTO>> getAlbumDetail(@RequestParam Long albumId) {
+    public ResponseEntity<BaseApiResponse<AlbumDetailResponseDTO>> getAlbumDetail(@PathVariable Long albumId) {
         BaseApiResponse<AlbumDetailResponseDTO> response = albumService.getAlbumDetail(albumId);
         return ResponseEntity.ok(response);
     }
