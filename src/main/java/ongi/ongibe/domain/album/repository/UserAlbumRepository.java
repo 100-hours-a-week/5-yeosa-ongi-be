@@ -1,7 +1,8 @@
-package ongi.ongibe.domain.album.entity;
+package ongi.ongibe.domain.album.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
