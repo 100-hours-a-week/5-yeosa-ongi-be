@@ -5,13 +5,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AlbumSummaryResponseDTO {
-    private Long pictureId;
-    private String pictureURL;
-    private double latitude;
-    private double longitude;
-}
+public record AlbumSummaryResponseDTO(
+        Long pictureId,
+        String pictureURL,
+        double latitude,
+        double longitude
+) {}
