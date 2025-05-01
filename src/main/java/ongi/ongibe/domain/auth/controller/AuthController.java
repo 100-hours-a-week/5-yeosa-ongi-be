@@ -50,7 +50,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<BaseApiResponse<RefreshAccessTokenResponseDTO>> refreshAccessToken(@RequestBody RefreshAccessTokenRequestDTO request) {
-        BaseApiResponse<RefreshAccessTokenResponseDTO> response = authService.reissueAccessToken(request.getRefreshToken());
+        BaseApiResponse<RefreshAccessTokenResponseDTO> response = authService.reissueAccessToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
 
@@ -59,11 +59,11 @@ public class AuthController {
             @RequestHeader("Authorization") String authorizationHeader,
             @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
 
-        if (refreshTokenRequest.getRefreshToken() == null) {
+        if (refreshTokenRequest.refreshToken() == null) {
             throw new InvalidRequestException("refresh token이 누락되었습니다.");
         }
 
-        authService.logout(authorizationHeader, refreshTokenRequest.getRefreshToken());
+        authService.logout(authorizationHeader, refreshTokenRequest.refreshToken());
         return ResponseEntity.ok(BaseApiResponse.success("LOGOUT_SUCCESS", "로그아웃이 완료되었습니다.", null));
     }
 }

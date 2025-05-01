@@ -59,10 +59,10 @@ public class AuthService {
         //access token, refresh token 요청
         KakaoTokenResponseDTO tokenResponse = getToken(code);
         //id token 파싱
-        KakaoIdTokenPayloadDTO userInfo = parseIdToken(tokenResponse.getId_token());
-        log.info("카카오 사용자 정보: email={}, nickname={}", userInfo.getEmail(), userInfo.getNickname());
+        KakaoIdTokenPayloadDTO kakaoUserInfo = parseIdToken(tokenResponse.id_token());
+        log.info("카카오 사용자 정보: email={}, nickname={}", kakaoUserInfo.email(), kakaoUserInfo.nickname());
 
-        Optional<User> optionalUser = userRepository.findByProviderId(userInfo.getSub());
+        Optional<User> optionalUser = userRepository.findByProviderId(kakaoUserInfo.sub());
         boolean isNewUser = false;
         User user;
         if (optionalUser.isPresent()) {
@@ -71,10 +71,10 @@ public class AuthService {
             String newNickname = "user_" + UUID.randomUUID().toString().substring(0, 5);
             user = userRepository.save(User.builder()
                     .provider(OAuthProvider.KAKAO)
-                    .providerId(userInfo.getSub())
+                    .providerId(kakaoUserInfo.sub())
                     .nickname(newNickname)
-                    .profileImage(userInfo.getPicture())
-                    .email(userInfo.getEmail())
+                    .profileImage(kakaoUserInfo.picture())
+                    .email(kakaoUserInfo.email())
                     .build());
             isNewUser = true;
         }
@@ -82,10 +82,10 @@ public class AuthService {
         OAuthToken oAuthToken = OAuthToken.builder()
                 .user(user)
                 .provider(OAuthProvider.KAKAO)
-                .accessToken(tokenResponse.getAccess_token())
-                .refreshToken(tokenResponse.getRefresh_token())
-                .accessTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.getExpires_in()))
-                .refreshTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.getRefresh_token_expires_in()))
+                .accessToken(tokenResponse.access_token())
+                .refreshToken(tokenResponse.refresh_token())
+                .accessTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.expires_in()))
+                .refreshTokenExpiresAt(LocalDateTime.now().plusSeconds(tokenResponse.refresh_token_expires_in()))
                 .build();
         oauthTokenRepository.save(oAuthToken);
 
@@ -93,17 +93,15 @@ public class AuthService {
         String ongiRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
         refreshTokenRepository.save(user.getId(), ongiRefreshToken, 14 * 24 * 60 * 60L);
 
-        KakaoLoginResponseDTO kakaoLoginResponseDTO =  KakaoLoginResponseDTO.builder()
-                .accessToken(ongiAccessToken)
-                .refreshToken(ongiRefreshToken)
-                .refreshTokenExpiresIn(60*60*24*14)
-                .user(KakaoLoginResponseDTO.UserInfo.builder()
-                        .userId(user.getId())
-                        .nickname(user.getNickname())
-                        .profileImageURL(user.getProfileImage())
-                        .cacheTtl(300)
-                        .build())
-                .build();
+        KakaoLoginResponseDTO kakaoLoginResponseDTO = KakaoLoginResponseDTO.of(
+                ongiAccessToken,
+                ongiRefreshToken,
+                60 * 60 * 24 * 14,
+                user.getId(),
+                user.getNickname(),
+                user.getProfileImage(),
+                300
+        );
 
         return BaseApiResponse.<KakaoLoginResponseDTO>builder()
                 .code(isNewUser ? "USER_REGISTERED" : "USER_ALREADY_REGISTERED")
@@ -165,9 +163,7 @@ public class AuthService {
         // 3. 새 AccessToken 발급
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
 
-        RefreshAccessTokenResponseDTO refreshAccessTokenResponseDTO = RefreshAccessTokenResponseDTO.builder()
-                .accessToken(newAccessToken)
-                .build();
+        RefreshAccessTokenResponseDTO refreshAccessTokenResponseDTO = new RefreshAccessTokenResponseDTO(newAccessToken);
 
         return BaseApiResponse.<RefreshAccessTokenResponseDTO>builder()
                 .code("TOKEN_REFRESH_SUCCESS")

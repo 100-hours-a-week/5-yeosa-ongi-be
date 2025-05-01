@@ -5,24 +5,25 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class KakaoLoginResponseDTO {
-    private String accessToken;
-    private int refreshTokenExpiresIn;
-    private String refreshToken;
-    private UserInfo user;
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class UserInfo {
-        private Long userId;
-        private String nickname;
-        private String profileImageURL;
-        private int cacheTtl;
+public record KakaoLoginResponseDTO(
+        String accessToken,
+        int refreshTokenExpiresIn,
+        String refreshToken,
+        UserInfo user
+) {
+    public static KakaoLoginResponseDTO of(String accessToken, String refreshToken, int refreshTokenExpiresIn, Long userId, String nickname, String profileImageURL, int cacheTtl) {
+        return new KakaoLoginResponseDTO(
+                accessToken,
+                refreshTokenExpiresIn,
+                refreshToken,
+                new UserInfo(userId, nickname, profileImageURL, cacheTtl)
+        );
     }
+
+    public record UserInfo(
+            Long userId,
+            String nickname,
+            String profileImageURL,
+            int cacheTtl
+    ) {}
 }
