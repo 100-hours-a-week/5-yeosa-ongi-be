@@ -3,15 +3,12 @@ package ongi.ongibe.domain.auth.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-public class KakaoTokenResponseDTO {
-
-    private String token_type;
-    private String access_token;
-    private String id_token;
-    private int expires_in;
-    private String refresh_token;
-    private int refresh_token_expires_in;
-    private String scope;
-}
+public record KakaoTokenResponseDTO(
+    String token_type,
+    String access_token,
+    String id_token,
+    int expires_in,
+    String refresh_token,
+    int refresh_token_expires_in,
+    String scope
+){}

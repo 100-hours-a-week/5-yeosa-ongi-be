@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-@Builder
-public class RefreshAccessTokenResponseDTO {
-    private String accessToken;
-}
+public record RefreshAccessTokenResponseDTO(
+        String accessToken
+){}
