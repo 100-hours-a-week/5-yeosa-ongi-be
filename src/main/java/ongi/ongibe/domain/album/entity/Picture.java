@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
+import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
+import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
@@ -85,6 +87,13 @@ public class Picture {
         return new AlbumSummaryResponseDTO(
                 id,
                 pictureURL,
+                latitude,
+                longitude
+        );
+    }
+
+    public UserTotalStateResponseDTO.PictureCoordinate toPictureCoordinate(){
+        return new UserTotalStateResponseDTO.PictureCoordinate(
                 latitude,
                 longitude
         );

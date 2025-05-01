@@ -3,6 +3,7 @@ package ongi.ongibe.domain.user.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
@@ -19,7 +20,6 @@ public class UserService {
 
     private final PlaceRepository placeRepository;
     private final UserAlbumRepository userAlbumRepository;
-    private final AlbumRepository albumRepository;
     private final PictureRepository pictureRepository;
     private final SecurityUtil securityUtil;
 
@@ -29,19 +29,13 @@ public class UserService {
 
         List<UserTotalStateResponseDTO.PictureCoordinate> coordinateList =
                 pictureRepository.findAllByUser(user).stream()
-                        .map(p -> UserTotalStateResponseDTO.PictureCoordinate.builder()
-                                .latitude(p.getLatitude())
-                                .longitude(p.getLongitude())
-                                .build())
+                        .map(Picture::toPictureCoordinate)
                         .toList();
         int albumCount = userAlbumRepository.countByUser(user);
         int placeCount = placeRepository.countDistinctByPicturesByUser(user);
 
-        UserTotalStateResponseDTO userTotalStateResponseDTO = UserTotalStateResponseDTO.builder()
-                .albumCount(albumCount)
-                .placeCount(placeCount)
-                .pictureCoordinates(coordinateList)
-                .build();
+        UserTotalStateResponseDTO userTotalStateResponseDTO =
+                new UserTotalStateResponseDTO(coordinateList, albumCount, placeCount);
 
         return BaseApiResponse.<UserTotalStateResponseDTO>builder()
                 .code("USER_TOTAL_STATISTICS_SUCCESS")
