@@ -1,8 +1,9 @@
 package ongi.ongibe.global.s3;
 
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.global.s3.dto.PresignedUrlRequest;
-import ongi.ongibe.global.s3.dto.PresignedUrlResponse;
+import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO;
+import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,10 +20,10 @@ public class PresignedUrlController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PresignedUrlResponse> createPresignedUrls(
-            @RequestBody PresignedUrlRequest request
+    public ResponseEntity<BaseApiResponse<PresignedUrlResponseDTO>> createPresignedUrls(
+            @RequestBody PresignedUrlRequestDTO request
     ) {
-        PresignedUrlResponse response = presignedUrlService.generatePresignedUrls(request);
+        BaseApiResponse<PresignedUrlResponseDTO> response = presignedUrlService.generatePresignedUrls(request);
         return ResponseEntity.ok(response);
     }
 }

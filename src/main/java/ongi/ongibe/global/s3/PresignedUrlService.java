@@ -4,11 +4,11 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.global.s3.dto.PresignedUrlRequest;
-import ongi.ongibe.global.s3.dto.PresignedUrlResponse;
-import ongi.ongibe.global.s3.dto.PresignedUrlResponse.PresignedFile;
+import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO;
+import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO;
+import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO.PresignedFile;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -26,7 +26,7 @@ public class PresignedUrlService {
     @Value("${cloud.aws.region.static}")
     private String region;
 
-    public PresignedUrlResponse generatePresignedUrls(PresignedUrlRequest request) {
+    public BaseApiResponse<PresignedUrlResponseDTO> generatePresignedUrls(PresignedUrlRequestDTO request) {
         List<PresignedFile> result = request.pictures().stream()
                 .map(picture -> {
                     String key = picture.pictureName();
@@ -46,12 +46,16 @@ public class PresignedUrlService {
 
                     String pictureUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
 
-                    return new PresignedUrlResponse.PresignedFile(
+                    return new PresignedUrlResponseDTO.PresignedFile(
                             key, presignedUrl.toString(), pictureUrl
                     );
                 })
                 .toList();
 
-        return new PresignedUrlResponse(result);
+        return BaseApiResponse.<PresignedUrlResponseDTO>builder()
+                .code("PRESIGNED_URL_SUCCESS")
+                .message("presigned-url 발급 성공")
+                .data(new PresignedUrlResponseDTO(result))
+                .build();
     }
 }
