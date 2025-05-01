@@ -8,6 +8,7 @@ import ongi.ongibe.global.s3.dto.PresignedUrlRequest;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponse;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponse.PresignedFile;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -38,7 +39,7 @@ public class PresignedUrlService {
 
                     PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                             .putObjectRequest(putObjectRequest)
-                            .signatureDuration(Duration.ofMinutes(10))
+                            .signatureDuration(Duration.ofMinutes(10)) // todo : 몇분 설정할지 상의
                             .build();
 
                     URL presignedUrl = presigner.presignPutObject(presignRequest).url();
