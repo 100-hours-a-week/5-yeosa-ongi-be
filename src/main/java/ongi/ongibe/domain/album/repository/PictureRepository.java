@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PictureRepository extends JpaRepository<Picture, Long> {
 
-    List<PictureCoordinate> findAllByUser(User user);
+    List<Picture> findAllByUser(User user);
 }
