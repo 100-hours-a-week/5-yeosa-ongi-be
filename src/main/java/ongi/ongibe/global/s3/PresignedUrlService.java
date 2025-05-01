@@ -1,0 +1,56 @@
+package ongi.ongibe.global.s3;
+
+import java.net.URL;
+import java.time.Duration;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import ongi.ongibe.global.s3.dto.PresignedUrlRequest;
+import ongi.ongibe.global.s3.dto.PresignedUrlResponse;
+import ongi.ongibe.global.s3.dto.PresignedUrlResponse.PresignedFile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+
+@Service
+@RequiredArgsConstructor
+public class PresignedUrlService {
+
+    private final S3Presigner presigner;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
+    public PresignedUrlResponse generatePresignedUrls(PresignedUrlRequest request) {
+        List<PresignedFile> result = request.pictures().stream()
+                .map(picture -> {
+                    String key = picture.pictureName();
+
+                    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(key)
+                            .contentType(picture.pictureType())
+                            .build();
+
+                    PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                            .putObjectRequest(putObjectRequest)
+                            .signatureDuration(Duration.ofMinutes(10))
+                            .build();
+
+                    URL presignedUrl = presigner.presignPutObject(presignRequest).url();
+
+                    String pictureUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+
+                    return new PresignedUrlResponse.PresignedFile(
+                            key, presignedUrl.toString(), pictureUrl
+                    );
+                })
+                .toList();
+
+        return new PresignedUrlResponse(result);
+    }
+}
