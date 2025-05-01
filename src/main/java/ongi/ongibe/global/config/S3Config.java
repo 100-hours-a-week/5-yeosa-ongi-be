@@ -1,4 +1,4 @@
-package ongi.ongibe.config;
+package ongi.ongibe.global.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,9 +8,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
 public class S3Config {
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
 
     @Value("${cloud.aws.region.static}")
     private String region;
