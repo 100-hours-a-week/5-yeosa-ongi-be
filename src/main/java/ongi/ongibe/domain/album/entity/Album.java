@@ -17,6 +17,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO.PictureInfo;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;

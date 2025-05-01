@@ -43,11 +43,11 @@ public class AlbumService {
 
         boolean hasNext = userAlbumRepository.existsByUserAndAlbum_CreatedAtBefore(user, DateUtil.getStartOfMonth(yearMonth));
         String nextYearMonth = hasNext ? DateUtil.getPreviousYearMonth(yearMonth) : null;
-        MonthlyAlbumResponseDTO monthlyAlbumResponseDTO = MonthlyAlbumResponseDTO.builder()
-                .albumInfo(albumInfos)
-                .nextYearMonth(nextYearMonth)
-                .hasNext(hasNext)
-                .build();
+        MonthlyAlbumResponseDTO monthlyAlbumResponseDTO = new MonthlyAlbumResponseDTO(
+                albumInfos,
+                nextYearMonth,
+                hasNext
+        );
         return BaseApiResponse.<MonthlyAlbumResponseDTO>builder()
                 .code("MONTHLY_ALBUM_SUCCESS")
                 .message("앨범 조회 성공")
@@ -63,17 +63,7 @@ public class AlbumService {
                 .map(UserAlbum::getAlbum)
                 .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
                         album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(album -> AlbumInfo.builder()
-                        .albumId(album.getId())
-                        .albumName(album.getName())
-                        .thumbnailPictureURL(album.getThumbnailPicture() != null ? album.getThumbnailPicture().getPictureURL() : null)
-                        .createdAt(album.getCreatedAt())
-                        .memberProfileImageURL(
-                                album.getUserAlbums().stream()
-                                        .map(ua -> ua.getUser().getProfileImage())
-                                        .toList()
-                        )
-                        .build())
+                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
                 .toList();
     }
 
@@ -81,23 +71,10 @@ public class AlbumService {
     public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
         Album album = getAlbumifMember(albumId);
 
-        Map<Place, Picture> bestPictureinPlace = new HashMap<>();
-
-        for (Picture picture : album.getPictures()) {
-            Place place = picture.getPlace();
-            Picture currentBestPicture = bestPictureinPlace.get(place);
-            if (currentBestPicture == null || currentBestPicture.getQualityScore() < picture.getQualityScore()) {
-                bestPictureinPlace.put(place, picture);
-            }
-        }
+        Map<Place, Picture> bestPictureinPlace = getBestPictureofPlace(album);
 
         List<AlbumSummaryResponseDTO> response = bestPictureinPlace.values().stream()
-                .map(pic -> AlbumSummaryResponseDTO.builder()
-                        .pictureId(pic.getId())
-                        .pictureURL(pic.getPictureURL())
-                        .latitude(pic.getLatitude())
-                        .longitude(pic.getLongitude())
-                        .build())
+                .map(Picture::toAlbumSummaryResponseDTO)
                 .toList();
 
         return BaseApiResponse.<List<AlbumSummaryResponseDTO>>builder()
@@ -107,29 +84,31 @@ public class AlbumService {
                 .build();
     }
 
+    private Map<Place, Picture> getBestPictureofPlace(Album album) {
+        Map<Place, Picture> bestPictureofPlace = new HashMap<>();
+
+        for (Picture picture : album.getPictures()) {
+            Place place = picture.getPlace();
+            Picture currentBestPicture = bestPictureofPlace.get(place);
+            if (currentBestPicture == null || currentBestPicture.getQualityScore() < picture.getQualityScore()) {
+                bestPictureofPlace.put(place, picture);
+            }
+        }
+        return bestPictureofPlace;
+    }
+
     @Transactional(readOnly = true)
     public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
         Album album = getAlbumifMember(albumId);
 
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
-                .map(p -> AlbumDetailResponseDTO.PictureInfo.builder()
-                        .pictureId(p.getId())
-                        .pictureURL(p.getPictureURL())
-                        .latitude(p.getLatitude())
-                        .longitude(p.getLongitude())
-                        .tag(p.getTag())
-                        .qualityScore(p.getQualityScore())
-                        .isDuplicated(p.isDuplicated())
-                        .isShaky(p.isShaky())
-                        .takeAt(p.getTakeAt())
-                        .build())
+                .map(Picture::toPictureInfo)
                 .toList();
 
-        AlbumDetailResponseDTO responseDTO = AlbumDetailResponseDTO.builder()
-                .title(album.getName())
-                .picture(pictureInfos)
-                .build();
-
+        AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
+                album.getName(),
+                pictureInfos
+        );
         return BaseApiResponse.<AlbumDetailResponseDTO>builder()
                 .code("ALBUM_ACCESS_SUCCESS")
                 .message("앨범 조회 성공")

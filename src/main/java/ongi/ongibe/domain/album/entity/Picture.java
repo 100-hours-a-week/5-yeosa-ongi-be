@@ -14,6 +14,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
@@ -65,4 +67,26 @@ public class Picture {
 
     private LocalDateTime deletedAt;
 
+    public AlbumDetailResponseDTO.PictureInfo toPictureInfo(){
+        return new AlbumDetailResponseDTO.PictureInfo(
+                id,
+                pictureURL,
+                latitude,
+                longitude,
+                tag,
+                qualityScore,
+                isDuplicated,
+                isShaky,
+                takeAt
+        );
+    }
+
+    public AlbumSummaryResponseDTO toAlbumSummaryResponseDTO(){
+        return new AlbumSummaryResponseDTO(
+                id,
+                pictureURL,
+                latitude,
+                longitude
+        );
+    }
 }
