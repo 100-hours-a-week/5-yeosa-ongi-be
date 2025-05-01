@@ -1,4 +1,4 @@
-package ongi.ongibe.config;
+package ongi.ongibe.global.config;
 
 import java.util.ArrayList;
 import java.util.List;
