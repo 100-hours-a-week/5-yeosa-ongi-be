@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.place.entity.Place;
@@ -23,6 +24,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+@Slf4j
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -52,7 +54,7 @@ public class Picture {
     @Column(length = 512)
     private String pictureURL;
 
-    @Column(length = 8)
+    @Column(length = 512)
     private String tag;
     private boolean isDuplicated = false;
     private boolean isShaky = false;
@@ -107,14 +109,19 @@ public class Picture {
     }
 
     public void markAsShaky() {
-        this.isShaky = true;
+        if (!this.isShaky) {
+            this.isShaky = true;
+            log.info("marked as shaky");
+        }
     }
+
 
     public void markAsDuplicate() {
         this.isDuplicated = true;
     }
 
     public void applyAestheticScore(double score) {
+        log.info("[AI] applyAestheticScore 실행됨 - 기존: {}, 새로: {}", this.qualityScore, score);
         this.qualityScore = (float) score;
     }
 

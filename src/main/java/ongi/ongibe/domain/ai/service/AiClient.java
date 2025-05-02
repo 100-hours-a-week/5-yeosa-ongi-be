@@ -14,12 +14,17 @@ import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class AiClient {
 
     private final RestTemplate restTemplate;
@@ -29,28 +34,34 @@ public class AiClient {
     private String baseUrl;
 
     public void requestEmbeddings(List<String> urls) {
-        String url = baseUrl + "/api/albums/embedding";
-        restTemplate.postForEntity(url, new AiImageRequestDTO(urls), Void.class);
+        postJson("/api/albums/embedding", new AiImageRequestDTO(urls), Void.class);
     }
 
     public void requestQuality(List<String> urls) {
+        log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         String url = baseUrl + "/api/albums/quality";
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        var response = restTemplate.postForObject(url, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
+        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+        var response = postJson("/api/albums/quality", new AiImageRequestDTO(urls), ShakyResponseDTO.class);
+        log.info("[AI] 품질 분석 응답: {}", response);  // <- 이거 추가
         if (response == null || response.data() == null) return;
-
         Map<String, Picture> map = toMap(pictures);
         response.data().forEach(urlStr -> {
             Picture p = map.get(urlStr);
+            log.info("before markAsShaky: {} -> isShaky={}", p.getPictureURL(), p.isShaky());
             if (p != null) p.markAsShaky();
         });
+        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
         pictureRepository.saveAll(pictures);
+        log.info("[AI] picture 저장 완료");
     }
 
     public void requestDuplicates(List<String> urls) {
         String url = baseUrl + "/api/albums/duplicates";
+        log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        var response = restTemplate.postForObject(url, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+        var response = postJson("/api/albums/duplicates", new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
@@ -61,13 +72,17 @@ public class AiClient {
                     Picture p = map.get(urlStr);
                     if (p != null) p.markAsDuplicate();
                 });
-        pictureRepository.saveAll(pictures);
+        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
+        pictures.forEach(pictureRepository::save);
+        log.info("[AI] picture 저장 완료");
     }
 
     public void requestCategories(List<String> urls) {
         String url = baseUrl + "/api/albums/categories";
+        log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        var response = restTemplate.postForObject(url, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+        var response = postJson("/api/albums/categories", new AiImageRequestDTO(urls), CategoryResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
@@ -77,14 +92,18 @@ public class AiClient {
                 if (p != null) p.setTagIfAbsent(category.category());
             }
         }
+        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
         pictureRepository.saveAll(pictures);
+        log.info("[AI] picture 저장 완료");
     }
 
     public void requestAestheticScore(List<String> urls) {
-        String url = baseUrl + "/api/albums/score";
+        log.info("[AI] requestAestheticScore API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
+        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+
         AiAestheticScoreRequestDTO request = AiAestheticScoreRequestDTO.from(pictures);
-        var response = restTemplate.postForObject(url, request, AiAestheticScoreResponseDTO.class);
+        var response = postJson("/api/albums/score", request, AiAestheticScoreResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
@@ -97,10 +116,24 @@ public class AiClient {
                 }
             }
         }
+        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
         pictureRepository.saveAll(pictures);
+        log.info("[AI] picture 저장 완료");
     }
+
 
     private Map<String, Picture> toMap(List<Picture> pictures) {
         return pictures.stream().collect(Collectors.toMap(Picture::getPictureURL, p -> p));
     }
+
+    private <T, R> R postJson(String path, T body, Class<R> responseType) {
+        String url = baseUrl + path + "/";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<T> request = new HttpEntity<>(body, headers);
+        return restTemplate.postForObject(url, request, responseType);
+    }
+
 }

@@ -16,6 +16,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.event.AlbumCreatedEvent;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
@@ -24,6 +25,8 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
+import org.springframework.boot.actuate.autoconfigure.wavefront.WavefrontProperties.Application;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,7 @@ public class AlbumService {
     private final SecurityUtil securityUtil;
     private final AlbumProcessService albumProcessService;
     private final PictureRepository pictureRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -155,7 +159,7 @@ public class AlbumService {
         album.setUserAlbums(List.of(userAlbum));
         albumRepository.save(album);
         pictureRepository.saveAll(pictures);
-        albumProcessService.processAlbumAsync(album.getId());
+        eventPublisher.publishEvent(new AlbumCreatedEvent(album.getId()));
         return album;
     }
 
