@@ -11,6 +11,7 @@ import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.service.AlbumService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,6 +58,8 @@ public class AlbumController {
 
     @PostMapping
     public ResponseEntity<BaseApiResponse<Void>> createAlbum(@RequestBody AlbumCreateRequestDTO request) {
-
+        Album album = albumService.createAlbum(request.albumName(), request.pictureUrls());
+        BaseApiResponse<Void> response =  BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null);
+        return ResponseEntity.ok(response);
     }
 }
