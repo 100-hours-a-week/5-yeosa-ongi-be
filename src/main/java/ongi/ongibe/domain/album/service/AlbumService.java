@@ -2,11 +2,13 @@ package ongi.ongibe.domain.album.service;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
@@ -129,6 +131,22 @@ public class AlbumService {
     private Album getAlbum(Long albumId) {
         return albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public Album createAlbum(String albumName, List<String> pictureUrls) {
+        User user = securityUtil.getCurrentUser();
+        Album album = Album.builder()
+                .name(albumName)
+                .userAlbums(new ArrayList<>())
+                .pictures(new ArrayList<>())
+                .build();
+        List<Picture> pictures = pictureUrls.stream()
+                .map(url -> Picture.of(album, user, url))
+                .toList();
+        UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
+        album.setUserAlbums(List.of(userAlbum));
+        return albumRepository.save(album);
     }
 
 }
