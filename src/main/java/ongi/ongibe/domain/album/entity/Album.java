@@ -39,7 +39,7 @@ public class Album {
     private Long id;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserAlbum> userAlbums;
+    private List<UserAlbum> userAlbums = new ArrayList<>();
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Picture> pictures = new ArrayList<>();

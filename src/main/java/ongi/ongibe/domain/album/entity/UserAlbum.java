@@ -41,4 +41,12 @@ public class UserAlbum {
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private UserAlbumRole role;
+
+    public static UserAlbum of(User user, Album album, UserAlbumRole role) {
+        return UserAlbum.builder()
+                .user(user)
+                .album(album)
+                .role(role)
+                .build();
+    }
 }
