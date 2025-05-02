@@ -33,23 +33,28 @@ public class AiClient {
     @Value("${ai.server.base-url}")
     private String baseUrl;
 
+    private static final String EMBEDDING_PATH = "/api/albums/embedding";
+    private static final String QUALITY_PATH = "/api/albums/quality";
+    private static final String DUPLICATE_PATH = "/api/albums/duplicates";
+    private static final String CATEGORY_PATH = "/api/albums/categories";
+    private static final String SCORE_PATH = "/api/albums/score";
+
     public void requestEmbeddings(List<String> urls) {
-        postJson("/api/albums/embedding", new AiImageRequestDTO(urls), Void.class);
+        postJson(EMBEDDING_PATH, new AiImageRequestDTO(urls), Void.class);
     }
 
     public void requestQuality(List<String> urls) {
         log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        String url = baseUrl + "/api/albums/quality";
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
-        var response = postJson("/api/albums/quality", new AiImageRequestDTO(urls), ShakyResponseDTO.class);
+        var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
         log.info("[AI] 품질 분석 응답: {}", response);  // <- 이거 추가
         if (response == null || response.data() == null) return;
+        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
+        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
         Map<String, Picture> map = toMap(pictures);
         response.data().forEach(urlStr -> {
             Picture p = map.get(urlStr);
             log.info("before markAsShaky: {} -> isShaky={}", p.getPictureURL(), p.isShaky());
-            if (p != null) p.markAsShaky();
+            p.markAsShaky();
         });
         log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
         pictureRepository.saveAll(pictures);
@@ -57,11 +62,10 @@ public class AiClient {
     }
 
     public void requestDuplicates(List<String> urls) {
-        String url = baseUrl + "/api/albums/duplicates";
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
-        var response = postJson("/api/albums/duplicates", new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+        var response = postJson(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
@@ -73,16 +77,15 @@ public class AiClient {
                     if (p != null) p.markAsDuplicate();
                 });
         log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
-        pictures.forEach(pictureRepository::save);
+        pictureRepository.saveAll(pictures);
         log.info("[AI] picture 저장 완료");
     }
 
     public void requestCategories(List<String> urls) {
-        String url = baseUrl + "/api/albums/categories";
         log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
-        var response = postJson("/api/albums/categories", new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        var response = postJson(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
@@ -103,7 +106,7 @@ public class AiClient {
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
 
         AiAestheticScoreRequestDTO request = AiAestheticScoreRequestDTO.from(pictures);
-        var response = postJson("/api/albums/score", request, AiAestheticScoreResponseDTO.class);
+        var response = postJson(SCORE_PATH, request, AiAestheticScoreResponseDTO.class);
         if (response == null || response.data() == null) return;
 
         Map<String, Picture> map = toMap(pictures);
