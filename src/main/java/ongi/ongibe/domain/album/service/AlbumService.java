@@ -16,7 +16,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.album.entity.Place;
+import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
