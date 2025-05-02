@@ -27,7 +27,7 @@ public class AiClient {
     private String baseUrl;
 
     public void requestEmbeddings(List<String> urls) {
-        String url = baseUrl + "/api/albums/embeddings";
+        String url = baseUrl + "/api/albums/embedding";
         restTemplate.postForEntity(url, new AiImageRequestDTO(urls), Void.class);
     }
 
@@ -79,7 +79,7 @@ public class AiClient {
     }
 
     public void requestAestheticScore(List<String> urls) {
-        String url = baseUrl + "/api/albums/scores";
+        String url = baseUrl + "/api/albums/score";
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         AiAestheticScoreRequestDTO request = AiAestheticScoreRequestDTO.from(pictures);
         var response = restTemplate.postForObject(url, request, AiAestheticScoreResponseDTO.class);
