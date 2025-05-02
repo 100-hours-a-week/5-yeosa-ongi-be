@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.album.repository;
 
+import java.util.Collection;
 import java.util.List;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -11,4 +12,6 @@ import org.springframework.stereotype.Repository;
 public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     List<Picture> findAllByUser(User user);
+
+    List<Picture> findAllByPictureURLIn(List<String> pictureURLS);
 }

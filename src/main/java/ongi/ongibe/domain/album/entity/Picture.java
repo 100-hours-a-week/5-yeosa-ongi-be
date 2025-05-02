@@ -68,7 +68,7 @@ public class Picture {
 
     private LocalDateTime deletedAt;
 
-    public AlbumDetailResponseDTO.PictureInfo toPictureInfo(){
+    public AlbumDetailResponseDTO.PictureInfo toPictureInfo() {
         return new AlbumDetailResponseDTO.PictureInfo(
                 id,
                 pictureURL,
@@ -82,7 +82,7 @@ public class Picture {
         );
     }
 
-    public AlbumSummaryResponseDTO toAlbumSummaryResponseDTO(){
+    public AlbumSummaryResponseDTO toAlbumSummaryResponseDTO() {
         return new AlbumSummaryResponseDTO(
                 id,
                 pictureURL,
@@ -91,7 +91,7 @@ public class Picture {
         );
     }
 
-    public UserTotalStateResponseDTO.PictureCoordinate toPictureCoordinate(){
+    public UserTotalStateResponseDTO.PictureCoordinate toPictureCoordinate() {
         return new UserTotalStateResponseDTO.PictureCoordinate(
                 latitude,
                 longitude
@@ -104,5 +104,23 @@ public class Picture {
                 .user(user)
                 .pictureURL(pictureURL)
                 .build();
+    }
+
+    public void markAsShaky() {
+        this.isShaky = true;
+    }
+
+    public void markAsDuplicate() {
+        this.isDuplicated = true;
+    }
+
+    public void applyAestheticScore(double score) {
+        this.qualityScore = (float) score;
+    }
+
+    public void setTagIfAbsent(String tag) {
+        if (this.tag == null || this.tag.isBlank()) {
+            this.tag = tag;
+        }
     }
 }
