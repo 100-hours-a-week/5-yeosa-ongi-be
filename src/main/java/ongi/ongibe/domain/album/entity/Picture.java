@@ -43,7 +43,7 @@ public class Picture {
     private Album album;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "place_id", nullable = false)
+    @JoinColumn(name = "place_id")
     private Place place;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -97,5 +97,13 @@ public class Picture {
                 latitude,
                 longitude
         );
+    }
+
+    public static Picture of(Album album, User user, String pictureURL) {
+        return Picture.builder()
+                .album(album)
+                .user(user)
+                .pictureURL(pictureURL)
+                .build();
     }
 }
