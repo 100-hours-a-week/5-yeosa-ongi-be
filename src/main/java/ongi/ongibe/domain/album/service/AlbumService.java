@@ -147,8 +147,8 @@ public class AlbumService {
                 .toList();
         UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
         album.setUserAlbums(List.of(userAlbum));
-        albumProcessService.processAlbumAsync(album.getId());
         albumRepository.save(album);
+        albumProcessService.processAlbumAsync(album.getId());
         return album;
     }
 

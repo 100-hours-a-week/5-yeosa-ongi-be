@@ -11,6 +11,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.place.service.PlaceService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,27 +29,34 @@ public class AlbumProcessService {
     private final PlaceService placeService;
     private final AiAlbumService aiAlbumService;
 
+    @Value("${album.process.test-mode:false}")
+    private boolean isTestMode;
+
     @Async
     @Transactional
-    public void processAlbumAsync(Long albumId){
+    public void processAlbumAsync(Long albumId) {
         Album album = albumRepository.findById(albumId)
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음")
-                );
-        List<Picture> pictures = album.getPictures();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
 
-        for (Picture p:pictures){
-            var gps = s3MetadataService.extractGPS(p.getPictureURL());
-            p.setLatitude(gps.lat());
-            p.setLongitude(gps.lon());
+        if (!isTestMode) {
+            List<Picture> pictures = album.getPictures();
 
-            var address = kakaoMapService.reverseGeocode(gps.lat(), gps.lon());
-            Place place = placeService.findOrCreate(address);
-            p.setPlace(place);
+            for (Picture p : pictures) {
+                var gps = s3MetadataService.extractGPS(p.getPictureURL());
+                p.setLatitude(gps.lat());
+                p.setLongitude(gps.lon());
+
+                var address = kakaoMapService.reverseGeocode(gps.lat(), gps.lon());
+                Place place = placeService.findOrCreate(address);
+                p.setPlace(place);
+            }
+
+            pictureRepository.saveAll(pictures);
+            album.setPictures(pictures);
+            albumRepository.save(album);
         }
-        pictureRepository.saveAll(pictures);
-        album.setPictures(pictures);
-        albumRepository.save(album);
+
         aiAlbumService.process(album);
     }
+
 }
