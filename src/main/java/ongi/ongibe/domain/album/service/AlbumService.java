@@ -39,7 +39,6 @@ public class AlbumService {
     private final UserAlbumRepository userAlbumRepository;
     private final AlbumRepository albumRepository;
     private final SecurityUtil securityUtil;
-    private final AlbumProcessService albumProcessService;
     private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -56,11 +55,7 @@ public class AlbumService {
                 nextYearMonth,
                 hasNext
         );
-        return BaseApiResponse.<MonthlyAlbumResponseDTO>builder()
-                .code("MONTHLY_ALBUM_SUCCESS")
-                .message("앨범 조회 성공")
-                .data(monthlyAlbumResponseDTO)
-                .build();
+        return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공",monthlyAlbumResponseDTO);
     }
 
     private List<AlbumInfo> getAlbumInfos(List<UserAlbum> userAlbumList,
@@ -79,30 +74,26 @@ public class AlbumService {
     public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
         Album album = getAlbumIfMember(albumId);
 
-        Map<Place, Picture> bestPictureinPlace = getBestPictureofPlace(album);
+        Map<Place, Picture> bestPictureOfPlace = getBestPictureOfPlace(album);
 
-        List<AlbumSummaryResponseDTO> response = bestPictureinPlace.values().stream()
+        List<AlbumSummaryResponseDTO> response = bestPictureOfPlace.values().stream()
                 .map(Picture::toAlbumSummaryResponseDTO)
                 .toList();
 
-        return BaseApiResponse.<List<AlbumSummaryResponseDTO>>builder()
-                .code("ALBUM_SUMMARY_SUCCESS")
-                .message("앨범 요약 조회 성공")
-                .data(response)
-                .build();
+        return BaseApiResponse.success("ALBUM_SUMMARY_SUCCESS", "앨범 요약 조회 성공", response);
     }
 
-    private Map<Place, Picture> getBestPictureofPlace(Album album) {
-        Map<Place, Picture> bestPictureofPlace = new HashMap<>();
+    private Map<Place, Picture> getBestPictureOfPlace(Album album) {
+        Map<Place, Picture> bestPictureOfPlace = new HashMap<>();
 
         for (Picture picture : album.getPictures()) {
             Place place = picture.getPlace();
-            Picture currentBestPicture = bestPictureofPlace.get(place);
+            Picture currentBestPicture = bestPictureOfPlace.get(place);
             if (currentBestPicture == null || currentBestPicture.getQualityScore() < picture.getQualityScore()) {
-                bestPictureofPlace.put(place, picture);
+                bestPictureOfPlace.put(place, picture);
             }
         }
-        return bestPictureofPlace;
+        return bestPictureOfPlace;
     }
 
     @Transactional(readOnly = true)
@@ -117,21 +108,21 @@ public class AlbumService {
                 album.getName(),
                 pictureInfos
         );
-        return BaseApiResponse.<AlbumDetailResponseDTO>builder()
-                .code("ALBUM_ACCESS_SUCCESS")
-                .message("앨범 조회 성공")
-                .data(responseDTO)
-                .build();
+        return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }
 
     private Album getAlbumIfMember(Long albumId) {
         Album album = getAlbum(albumId);
+        validateAlbumMember(album, securityUtil.getCurrentUser().getId());
+        return album;
+    }
+
+    private void validateAlbumMember(Album album, Long userId) {
         boolean isMember = album.getUserAlbums().stream()
-                .anyMatch(ua -> ua.getUser().getId().equals(securityUtil.getCurrentUserId()));
+                .anyMatch(ua -> ua.getUser().getId().equals(userId));
         if (!isMember){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
         }
-        return album;
     }
 
     private Album getAlbum(Long albumId) {
@@ -141,25 +132,37 @@ public class AlbumService {
 
     @Transactional
     public Album createAlbum(String albumName, List<String> pictureUrls) {
-        log.info("albumName={}, pictureUrls={}", albumName, pictureUrls);
         User user = securityUtil.getCurrentUser();
-        Album album = Album.builder()
-                .name(albumName)
-                .userAlbums(new ArrayList<>())
-                .pictures(new ArrayList<>())
-                .build();
-        log.info("album={}", album.getName());
-        List<Picture> pictures = pictureUrls.stream()
-                .map(url -> Picture.of(album, user, url))
-                .toList();
+        Album album = getEmptyAlbum(albumName);
+        List<Picture> pictures = createPictures(pictureUrls, album, user);
         album.setPictures(pictures);
-        pictures.stream().map(Picture::getPictureURL).forEach(log::info);
-        UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
-        album.setUserAlbums(List.of(userAlbum));
-        albumRepository.save(album);
-        pictureRepository.saveAll(pictures);
+        associateAlbumWithUser(user, album);
+        persistAlbum(album, pictures);
         eventPublisher.publishEvent(new AlbumCreatedEvent(album.getId()));
         return album;
     }
 
+    private void persistAlbum(Album album, List<Picture> pictures) {
+        albumRepository.save(album);
+        pictureRepository.saveAll(pictures);
+    }
+
+    private void associateAlbumWithUser(User user, Album album) {
+        UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
+        album.setUserAlbums(List.of(userAlbum));
+    }
+
+    private static List<Picture> createPictures(List<String> pictureUrls, Album album, User user) {
+        return pictureUrls.stream()
+                .map(url -> Picture.of(album, user, url))
+                .toList();
+    }
+
+    private Album getEmptyAlbum(String albumName) {
+        return Album.builder()
+                .name(albumName)
+                .userAlbums(new ArrayList<>())
+                .pictures(new ArrayList<>())
+                .build();
+    }
 }
