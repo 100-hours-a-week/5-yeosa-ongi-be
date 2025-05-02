@@ -25,7 +25,6 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
-import org.springframework.boot.actuate.autoconfigure.wavefront.WavefrontProperties.Application;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -78,7 +77,7 @@ public class AlbumService {
 
     @Transactional(readOnly = true)
     public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
-        Album album = getAlbumifMember(albumId);
+        Album album = getAlbumIfMember(albumId);
 
         Map<Place, Picture> bestPictureinPlace = getBestPictureofPlace(album);
 
@@ -108,7 +107,7 @@ public class AlbumService {
 
     @Transactional(readOnly = true)
     public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
-        Album album = getAlbumifMember(albumId);
+        Album album = getAlbumIfMember(albumId);
 
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
                 .map(Picture::toPictureInfo)
@@ -125,7 +124,7 @@ public class AlbumService {
                 .build();
     }
 
-    private Album getAlbumifMember(Long albumId) {
+    private Album getAlbumIfMember(Long albumId) {
         Album album = getAlbum(albumId);
         boolean isMember = album.getUserAlbums().stream()
                 .anyMatch(ua -> ua.getUser().getId().equals(securityUtil.getCurrentUserId()));
