@@ -36,6 +36,7 @@ public class AlbumService {
     private final UserAlbumRepository userAlbumRepository;
     private final AlbumRepository albumRepository;
     private final SecurityUtil securityUtil;
+    private final AlbumProcessService albumProcessService;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -146,7 +147,9 @@ public class AlbumService {
                 .toList();
         UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
         album.setUserAlbums(List.of(userAlbum));
-        return albumRepository.save(album);
+        albumProcessService.processAlbumAsync(album.getId());
+        albumRepository.save(album);
+        return album;
     }
 
 }
