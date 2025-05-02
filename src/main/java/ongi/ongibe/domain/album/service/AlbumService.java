@@ -16,6 +16,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
@@ -37,6 +38,7 @@ public class AlbumService {
     private final AlbumRepository albumRepository;
     private final SecurityUtil securityUtil;
     private final AlbumProcessService albumProcessService;
+    private final PictureRepository pictureRepository;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -136,18 +138,23 @@ public class AlbumService {
 
     @Transactional
     public Album createAlbum(String albumName, List<String> pictureUrls) {
+        log.info("albumName={}, pictureUrls={}", albumName, pictureUrls);
         User user = securityUtil.getCurrentUser();
         Album album = Album.builder()
                 .name(albumName)
                 .userAlbums(new ArrayList<>())
                 .pictures(new ArrayList<>())
                 .build();
+        log.info("album={}", album.getName());
         List<Picture> pictures = pictureUrls.stream()
                 .map(url -> Picture.of(album, user, url))
                 .toList();
+        album.setPictures(pictures);
+        pictures.stream().map(Picture::getPictureURL).forEach(log::info);
         UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.OWNER);
         album.setUserAlbums(List.of(userAlbum));
         albumRepository.save(album);
+        pictureRepository.saveAll(pictures);
         albumProcessService.processAlbumAsync(album.getId());
         return album;
     }
