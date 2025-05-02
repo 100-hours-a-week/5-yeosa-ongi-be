@@ -2,6 +2,7 @@ package ongi.ongibe.domain.album.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import ongi.ongibe.domain.ai.service.AiAlbumService;
 import ongi.ongibe.domain.album.dto.KakaoAddressDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -25,6 +26,7 @@ public class AlbumProcessService {
     private final S3MetadataService s3MetadataService;
     private final KakaoMapService kakaoMapService;
     private final PlaceService placeService;
+    private final AiAlbumService aiAlbumService;
 
     @Async
     @Transactional
@@ -47,5 +49,6 @@ public class AlbumProcessService {
         pictureRepository.saveAll(pictures);
         album.setPictures(pictures);
         albumRepository.save(album);
+        aiAlbumService.process(album);
     }
 }
