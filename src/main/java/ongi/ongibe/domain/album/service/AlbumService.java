@@ -217,6 +217,9 @@ public class AlbumService {
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
         album.setDeletedAt(LocalDateTime.now());
+        for (Picture p : album.getPictures()){
+            p.setDeletedAt(LocalDateTime.now());
+        }
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
