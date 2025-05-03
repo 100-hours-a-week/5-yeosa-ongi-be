@@ -18,6 +18,7 @@ import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
@@ -25,6 +26,7 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
+import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,10 @@ public class AlbumService {
     private final SecurityUtil securityUtil;
     private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RedisInviteTokenRepository redisInviteTokenRepository;
+
+    private static final String INVITE_LINK_PREFIX = "localhost:8080/invite?token=";
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -262,5 +268,15 @@ public class AlbumService {
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "소유자만 앨범 이름을 변경할 수 있습니다.");
         }
+    }
+
+    @Transactional
+    public String createInviteToken(Long albumId){
+        Album album = getAlbumIfMember(albumId);
+        validAlbumOwner(album);
+
+        String token = jwtTokenProvider.generateInviteToken(albumId);
+        redisInviteTokenRepository.save(token, albumId);
+        return token;
     }
 }
