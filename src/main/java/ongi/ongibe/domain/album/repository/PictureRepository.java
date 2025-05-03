@@ -24,7 +24,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Query("update Picture p set p.isShaky = true where p.pictureURL in :urls")
     int markPicturesAsShaky(@Param("urls") List<String> urls);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isShaky = false where p.pictureURL in :urls")
     int markPicturesShakyAsStable(@Param("urls") List<String> urls);
@@ -34,7 +34,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls")
     int markPicturesAsDuplicated(@Param("urls") List<String> urls);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isDuplicated = false where p.pictureURL in :urls")
     int markPicturesDuplicatedAsStable(@Param("urls") List<String> urls);
