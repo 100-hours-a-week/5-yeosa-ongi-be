@@ -15,7 +15,9 @@ import ongi.ongibe.domain.album.dto.AlbumPictureUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.service.AlbumService;
+import ongi.ongibe.domain.album.service.PictureService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AlbumController {
 
     private final AlbumService albumService;
+    private final PictureService pictureService;
 
     @Operation(summary = "월별 앨범 목록 조회", description = "요청한 연월에 등록된 앨범 목록을 조회합니다.")
     @ApiResponses({
@@ -84,7 +87,7 @@ public class AlbumController {
 
     @PutMapping("/{albumId}/picture")
     public ResponseEntity<BaseApiResponse<Void>> updatePictureState(@PathVariable Long albumId, @RequestBody AlbumPictureUpdateRequestDTO request) {
-        // boolean true -> false 바꾸는 로직
+        List<Picture> pictures = pictureService.updatePicture(request.pictureIds());
         BaseApiResponse<Void> response = BaseApiResponse.success("ALBUMNAEM_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null);
         return ResponseEntity.ok(response);
     }
