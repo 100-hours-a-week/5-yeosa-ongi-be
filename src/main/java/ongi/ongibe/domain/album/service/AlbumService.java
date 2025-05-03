@@ -212,6 +212,13 @@ public class AlbumService {
         }
     }
 
+    @Transactional
+    public void deleteAlbum(Long albumId) {
+        Album album = getAlbumIfMember(albumId);
+        validAlbumOwner(album);
+        album.setDeletedAt(LocalDateTime.now());
+    }
+
     private void checkAddPictureSize(int newSize, int previousSize) {
         if (newSize > 100) {
             int remaining = 100 - previousSize;
