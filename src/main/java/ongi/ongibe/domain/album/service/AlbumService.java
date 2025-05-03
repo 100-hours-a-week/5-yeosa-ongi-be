@@ -172,12 +172,44 @@ public class AlbumService {
     @Transactional
     public Album updateAlbumName(Long albumId, String albumName) {
         Album album = getAlbumIfMember(albumId);
-        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(), album);
-        if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "소유자만 앨범 이름을 변경할 수 있습니다.");
-        }
+        validAlbumOwner(album);
         album.setName(albumName);
         return albumRepository.save(album);
+    }
+
+    @Transactional
+    public List<Picture> updatePicture(Long albumId, List<Long> pictureIds){
+        Album album = getAlbumIfMember(albumId);
+        validAlbumOwner(album);
+
+        List<Picture> pictures = pictureRepository.findAllById(pictureIds).stream()
+                .filter(p -> p.getAlbum().getId().equals(albumId))
+                .toList();
+
+        List<String> urls = pictures.stream()
+                .map(Picture::getPictureURL)
+                .toList();
+        pictureRepository.markPicturesDuplicatedAsStable(urls);
+        pictureRepository.markPicturesShakyAsStable(urls);
+        return pictures;
+    }
+
+    @Transactional
+    public void deletePictures(Long albumId, List<Long> pictureIds) {
+        Album album = getAlbumIfMember(albumId);
+        validAlbumOwner(album);
+
+        List<Picture> pictures = pictureRepository.findAllById(pictureIds).stream()
+                .filter(p -> p.getAlbum().getId().equals(albumId))
+                .toList();
+
+        if (pictures.size() != pictureIds.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제할 수 없는 사진이 포함되어 있습니다.");
+        }
+
+        for (Picture p : pictures) {
+            p.setDeletedAt(LocalDateTime.now());
+        }
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
@@ -212,5 +244,13 @@ public class AlbumService {
                 .userAlbums(new ArrayList<>())
                 .pictures(new ArrayList<>())
                 .build();
+    }
+
+    private void validAlbumOwner(Album album) {
+        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
+                album);
+        if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "소유자만 앨범 이름을 변경할 수 있습니다.");
+        }
     }
 }
