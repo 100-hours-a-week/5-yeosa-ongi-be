@@ -111,13 +111,13 @@ public class Picture {
     public void markAsShaky() {
         if (!this.isShaky) {
             this.isShaky = true;
-            log.info("marked as shaky");
         }
     }
 
-
     public void markAsDuplicate() {
-        this.isDuplicated = true;
+        if (!this.isDuplicated) {
+            this.isDuplicated = true;
+        }
     }
 
     public void applyAestheticScore(double score) {
