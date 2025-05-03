@@ -1,5 +1,5 @@
 package ongi.ongibe.domain.album.event;
 
-public record AlbumCreatedEvent(
+public record AlbumEvent(
         Long albumId
 ) {}
