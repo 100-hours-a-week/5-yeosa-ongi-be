@@ -41,13 +41,12 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying
     @Transactional
-    @Query("""
-            update Picture p
-            set p.tag = :tag, p.qualityScore = :score 
-            where p.pictureURL in :url
-    """)
-    int updateScoreAndTagIfAbsent(@Param("url") String url,
-            @Param("score") Double score,
-            @Param("tag") String tag);
+    @Query("update Picture p set p.tag = :tag where p.pictureURL in :urls and p.tag is null")
+    int updateTagIfAbsent(@Param("urls") List<String> urls, @Param("tag") String tag);
+
+    @Modifying
+    @Transactional
+    @Query("update Picture p set p.qualityScore = :score where p.pictureURL in :url")
+    int updateScore(@Param("url") String url, @Param("score") Double score);
 
 }
