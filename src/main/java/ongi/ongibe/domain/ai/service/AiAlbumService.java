@@ -15,13 +15,14 @@ public class AiAlbumService {
 
     private final AiClient aiClient;
 
-    public void process(Album album) {
-        List<Picture> pictures = album.getPictures();
-        List<String> urls = pictures.stream()
-                .map(Picture::getPictureURL)
-                .toList();
+    public void process(List<Picture> pictures) {
 
-        log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", album.getId(), urls.size());
+        List<String> urls = pictures.stream()
+                        .map(Picture::getPictureURL)
+                        .toList();
+
+        Long albumId = pictures.get(0).getAlbum().getId();
+        log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, urls.size());
 
         // 1. 임베딩 요청
         aiClient.requestEmbeddings(urls);
@@ -52,6 +53,6 @@ public class AiAlbumService {
             log.info("[AI] 미적 점수 분석 완료");
         }).join();
 
-        log.info("[AI] 앨범 {} 분석 전체 완료", album.getId());
+        log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
     }
 }

@@ -16,7 +16,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.album.event.AlbumCreatedEvent;
+import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
@@ -132,15 +132,53 @@ public class AlbumService {
 
     @Transactional
     public Album createAlbum(String albumName, List<String> pictureUrls) {
+        if (pictureUrls.size() > 100){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
+        }
         User user = securityUtil.getCurrentUser();
         Album album = getEmptyAlbum(albumName);
         List<Picture> pictures = createPictures(pictureUrls, album, user);
         album.setPictures(pictures);
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
-        eventPublisher.publishEvent(new AlbumCreatedEvent(album.getId()));
+        eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
         return album;
     }
+
+    @Transactional
+    public Album addPictures(Long albumId, List<String> pictureUrls) {
+        Album album = getAlbumIfMember(albumId);
+
+        List<Picture> existingPictures = album.getPictures();
+        if (existingPictures == null) {
+            existingPictures = new ArrayList<>();
+            album.setPictures(existingPictures);
+        }
+
+        int previousSize = existingPictures.size();
+        int newSize = previousSize + pictureUrls.size();
+
+        checkAddPictureSize(newSize, previousSize);
+
+        User user = securityUtil.getCurrentUser();
+        List<Picture> newPictures = createPictures(pictureUrls, album, user);
+        existingPictures.addAll(newPictures);
+
+        albumRepository.save(album);
+        eventPublisher.publishEvent(new AlbumEvent(albumId, pictureUrls));
+        return album;
+    }
+
+    private void checkAddPictureSize(int newSize, int previousSize) {
+        if (newSize > 100) {
+            int remaining = 100 - previousSize;
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "같은 앨범에 사진은 100장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
+            );
+        }
+    }
+
 
     private void persistAlbum(Album album, List<Picture> pictures) {
         albumRepository.save(album);
