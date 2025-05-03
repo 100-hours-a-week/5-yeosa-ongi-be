@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.ai.service;
 
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ public class AiClient {
 
     private final RestTemplate restTemplate;
     private final PictureRepository pictureRepository;
+    private final EntityManager entityManager;
 
     @Value("${ai.server.base-url}")
     private String baseUrl;
@@ -49,48 +51,26 @@ public class AiClient {
         var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
         log.info("[AI] 품질 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
-        Map<String, Picture> map = toMap(pictures);
-        response.data().forEach(url -> {
-            Picture p = map.get(url);
-            log.info("before markAsShaky: {} -> isShaky={}", p.getPictureURL(), p.isShaky());
-            if (p != null) {
-                p.markAsShaky();
-            }
-        });
-
-        List<Picture> updated = response.data().stream()
-                .map(map::get)
-                .filter(Objects::nonNull)
+        List<String> shakyUrls = response.data().stream()
+                .filter(urls::contains)
                 .toList();
 
-        log.info("[AI] {}개 picture 저장 시작: {}", updated.size(), urls);
-        pictureRepository.saveAll(updated);
-        log.info("[AI] picture 저장 완료");
+        int shakyCount = pictureRepository.markPicturesAsShaky(shakyUrls);
+        log.info("[AI] 흔들린 사진 : {}", shakyCount);
+        entityManager.clear();
     }
 
     public void requestDuplicates(List<String> urls) {
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
-        Map<String, Picture> map = toMap(pictures);
-        response.data().forEach(url -> {
-            Picture p = map.get(url);
-            if (p != null) {
-                p.markAsDuplicate();
-            }
-        });
-
-        List<Picture> updated = response.data().stream()
-                .map(map::get)
-                .filter(Objects::nonNull)
+        List<String> duplicatedUrls = response.data().stream()
+                .flatMap(List::stream)
                 .toList();
-        log.info("[AI] {}개 picture 저장 시작: {}", updated.size(), urls);
-        pictureRepository.saveAll(updated);
-        log.info("[AI] picture 저장 완료");
+
+        int duplicatedCount = pictureRepository.markPicturesAsDuplicated(duplicatedUrls);
+        log.info("[AI] 중복 사진 : {}", duplicatedCount);
+        entityManager.clear();
     }
 
     public void requestCategories(List<String> urls) {
@@ -100,16 +80,13 @@ public class AiClient {
         var response = postJson(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
         if (response == null || response.data() == null) return;
 
-        Map<String, Picture> map = toMap(pictures);
-        for (var category : response.data()) {
-            for (String urlStr : category.images()) {
-                Picture p = map.get(urlStr);
-                if (p != null) p.setTagIfAbsent(category.category());
-            }
+        int totalTagUpdated = 0;
+        for (var categoryResult : response.data()) {
+            int count = pictureRepository.updateTagIfAbsent(categoryResult.images(), categoryResult.category());
+            totalTagUpdated += count;
         }
-        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
-        pictureRepository.saveAll(pictures);
-        log.info("[AI] picture 저장 완료");
+        log.info("[AI] tag 반영 : {}", totalTagUpdated);
+        entityManager.clear();
     }
 
     public void requestAestheticScore(List<String> urls) {
@@ -117,23 +94,18 @@ public class AiClient {
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
 
-        AiAestheticScoreRequestDTO request = AiAestheticScoreRequestDTO.from(pictures);
-        var response = postJson(SCORE_PATH, request, AiAestheticScoreResponseDTO.class);
+        var response = postJson(SCORE_PATH, AiAestheticScoreRequestDTO.from(pictures), AiAestheticScoreResponseDTO.class);
         if (response == null || response.data() == null) return;
 
-        Map<String, Picture> map = toMap(pictures);
+        int totalScoreUpdated = 0;
         for (var category : response.data()) {
-            for (var entry : category.images()) {
-                Picture p = map.get(entry.image());
-                if (p != null) {
-                    p.applyAestheticScore(entry.score());
-                    p.setTagIfAbsent(category.category());
-                }
+            for (var entry : category.images()){
+                int count = pictureRepository.updateScore(entry.image(), entry.score());
+                totalScoreUpdated += count;
             }
         }
-        log.info("[AI] {}개 picture 저장 시작: {}", pictures.size(), urls);
-        pictureRepository.saveAll(pictures);
-        log.info("[AI] picture 저장 완료");
+        log.info("[AI] score 반영 : {}", totalScoreUpdated);
+        entityManager.clear();
     }
 
 
