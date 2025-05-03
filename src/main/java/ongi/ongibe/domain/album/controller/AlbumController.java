@@ -17,8 +17,8 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.service.AlbumService;
-import ongi.ongibe.domain.album.service.PictureService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -87,8 +87,15 @@ public class AlbumController {
 
     @PutMapping("/{albumId}/picture")
     public ResponseEntity<BaseApiResponse<Void>> updatePictureState(@PathVariable Long albumId, @RequestBody AlbumPictureUpdateRequestDTO request) {
-        List<Picture> pictures = pictureService.updatePicture(request.pictureIds());
-        BaseApiResponse<Void> response = BaseApiResponse.success("ALBUMNAEM_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null);
+        List<Picture> pictures = albumService.updatePicture(albumId, request.pictureIds());
+        BaseApiResponse<Void> response = BaseApiResponse.success("PICTURE_RESTORE_SUCCESS", "앨범 내 사진을 복원했습니다.", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{albumId}/picture")
+    public ResponseEntity<BaseApiResponse<Void>> deletePicture(@PathVariable Long albumId, @RequestBody AlbumPictureUpdateRequestDTO request) {
+        albumService.deletePictures(albumId, request.pictureIds());
+        BaseApiResponse<Void> response = BaseApiResponse.success("PICTURE_DELTE_SUCCESS", "앨범 내 사진을 삭제했습니다.", null);
         return ResponseEntity.ok(response);
     }
 }

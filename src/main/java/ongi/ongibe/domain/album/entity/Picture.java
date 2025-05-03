@@ -31,7 +31,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Getter
 @Setter
 @Builder
-@SQLDelete(sql = "UPDATE picture SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Picture {
 
