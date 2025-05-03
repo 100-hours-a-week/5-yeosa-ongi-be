@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumNameUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureUpdateRequestDTO;
@@ -108,6 +109,12 @@ public class AlbumController {
     @PostMapping("/{albumId}/invite/link")
     public ResponseEntity<BaseApiResponse<String>> createInviteLink(@PathVariable Long albumId) {
         BaseApiResponse<String> response = albumService.createInviteToken(albumId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/invite")
+    public ResponseEntity<BaseApiResponse<AlbumInviteResponseDTO>> acceptInvite(@RequestBody String inviteToken) {
+        BaseApiResponse<AlbumInviteResponseDTO> response = albumService.acceptInvite(inviteToken);
         return ResponseEntity.ok(response);
     }
 }
