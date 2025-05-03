@@ -271,12 +271,12 @@ public class AlbumService {
     }
 
     @Transactional
-    public String createInviteToken(Long albumId){
+    public BaseApiResponse<String> createInviteToken(Long albumId){
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
 
         String token = jwtTokenProvider.generateInviteToken(albumId);
         redisInviteTokenRepository.save(token, albumId);
-        return token;
+        return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", token);
     }
 }
