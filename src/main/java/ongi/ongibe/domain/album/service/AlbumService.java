@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
@@ -278,5 +279,20 @@ public class AlbumService {
         String token = jwtTokenProvider.generateInviteToken(albumId);
         redisInviteTokenRepository.save(token, albumId);
         return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", token);
+    }
+
+    @Transactional
+    public BaseApiResponse<AlbumInviteResponseDTO> acceptInvite(String token){
+        if (redisInviteTokenRepository.existsByToken(token)) {
+            Long tokenAlbumId = jwtTokenProvider.validateAndExtractInviteId(token);
+            Album album = getAlbum(tokenAlbumId);
+            UserAlbum userAlbum = UserAlbum.of(securityUtil.getCurrentUser(), album, UserAlbumRole.NORMAL);
+            userAlbumRepository.save(userAlbum);
+            redisInviteTokenRepository.remove(token);
+            AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
+                    album.getName());
+            return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "발급되지 않은 초대코드입니다.");
     }
 }
