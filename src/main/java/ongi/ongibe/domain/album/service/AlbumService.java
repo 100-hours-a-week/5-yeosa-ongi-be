@@ -169,6 +169,17 @@ public class AlbumService {
         return album;
     }
 
+    @Transactional
+    public Album updateAlbumName(Long albumId, String albumName) {
+        Album album = getAlbumIfMember(albumId);
+        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(), album);
+        if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "소유자만 앨범 이름을 변경할 수 있습니다.");
+        }
+        album.setName(albumName);
+        return albumRepository.save(album);
+    }
+
     private void checkAddPictureSize(int newSize, int previousSize) {
         if (newSize > 100) {
             int remaining = 100 - previousSize;
