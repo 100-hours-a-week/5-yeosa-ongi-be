@@ -98,4 +98,11 @@ public class AlbumController {
         BaseApiResponse<Void> response = BaseApiResponse.success("PICTURE_DELTE_SUCCESS", "앨범 내 사진을 삭제했습니다.", null);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{albumId}")
+    public ResponseEntity<BaseApiResponse<Void>> deleteAlbum(@PathVariable Long albumId) {
+        albumService.deleteAlbum(albumId);
+        BaseApiResponse<Void> response = BaseApiResponse.success("ALBUM_DELETE_SUCCESS", "앨범이 삭제되었습니다.", null);
+        return ResponseEntity.ok(response);
+    }
 }
