@@ -190,7 +190,6 @@ public class AlbumService {
         }
     }
 
-
     private void persistAlbum(Album album, List<Picture> pictures) {
         albumRepository.save(album);
         pictureRepository.saveAll(pictures);

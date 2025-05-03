@@ -11,6 +11,7 @@ import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumNameUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
+import ongi.ongibe.domain.album.dto.AlbumPictureUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
@@ -77,6 +78,13 @@ public class AlbumController {
     @PutMapping("/{albumId}")
     public ResponseEntity<BaseApiResponse<Void>> updateAlbumTitle(@PathVariable Long albumId, @RequestBody AlbumNameUpdateRequestDTO request) {
         Album album = albumService.updateAlbumName(albumId, request.albumName());
+        BaseApiResponse<Void> response = BaseApiResponse.success("ALBUMNAEM_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{albumId}/picture")
+    public ResponseEntity<BaseApiResponse<Void>> updatePictureState(@PathVariable Long albumId, @RequestBody AlbumPictureUpdateRequestDTO request) {
+        // boolean true -> false 바꾸는 로직
         BaseApiResponse<Void> response = BaseApiResponse.success("ALBUMNAEM_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null);
         return ResponseEntity.ok(response);
     }
