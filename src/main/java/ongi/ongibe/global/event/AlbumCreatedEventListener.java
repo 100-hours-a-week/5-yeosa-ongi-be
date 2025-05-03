@@ -2,9 +2,8 @@ package ongi.ongibe.global.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.domain.album.event.AlbumCreatedEvent;
+import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.service.AlbumProcessService;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -19,8 +18,8 @@ public class AlbumCreatedEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handledAlbumCreated(AlbumCreatedEvent event) {
+    public void handledAlbumCreated(AlbumEvent event) {
         log.info("event received: {}", event.albumId());
-        albumProcessService.processAlbumAsync(event.albumId());
+        albumProcessService.processAlbumAsync(event.albumId(), event.pictureUrls());
     }
 }

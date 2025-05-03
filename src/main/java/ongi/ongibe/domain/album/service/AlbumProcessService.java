@@ -32,15 +32,17 @@ public class AlbumProcessService {
     @Value("${album.process.test-mode:false}")
     private boolean isTestMode;
 
-    @Async
+    @Async("asyncExecutor")
     @Transactional
-    public void processAlbumAsync(Long albumId) {
+    public void processAlbumAsync(Long albumId, List<String> pictureUrls) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
 
-        if (!isTestMode) {
-            List<Picture> pictures = album.getPictures();
+        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(pictureUrls).stream()
+                .filter(p -> p.getAlbum().getId().equals(albumId))
+                .toList();
 
+        if (!isTestMode) {
             for (Picture p : pictures) {
                 var gps = s3MetadataService.extractGPS(p.getPictureURL());
                 p.setLatitude(gps.lat());
@@ -50,13 +52,9 @@ public class AlbumProcessService {
                 Place place = placeService.findOrCreate(address);
                 p.setPlace(place);
             }
-
             pictureRepository.saveAll(pictures);
-            album.setPictures(pictures);
-            albumRepository.save(album);
         }
 
-        aiAlbumService.process(album);
+        aiAlbumService.process(pictures);
     }
-
 }
