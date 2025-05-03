@@ -104,4 +104,10 @@ public class AlbumController {
         BaseApiResponse<Void> response = BaseApiResponse.success("ALBUM_DELETE_SUCCESS", "앨범이 삭제되었습니다.", null);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{albumId}/invite/link")
+    public ResponseEntity<BaseApiResponse<String>> createInviteLink(@PathVariable Long albumId) {
+        BaseApiResponse<String> response = albumService.createInviteToken(albumId);
+        return ResponseEntity.ok(response);
+    }
 }
