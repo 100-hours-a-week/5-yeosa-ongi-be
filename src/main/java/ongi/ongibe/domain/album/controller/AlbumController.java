@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumNameUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,6 +71,13 @@ public class AlbumController {
     public ResponseEntity<BaseApiResponse<Void>> createAlbum(@PathVariable Long albumId, @RequestBody AlbumPictureAddRequestDTO request) {
         Album album = albumService.addPictures(albumId, request.pictureUrls());
         BaseApiResponse<Void> response = BaseApiResponse.success("PICTURE_ADD_SUCCESS", "앨범 사진 추가 요청이 접수되었습니다.", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{albumId}")
+    public ResponseEntity<BaseApiResponse<Void>> updateAlbumTitle(@PathVariable Long albumId, @RequestBody AlbumNameUpdateRequestDTO request) {
+        Album album = albumService.updateAlbumName(albumId, request.albumName());
+        BaseApiResponse<Void> response = BaseApiResponse.success("ALBUMNAEM_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null);
         return ResponseEntity.ok(response);
     }
 }
