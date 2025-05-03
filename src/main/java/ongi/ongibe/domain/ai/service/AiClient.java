@@ -116,7 +116,7 @@ public class AiClient {
     }
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {
-        String url = baseUrl + path + "/";
+        String url = baseUrl + path;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));

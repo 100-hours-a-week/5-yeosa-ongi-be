@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(staticName = "success")
 @Builder
 public class BaseApiResponse<T> {
     private String code;

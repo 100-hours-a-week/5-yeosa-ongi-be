@@ -31,7 +31,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :url")
+    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls")
     int markPicturesAsDuplicated(@Param("urls") List<String> urls);
 
     @Modifying
