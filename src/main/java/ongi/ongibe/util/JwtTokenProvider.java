@@ -39,6 +39,7 @@ public class JwtTokenProvider {
 
     private static final long ACCESS_TOKEN_VALIDITY = 60 * 5L;
     private static final long REFRESH_TOKEN_VALIDITY = 14 * 24 * 60 * 60L;
+    private static final long INVITE_TOKEN_VALIDITY = 24 * 60 * 60L;
 
     public String generateAccessToken(Long userId) {
         return Jwts.builder()
@@ -79,9 +80,30 @@ public class JwtTokenProvider {
             return true;
         } catch (Exception e) {
             log.warn("토큰 유효성 검사 실패: {}", e.getMessage());
-            return false;
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
         }
     }
 
+    public String generateInviteToken(Long albumId){
+        return Jwts.builder()
+                .subject(String.valueOf(albumId))
+                .expiration(Date.from(Instant.now().plusSeconds(INVITE_TOKEN_VALIDITY)))
+                .signWith(signingKey)
+                .compact();
+    }
+
+    public Long validateAndExtractInviteId(String token){
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(signingKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Long.parseLong(claims.getSubject());
+        } catch (Exception e) {
+            log.warn("토큰 유효성 검사 실패: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+        }
+    }
 }
 
