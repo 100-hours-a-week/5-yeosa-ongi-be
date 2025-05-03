@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
@@ -56,10 +57,18 @@ public class AlbumController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "앨범 생성", description = "사진을 추가하면 앨범 생성됨.")
     @PostMapping
     public ResponseEntity<BaseApiResponse<Void>> createAlbum(@RequestBody AlbumCreateRequestDTO request) {
         Album album = albumService.createAlbum(request.albumName(), request.pictureUrls());
         BaseApiResponse<Void> response =  BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{albumId}")
+    public ResponseEntity<BaseApiResponse<Void>> createAlbum(@PathVariable Long albumId, @RequestBody AlbumPictureAddRequestDTO request) {
+        Album album = albumService.addPictures(albumId, request.pictureUrls());
+        BaseApiResponse<Void> response = BaseApiResponse.success("PICTURE_ADD_SUCCESS", "앨범 사진 추가 요청이 접수되었습니다.", null);
         return ResponseEntity.ok(response);
     }
 }
