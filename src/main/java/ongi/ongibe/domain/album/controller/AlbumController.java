@@ -11,6 +11,7 @@ import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumNameUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
@@ -107,6 +108,13 @@ public class AlbumController {
         BaseApiResponse<Void> response = BaseApiResponse.success("ALBUM_DELETE_SUCCESS", "앨범이 삭제되었습니다.", null);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{albumId}/members")
+    public ResponseEntity<BaseApiResponse<AlbumMemberResponseDTO>> getAlbumMembers(@PathVariable Long albumId) {
+        BaseApiResponse<AlbumMemberResponseDTO> response = albumService.getAlbumMembers(albumId);
+        return ResponseEntity.ok(response);
+    }
+
 
     @PostMapping("/{albumId}/invite/link")
     public ResponseEntity<BaseApiResponse<String>> createInviteLink(@PathVariable Long albumId) {
