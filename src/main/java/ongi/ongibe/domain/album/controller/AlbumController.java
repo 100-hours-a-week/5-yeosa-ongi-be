@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.album.controller;
 
+import com.fasterxml.jackson.databind.ser.Serializers.Base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -11,6 +12,7 @@ import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumNameUpdateRequestDTO;
+import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureUpdateRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
@@ -115,6 +117,12 @@ public class AlbumController {
     @PostMapping("/invite")
     public ResponseEntity<BaseApiResponse<AlbumInviteResponseDTO>> acceptInvite(@RequestBody String inviteToken) {
         BaseApiResponse<AlbumInviteResponseDTO> response = albumService.acceptInvite(inviteToken);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{albumId}/owner")
+    public ResponseEntity<BaseApiResponse<AlbumOwnerTransferResponseDTO>> transferOwner(@PathVariable Long albumId, @RequestBody Long newOwnerId) {
+        BaseApiResponse<AlbumOwnerTransferResponseDTO> response = albumService.transferAlbumOwner(albumId, newOwnerId);
         return ResponseEntity.ok(response);
     }
 }

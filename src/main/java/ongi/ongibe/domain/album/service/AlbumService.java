@@ -12,6 +12,7 @@ import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
@@ -25,6 +26,7 @@ import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import ongi.ongibe.util.JwtTokenProvider;
@@ -46,6 +48,7 @@ public class AlbumService {
     private final ApplicationEventPublisher eventPublisher;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisInviteTokenRepository redisInviteTokenRepository;
+    private final UserRepository userRepository;
 
     private static final String INVITE_LINK_PREFIX = "localhost:8080/invite?token=";
 
@@ -294,5 +297,24 @@ public class AlbumService {
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "발급되지 않은 초대코드입니다.");
+    }
+
+    @Transactional
+    public BaseApiResponse<AlbumOwnerTransferResponseDTO> transferAlbumOwner(Long albumId, Long newOwnerId){
+        User oldOwner = securityUtil.getCurrentUser();
+        User newUser = userRepository.findById(newOwnerId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이양할 유저 정보를 찾을 수 없습니다.")
+        );
+        UserAlbum oldUserAlbum = userAlbumRepository.findByUserAndAlbum(oldOwner, getAlbumIfMember(albumId));
+        UserAlbum newUserAlbum = userAlbumRepository.findByUserAndAlbum(newUser, getAlbumIfMember(albumId));
+        if (!oldUserAlbum.getRole().equals(UserAlbumRole.OWNER)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "현재 OWNER만 소유권을 위임할 수 있습니다.");
+        }
+        oldUserAlbum.setRole(UserAlbumRole.NORMAL);
+        newUserAlbum.setRole(UserAlbumRole.OWNER);
+        return BaseApiResponse.success(
+                "ALBUM_OWNERSHIP_TRANSFER_SUCCESS", "앨범 소유권이 정상적으로 이전되었습니다.",
+                new AlbumOwnerTransferResponseDTO(oldOwner.getId(), newUser.getId())
+        );
     }
 }
