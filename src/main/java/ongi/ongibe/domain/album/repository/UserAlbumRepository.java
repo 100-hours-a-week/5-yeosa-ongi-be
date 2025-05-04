@@ -15,4 +15,8 @@ public interface UserAlbumRepository extends JpaRepository<UserAlbum, Long> {
     int countByUser(User user);
 
     UserAlbum findByUserAndAlbum(User user, Album album);
+
+    List<UserAlbum> findAllByAlbum(Album album);
+
+    List<UserAlbum> findAllByAlbumAndUser(Album album, User user);
 }
