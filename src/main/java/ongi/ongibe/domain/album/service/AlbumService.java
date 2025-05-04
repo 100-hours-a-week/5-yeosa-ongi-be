@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
@@ -316,5 +318,26 @@ public class AlbumService {
                 "ALBUM_OWNERSHIP_TRANSFER_SUCCESS", "앨범 소유권이 정상적으로 이전되었습니다.",
                 new AlbumOwnerTransferResponseDTO(oldOwner.getId(), newUser.getId())
         );
+    }
+
+    @Transactional(readOnly = true)
+    public BaseApiResponse<AlbumMemberResponseDTO> getAlbumMembers(Long albumId) {
+        User user = securityUtil.getCurrentUser();
+        Album album = getAlbumIfMember(albumId);
+        List<UserAlbum> members = userAlbumRepository.findAllByAlbumAndUser(album, user);
+
+        List<AlbumMemberResponseDTO.UserInfo> userInfos = members.stream()
+                .map(ua -> new AlbumMemberResponseDTO.UserInfo(
+                        ua.getUser().getId(),
+                        ua.getUser().getNickname(),
+                        ua.getRole(),
+                        ua.getUser().getProfileImage()
+                ))
+                .toList();
+
+        return BaseApiResponse.success(
+                "ALBUM_MEMBER_LIST_SUCCESS",
+                "공동작업자 목록 조회 성공",
+                new AlbumMemberResponseDTO(userInfos));
     }
 }
