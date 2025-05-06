@@ -1,20 +1,21 @@
 package ongi.ongibe.domain.album.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 import ongi.ongibe.domain.album.entity.Album;
 
 public record MonthlyAlbumResponseDTO(
-        List<AlbumInfo> albumInfo,
-        String nextYearMonth,
-        boolean hasNext
+        @Schema(description = "앨범 목록") List<AlbumInfo> albumInfo,
+        @Schema(description = "다음 페이지 연월") String nextYearMonth,
+        @Schema(description = "다음 페이지 존재 여부") boolean hasNext
 ) {
     public record AlbumInfo(
-            Long albumId,
-            String albumName,
-            String thumbnailPictureURL,
-            LocalDateTime createdAt,
-            List<String> memberProfileImageURL
+            @Schema(description = "앨범 ID") Long albumId,
+            @Schema(description = "앨범 이름") String albumName,
+            @Schema(description = "썸네일 사진 URL") String thumbnailPictureURL,
+            @Schema(description = "앨범 생성 일시") LocalDateTime createdAt,
+            @Schema(description = "앨범 멤버들의 프로필 이미지 URL 목록") List<String> memberProfileImageURL
     ) {
         public static AlbumInfo of(Album album) {
             return new AlbumInfo(

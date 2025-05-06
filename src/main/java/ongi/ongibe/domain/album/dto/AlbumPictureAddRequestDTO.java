@@ -1,7 +1,8 @@
 package ongi.ongibe.domain.album.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record AlbumPictureAddRequestDTO(
-        List<String> pictureUrls
+        @Schema(description = "사진 url") List<String> pictureUrls
 ) { }
