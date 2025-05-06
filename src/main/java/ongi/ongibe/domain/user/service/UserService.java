@@ -12,11 +12,11 @@ import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
-import ongi.ongibe.domain.user.dto.UserImageStatResponseDTO;
+import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
+import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.DateUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +51,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public BaseApiResponse<UserImageStatResponseDTO> getUserPlaceStat(String yearMonth){
+    public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
         YearMonth ym = YearMonth.parse(yearMonth);
         LocalDate startMonth = ym.atDay(1) ;
@@ -69,10 +69,15 @@ public class UserService {
             dailyCountMap.put(date.toString(), count);
         }
 
-        UserImageStatResponseDTO response = new UserImageStatResponseDTO(yearMonth, dailyCountMap);
+        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, dailyCountMap);
         return BaseApiResponse.success(
                 "USER_IMAGE_STATISTICS_SUCCESS",
                 "월간 일별 사진 업로드 수 조회 성공",
                 response);
+    }
+
+    @Transactional(readOnly = true)
+    public BaseApiResponse<UserPlaceStatResponseDTO> getUserPlaceStat(String yearMonth){
+        User
     }
 }
