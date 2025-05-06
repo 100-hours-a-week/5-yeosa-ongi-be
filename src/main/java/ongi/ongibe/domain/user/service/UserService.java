@@ -115,11 +115,10 @@ public class UserService {
                 tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
             }
         }
-        List<String> tags = tagMap.entrySet().stream()
+        return tagMap.entrySet().stream()
                 .sorted(Entry.<String, Integer>comparingByValue().reversed())
                 .limit(6)
                 .map(Entry::getKey)
                 .toList();
-        return tags;
     }
 }
