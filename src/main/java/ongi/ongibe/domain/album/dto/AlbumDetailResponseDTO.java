@@ -1,21 +1,22 @@
 package ongi.ongibe.domain.album.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record AlbumDetailResponseDTO(
-        String title,
-        List<PictureInfo> picture
+        @Schema(description = "앨범 제목") String title,
+        @Schema(description = "사진 정보 목록") List<PictureInfo> picture
 ) {
     public record PictureInfo(
-            Long pictureId,
-            String pictureURL,
-            double latitude,
-            double longitude,
-            String tag,
-            float qualityScore,
-            boolean isDuplicated,
-            boolean isShaky,
-            LocalDateTime takeAt
+            @Schema(description = "사진 ID") Long pictureId,
+            @Schema(description = "사진 URL") String pictureURL,
+            @Schema(description = "위도") double latitude,
+            @Schema(description = "경도") double longitude,
+            @Schema(description = "태그") String tag,
+            @Schema(description = "품질 점수") float qualityScore,
+            @Schema(description = "중복 여부") boolean isDuplicated,
+            @Schema(description = "흔들림 여부") boolean isShaky,
+            @Schema(description = "촬영 시각") LocalDateTime takeAt
     ) {}
 }
