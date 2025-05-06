@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -18,6 +19,7 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
+import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
@@ -120,5 +122,35 @@ public class UserService {
                 .limit(6)
                 .map(Entry::getKey)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BaseApiResponse<UserTagStatResponseDTO> getUserTagStat(String yearMonth){
+        User user = securityUtil.getCurrentUser();
+        YearMonth ym = YearMonth.parse(yearMonth);
+        LocalDateTime startDate = ym.atDay(1).atStartOfDay();
+        LocalDateTime endDate = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        List<Picture> pictures = pictureRepository.findAllByUserAndCreatedAtBetween(user, startDate, endDate);
+        String maxTag = getMaxTag(pictures);
+        if (maxTag == null){
+            return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공",
+                    new UserTagStatResponseDTO(null, List.of()));
+        }
+        List<String> pictureUrls = pictures.stream()
+                .filter(p -> p.getTag().equals(maxTag))
+                .map(Picture::getPictureURL)
+                .toList();
+        UserTagStatResponseDTO response = new UserTagStatResponseDTO(maxTag, pictureUrls);
+        return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공", response);
+    }
+
+    private static String getMaxTag(List<Picture> pictures) {
+        Map<String, Long> tagCount = pictures.stream()
+                .filter(p->p.getTag() != null && !p.getTag().isBlank())
+                .collect(Collectors.groupingBy(Picture::getTag, Collectors.counting()));
+        return tagCount.entrySet().stream()
+                .max(Entry.comparingByValue())
+                .map(Entry::getKey)
+                .orElse(null);
     }
 }
