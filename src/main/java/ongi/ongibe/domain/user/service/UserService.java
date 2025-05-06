@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -138,7 +139,9 @@ public class UserService {
         }
         List<String> pictureUrls = pictures.stream()
                 .filter(p -> p.getTag().equals(maxTag))
+                .sorted(Comparator.comparing(Picture::getQualityScore).reversed())
                 .map(Picture::getPictureURL)
+                .limit(4)
                 .toList();
         UserTagStatResponseDTO response = new UserTagStatResponseDTO(maxTag, pictureUrls);
         return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공", response);
