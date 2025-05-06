@@ -2,21 +2,27 @@ package ongi.ongibe.domain.user.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
+import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +84,42 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPlaceStatResponseDTO> getUserPlaceStat(String yearMonth){
-        User
+        User user = securityUtil.getCurrentUser();
+        YearMonth ym = YearMonth.parse(yearMonth);
+        LocalDateTime startDate = ym.atDay(1).atStartOfDay();
+        LocalDateTime endDate = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        List<Object[]> topPlace = pictureRepository.mostVisitPlace(
+                user.getId(), startDate, endDate, PageRequest.of(0,1));
+        UserPlaceStatResponseDTO response;
+        if (topPlace.isEmpty()){
+            response = new UserPlaceStatResponseDTO(null, null, null, List.of());
+            return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
+        }
+        String city = topPlace.getFirst()[0].toString();
+        String district = topPlace.getFirst()[1].toString();
+        String town = topPlace.getFirst()[2].toString();
+
+        List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
+        response = new UserPlaceStatResponseDTO(city, district, town, tags);
+        return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
+    }
+
+    private List<String> getTopTags(User user, String city, String district, String town,
+            LocalDateTime startDate, LocalDateTime endDate) {
+        List<Picture> pictures = pictureRepository.findByUserAndPlaceAndCreatedAtBetween(
+                user, city, district, town, startDate, endDate);
+        Map<String, Integer> tagMap = new HashMap<>();
+        for (Picture picture : pictures){
+            String tag = picture.getTag();
+            if (tag != null && !tag.isBlank()){
+                tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
+            }
+        }
+        List<String> tags = tagMap.entrySet().stream()
+                .sorted(Entry.<String, Integer>comparingByValue().reversed())
+                .limit(6)
+                .map(Entry::getKey)
+                .toList();
+        return tags;
     }
 }
