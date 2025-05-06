@@ -1,4 +1,4 @@
-package ongi.ongibe.swagger;
+package ongi.ongibe.swagger.album;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import ongi.ongibe.common.BaseApiResponse;
