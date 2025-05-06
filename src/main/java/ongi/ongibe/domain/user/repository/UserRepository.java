@@ -13,16 +13,4 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByProviderId(String providerId);
-
-    @Query("""
-        select DATE(p.createdAt), count(p)
-        from Picture p
-        where p.user.id = :userId
-        and p.createdAt between :startDate and :endDate
-        group by DATE(p.createdAt)
-        order by DATE(p.createdAt)
-    """)
-    List<Object[]> countPicturesByDate(@Param("userId") Long userId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
 }
