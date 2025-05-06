@@ -114,7 +114,7 @@ public class UserService {
         Map<String, Integer> tagMap = new HashMap<>();
         for (Picture picture : pictures){
             String tag = picture.getTag();
-            if (tag != null && !tag.isBlank()){
+            if (tag != null && !tag.isBlank() && !tag.equals("기타")){
                 tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
             }
         }
@@ -149,7 +149,7 @@ public class UserService {
 
     private static String getMaxTag(List<Picture> pictures) {
         Map<String, Long> tagCount = pictures.stream()
-                .filter(p->p.getTag() != null && !p.getTag().isBlank())
+                .filter(p->p.getTag() != null && !p.getTag().isBlank() && !p.getTag().equals("기타"))
                 .collect(Collectors.groupingBy(Picture::getTag, Collectors.counting()));
         return tagCount.entrySet().stream()
                 .max(Entry.comparingByValue())
