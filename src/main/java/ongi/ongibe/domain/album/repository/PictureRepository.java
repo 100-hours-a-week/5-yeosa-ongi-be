@@ -94,4 +94,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
             @Param("town") String town,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
+
+    List<Picture> findAllByUserAndCreatedAtBetween(User user, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 }
