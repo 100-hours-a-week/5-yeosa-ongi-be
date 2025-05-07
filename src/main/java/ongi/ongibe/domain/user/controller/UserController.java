@@ -25,6 +25,7 @@ import ongi.ongibe.swagger.user.BaseApiResponse_UserTotalStateResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,7 +55,7 @@ public class UserController {
             @Parameter(name = "userId", description = "유저 아이디", required = true)
     })
     @ApiResponse(responseCode = "200", description = "유저 정보 수정 성공", content = @Content(schema = @Schema(implementation = BaseApiResponse_UserInfoResponse.class)))
-    @GetMapping("/{userId}")
+    @PutMapping("/{userId}")
     public ResponseEntity<BaseApiResponse<UserInfoResponseDTO>> updateUserInfo(@PathVariable Long userId, @RequestBody
             UserUpdateRequestDTO request) {
         BaseApiResponse<UserInfoResponseDTO> response = userService.updateUserInfo(userId, request);
