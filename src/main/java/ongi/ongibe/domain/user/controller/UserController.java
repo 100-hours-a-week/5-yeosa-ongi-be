@@ -9,17 +9,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO.UserInfo;
+import ongi.ongibe.domain.user.dto.UserInfoResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.service.UserService;
+import ongi.ongibe.swagger.user.BaseApiResponse_UserInfoResponse;
 import ongi.ongibe.swagger.user.BaseApiResponse_UserPictureStatResponse;
 import ongi.ongibe.swagger.user.BaseApiResponse_UserPlaceStatResponse;
 import ongi.ongibe.swagger.user.BaseApiResponse_UserTagStatResponse;
 import ongi.ongibe.swagger.user.BaseApiResponse_UserTotalStateResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +35,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+
+    @Operation(summary = "유저 정보 조회", description = "본인 정보를 조회합니다.")
+    @Parameters({
+            @Parameter(name = "userId", description = "유저 아이디", required = true)
+    })
+    @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공", content = @Content(schema = @Schema(implementation = BaseApiResponse_UserInfoResponse.class)))
+    @GetMapping("/{userId}")
+    public ResponseEntity<BaseApiResponse<UserInfoResponseDTO>> getUserInfo(@PathVariable Long userId) {
+        BaseApiResponse<UserInfoResponseDTO> response = userService.getUserInfo(userId);
+        return ResponseEntity.ok(response);
+    }
 
     @Operation(summary = "유저 전체 통계 조회", description = "유저가 올린 사진의 위치, 앨범 수, 장소 수를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "유저 통계 조회 성공", content = @Content(schema = @Schema(implementation = BaseApiResponse_UserTotalStateResponse.class)))
