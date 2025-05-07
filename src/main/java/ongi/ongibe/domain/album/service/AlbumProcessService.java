@@ -2,6 +2,7 @@ package ongi.ongibe.domain.album.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.service.AiAlbumService;
 import ongi.ongibe.domain.album.dto.KakaoAddressDTO;
 import ongi.ongibe.domain.album.entity.Album;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AlbumProcessService {
 
     private final AlbumRepository albumRepository;
@@ -42,18 +44,18 @@ public class AlbumProcessService {
                 .filter(p -> p.getAlbum().getId().equals(albumId))
                 .toList();
 
-        if (!isTestMode) {
-            for (Picture p : pictures) {
-                var gps = s3MetadataService.extractGPS(p.getPictureURL());
-                p.setLatitude(gps.lat());
-                p.setLongitude(gps.lon());
-
+        for (Picture p : pictures) {
+            var gps = s3MetadataService.extractGPS(p.getPictureURL());
+            p.setLatitude(gps.lat());
+            p.setLongitude(gps.lon());
+            log.info("lat: {}, lon: {}", gps.lat(), gps.lon());
+            if (gps.lat() != null && gps.lon() != null) {
                 var address = kakaoMapService.reverseGeocode(gps.lat(), gps.lon());
                 Place place = placeService.findOrCreate(address);
                 p.setPlace(place);
             }
-            pictureRepository.saveAll(pictures);
         }
+        pictureRepository.saveAll(pictures);
 
         aiAlbumService.process(pictures);
     }
