@@ -31,8 +31,6 @@ public class AlbumProcessService {
     private final PlaceService placeService;
     private final AiAlbumService aiAlbumService;
 
-    @Value("${album.process.test-mode:false}")
-    private boolean isTestMode;
 
     @Async("asyncExecutor")
     @Transactional
