@@ -18,6 +18,7 @@ import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.place.entity.Place;
+import ongi.ongibe.domain.user.dto.UserInfoResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
@@ -26,8 +27,10 @@ import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -155,5 +158,15 @@ public class UserService {
                 .max(Entry.comparingByValue())
                 .map(Entry::getKey)
                 .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public BaseApiResponse<UserInfoResponseDTO> getUserInfo(Long userId){
+        User user = securityUtil.getCurrentUser();
+        if (!userId.equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "요청하는 유저가 본인이 아닙니다.");
+        }
+        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
     }
 }
