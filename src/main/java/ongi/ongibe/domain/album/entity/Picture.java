@@ -60,8 +60,8 @@ public class Picture {
     private float qualityScore;
 
     private LocalDateTime takeAt;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
 
     @CreationTimestamp
     @Column(updatable = false)
