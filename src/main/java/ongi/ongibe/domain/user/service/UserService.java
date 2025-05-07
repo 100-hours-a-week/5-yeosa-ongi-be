@@ -13,11 +13,11 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
-import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.dto.UserInfoResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
@@ -26,7 +26,6 @@ import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,11 +161,25 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserInfoResponseDTO> getUserInfo(Long userId){
+        User user = getUserIfCorrectId(userId);
+        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
+    }
+
+    private User getUserIfCorrectId(Long userId) {
         User user = securityUtil.getCurrentUser();
         if (!userId.equals(user.getId())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "요청하는 유저가 본인이 아닙니다.");
         }
+        return user;
+    }
+
+    @Transactional
+    public BaseApiResponse<UserInfoResponseDTO> updateUserInfo(Long userId, UserUpdateRequestDTO request){
+        User user = getUserIfCorrectId(userId);
+        user.setNickname(request.nickname());
+        user.setProfileImage(request.profileImageURL());
         UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
-        return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
+        return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
 }

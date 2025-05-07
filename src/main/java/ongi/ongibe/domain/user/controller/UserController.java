@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO.UserInfo;
+import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
 import ongi.ongibe.domain.user.dto.UserInfoResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
@@ -24,6 +25,7 @@ import ongi.ongibe.swagger.user.BaseApiResponse_UserTotalStateResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +46,18 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<BaseApiResponse<UserInfoResponseDTO>> getUserInfo(@PathVariable Long userId) {
         BaseApiResponse<UserInfoResponseDTO> response = userService.getUserInfo(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "유저 정보 수정", description = "본인 정보를 수정합니다.")
+    @Parameters({
+            @Parameter(name = "userId", description = "유저 아이디", required = true)
+    })
+    @ApiResponse(responseCode = "200", description = "유저 정보 수정 성공", content = @Content(schema = @Schema(implementation = BaseApiResponse_UserInfoResponse.class)))
+    @GetMapping("/{userId}")
+    public ResponseEntity<BaseApiResponse<UserInfoResponseDTO>> updateUserInfo(@PathVariable Long userId, @RequestBody
+            UserUpdateRequestDTO request) {
+        BaseApiResponse<UserInfoResponseDTO> response = userService.updateUserInfo(userId, request);
         return ResponseEntity.ok(response);
     }
 
