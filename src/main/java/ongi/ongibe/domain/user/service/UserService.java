@@ -65,8 +65,8 @@ public class UserService {
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
         YearMonth ym = YearMonth.parse(yearMonth);
-        LocalDate startMonth = ym.atDay(1) ;
-        LocalDate endMonth = ym.atEndOfMonth();
+        LocalDateTime startMonth = ym.atDay(1).atStartOfDay();
+        LocalDateTime endMonth = ym.atEndOfMonth().atTime(LocalTime.MAX);
         List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
         Map<String, Integer> dailyCountMap = new LinkedHashMap<>();
         for (int day = 1; day<=ym.lengthOfMonth(); day++){
