@@ -9,7 +9,7 @@ public class DateUtil {
 
     private static final DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
 
-    private static YearMonth parseOrNow(String yearMonth){
+    public static YearMonth parseOrNow(String yearMonth){
         if (yearMonth == null || yearMonth.isBlank()){
             return YearMonth.now();
         }

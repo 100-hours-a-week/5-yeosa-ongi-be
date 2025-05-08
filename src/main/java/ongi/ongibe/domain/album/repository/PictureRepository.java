@@ -63,8 +63,8 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
         order by DATE(p.createdAt)
     """)
     List<Object[]> countPicturesByDate(@Param("userId") Long userId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     @Query("""
         select p.place.city, p.place.district, p.place.town
@@ -75,8 +75,8 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
         order by count(p) desc
     """)
     List<Object[]> mostVisitPlace(@Param("userId") Long userId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
             Pageable pageable);
 
     @Query("""
