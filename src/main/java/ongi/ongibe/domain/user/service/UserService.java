@@ -25,6 +25,7 @@ import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.global.security.util.SecurityUtil;
+import ongi.ongibe.util.DateUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -64,9 +65,9 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        YearMonth ym = YearMonth.parse(yearMonth);
-        LocalDateTime startMonth = ym.atDay(1).atStartOfDay();
-        LocalDateTime endMonth = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        YearMonth ym = DateUtil.parseOrNow(yearMonth);
+        LocalDateTime startMonth = DateUtil.getStartOfMonth(yearMonth);
+        LocalDateTime endMonth = DateUtil.getEndOfMonth(yearMonth);
         List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
         Map<String, Integer> dailyCountMap = new LinkedHashMap<>();
         for (int day = 1; day<=ym.lengthOfMonth(); day++){
@@ -90,9 +91,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPlaceStatResponseDTO> getUserPlaceStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        YearMonth ym = YearMonth.parse(yearMonth);
-        LocalDateTime startDate = ym.atDay(1).atStartOfDay();
-        LocalDateTime endDate = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
+        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
         List<Object[]> topPlace = pictureRepository.mostVisitPlace(
                 user.getId(), startDate, endDate, PageRequest.of(0,1));
         UserPlaceStatResponseDTO response;
@@ -130,9 +130,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTagStatResponseDTO> getUserTagStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        YearMonth ym = YearMonth.parse(yearMonth);
-        LocalDateTime startDate = ym.atDay(1).atStartOfDay();
-        LocalDateTime endDate = ym.atEndOfMonth().atTime(LocalTime.MAX);
+        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
+        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
         List<Picture> pictures = pictureRepository.findAllByUserAndCreatedAtBetween(user, startDate, endDate);
         String maxTag = getMaxTag(pictures);
         if (maxTag == null){
