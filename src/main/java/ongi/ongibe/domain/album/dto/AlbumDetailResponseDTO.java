@@ -11,8 +11,8 @@ public record AlbumDetailResponseDTO(
     public record PictureInfo(
             @Schema(description = "사진 ID") Long pictureId,
             @Schema(description = "사진 URL") String pictureURL,
-            @Schema(description = "위도") double latitude,
-            @Schema(description = "경도") double longitude,
+            @Schema(description = "위도") Double latitude,
+            @Schema(description = "경도") Double longitude,
             @Schema(description = "태그") String tag,
             @Schema(description = "품질 점수") float qualityScore,
             @Schema(description = "중복 여부") boolean isDuplicated,
