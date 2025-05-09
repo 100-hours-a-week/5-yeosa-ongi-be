@@ -9,7 +9,7 @@ public record UserTotalStateResponseDTO(
         @Schema(description = "총 방문 장소 수") int placeCount
 ) {
     public record PictureCoordinate(
-            @Schema(description = "위도") double latitude,
-            @Schema(description = "경도") double longitude
+            @Schema(description = "위도") Double latitude,
+            @Schema(description = "경도") Double longitude
     ) {}
 }
