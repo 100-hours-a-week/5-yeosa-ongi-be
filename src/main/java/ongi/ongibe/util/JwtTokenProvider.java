@@ -65,9 +65,22 @@ public class JwtTokenProvider {
                     .parseSignedClaims(token)
                     .getPayload();
             return Long.parseLong(claims.getSubject());
-        } catch (ExpiredJwtException | MalformedJwtException | SecurityException | IllegalArgumentException e) {
-            log.warn("토큰 파싱 실패: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+
+        } catch (ExpiredJwtException e) {
+            log.warn("토큰 만료: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "액세스 토큰이 만료되었습니다.");
+
+        } catch (MalformedJwtException e) {
+            log.warn("잘못된 형식의 JWT: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 토큰이 잘못되었습니다.");
+
+        } catch (SecurityException e) {
+            log.warn("JWT 서명 검증 실패: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 JWT 서명입니다.");
+
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT 파싱 시 잘못된 인자: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 파싱에 실패했습니다.");
         }
     }
 
