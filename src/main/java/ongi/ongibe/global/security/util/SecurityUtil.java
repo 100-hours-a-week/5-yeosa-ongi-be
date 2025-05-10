@@ -3,6 +3,7 @@ package ongi.ongibe.global.security.util;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.exception.SecurityUtilException;
 import ongi.ongibe.global.security.config.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ public class SecurityUtil {
     public Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails userDetails)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+            throw new SecurityUtilException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
         }
         return userDetails.getUserId();
     }
@@ -27,7 +28,7 @@ public class SecurityUtil {
     public User getCurrentUser() {
         Long userId = getCurrentUserId();
         return userRepository.findById(userId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다.")
+                () -> new SecurityUtilException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다.")
         );
     }
 }
