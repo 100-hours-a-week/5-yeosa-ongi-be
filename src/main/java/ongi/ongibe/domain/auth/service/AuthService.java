@@ -21,6 +21,7 @@ import ongi.ongibe.domain.auth.repository.RefreshTokenRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.exception.InvalidTokenException;
+import ongi.ongibe.global.exception.TokenNotFoundException;
 import ongi.ongibe.global.exception.TokenParsingException;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -195,7 +196,7 @@ public class AuthService {
 
     private String extractAccessToken(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new InvalidTokenException("AccessToken이 없습니다.");
+            throw new TokenNotFoundException("AccessToken이 없습니다.");
         }
         return authorizationHeader.substring(7);
     }

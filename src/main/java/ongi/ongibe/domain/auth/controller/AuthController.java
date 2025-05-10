@@ -16,6 +16,7 @@ import ongi.ongibe.domain.auth.dto.RefreshAccessTokenResponseDTO;
 import ongi.ongibe.domain.auth.dto.RefreshTokenRequestDTO;
 import ongi.ongibe.domain.auth.service.AuthService;
 import ongi.ongibe.global.exception.InvalidTokenException;
+import ongi.ongibe.global.exception.TokenNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,7 +100,7 @@ public class AuthController {
             @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
 
         if (refreshTokenRequest.refreshToken() == null) {
-            throw new InvalidTokenException("refresh token이 없습니다.");
+            throw new TokenNotFoundException("refresh token이 없습니다.");
         }
 
         authService.logout(authorizationHeader, refreshTokenRequest.refreshToken());
