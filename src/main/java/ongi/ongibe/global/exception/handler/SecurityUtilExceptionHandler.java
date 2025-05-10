@@ -23,7 +23,7 @@ public class SecurityUtilExceptionHandler {
         return ResponseEntity
                 .status(e.getStatusCode())
                 .body(
-                        new BaseApiResponse<>(code, e.getMessage(), null)
+                        new BaseApiResponse<>(code, e.getReason(), null)
                 );
     }
 
