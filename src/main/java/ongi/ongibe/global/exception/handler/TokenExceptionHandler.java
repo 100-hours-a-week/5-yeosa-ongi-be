@@ -1,10 +1,35 @@
 package ongi.ongibe.global.exception.handler;
 
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.global.exception.InvalidTokenException;
+import ongi.ongibe.global.exception.TokenParsingException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @Slf4j
 public class TokenExceptionHandler {
 
+    @ExceptionHandler(TokenParsingException.class)
+    public ResponseEntity<BaseApiResponse<Void>> handleTokenParsingException(TokenParsingException e) {
+        log.warn("토큰 파싱 에러 : {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(
+                        new BaseApiResponse<>("KAKAO_TOKEN_ERROR", e.getMessage(), null)
+                );
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<BaseApiResponse<Void>> handleInvalidTokenException(InvalidTokenException e) {
+        log.warn("토큰 검증 에러 : {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        new BaseApiResponse<>("TOKEN_INVALID", e.getMessage(), null)
+                );
+    }
 }
