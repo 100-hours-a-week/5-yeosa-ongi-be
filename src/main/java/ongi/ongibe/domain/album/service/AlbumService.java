@@ -21,6 +21,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
+import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.place.entity.Place;
@@ -52,7 +53,7 @@ public class AlbumService {
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
 
-    private static final String INVITE_LINK_PREFIX = "localhost:8080/invite?token=";
+    private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -216,7 +217,7 @@ public class AlbumService {
                 .toList();
 
         if (pictures.size() != pictureIds.size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제할 수 없는 사진이 포함되어 있습니다.");
+            throw new AlbumException(HttpStatus.BAD_REQUEST, "삭제할 수 없는 사진이 포함되어 있습니다.");
         }
 
         for (Picture p : pictures) {
@@ -237,7 +238,7 @@ public class AlbumService {
     private void checkAddPictureSize(int newSize, int previousSize) {
         if (newSize > 100) {
             int remaining = 100 - previousSize;
-            throw new ResponseStatusException(
+            throw new AlbumException(
                     HttpStatus.BAD_REQUEST,
                     "같은 앨범에 사진은 100장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
             );
@@ -272,7 +273,7 @@ public class AlbumService {
         UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
                 album);
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "소유자만 앨범 이름을 변경할 수 있습니다.");
+            throw new AlbumException(HttpStatus.FORBIDDEN, "소유자만 앨범 이름을 변경할 수 있습니다.");
         }
     }
 
@@ -283,7 +284,7 @@ public class AlbumService {
 
         String token = jwtTokenProvider.generateInviteToken(albumId);
         redisInviteTokenRepository.save(token, albumId);
-        return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", token);
+        return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", INVITE_LINK_PREFIX + token);
     }
 
     @Transactional
@@ -298,19 +299,19 @@ public class AlbumService {
                     album.getName());
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "발급되지 않은 초대코드입니다.");
+        throw new AlbumException(HttpStatus.UNAUTHORIZED, "발급되지 않은 초대코드입니다.");
     }
 
     @Transactional
     public BaseApiResponse<AlbumOwnerTransferResponseDTO> transferAlbumOwner(Long albumId, Long newOwnerId){
         User oldOwner = securityUtil.getCurrentUser();
         User newUser = userRepository.findById(newOwnerId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이양할 유저 정보를 찾을 수 없습니다.")
+                () -> new AlbumException(HttpStatus.NOT_FOUND, "이양할 유저 정보를 찾을 수 없습니다.")
         );
         UserAlbum oldUserAlbum = userAlbumRepository.findByUserAndAlbum(oldOwner, getAlbumIfMember(albumId));
         UserAlbum newUserAlbum = userAlbumRepository.findByUserAndAlbum(newUser, getAlbumIfMember(albumId));
         if (!oldUserAlbum.getRole().equals(UserAlbumRole.OWNER)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "현재 OWNER만 소유권을 위임할 수 있습니다.");
+            throw new AlbumException(HttpStatus.FORBIDDEN, "현재 OWNER만 소유권을 위임할 수 있습니다.");
         }
         oldUserAlbum.setRole(UserAlbumRole.NORMAL);
         newUserAlbum.setRole(UserAlbumRole.OWNER);

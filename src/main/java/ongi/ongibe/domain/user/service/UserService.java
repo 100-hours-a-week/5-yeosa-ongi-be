@@ -24,6 +24,7 @@ import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.domain.user.exception.UserException;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import org.springframework.data.domain.PageRequest;
@@ -168,7 +169,7 @@ public class UserService {
     private User getUserIfCorrectId(Long userId) {
         User user = securityUtil.getCurrentUser();
         if (!userId.equals(user.getId())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "요청하는 유저가 본인이 아닙니다.");
+            throw new UserException(HttpStatus.BAD_REQUEST, "요청하는 유저가 본인이 아닙니다.");
         }
         return user;
     }
