@@ -32,7 +32,7 @@ public class PresignedUrlService {
                 .map(picture -> {
                     String key = picture.pictureName();
 
-                    PutObjectRequest putObjectRequest = getObjectRequest(picture, key);
+                    PutObjectRequest putObjectRequest = getObjectRequest(picture.pictureType(), key);
 
                     PutObjectPresignRequest presignRequest = getPresignRequest(putObjectRequest);
 
@@ -61,11 +61,11 @@ public class PresignedUrlService {
                 .build();
     }
 
-    private PutObjectRequest getObjectRequest(PictureInfo picture, String key) {
+    private PutObjectRequest getObjectRequest(String pictureType, String key) {
         return PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                .contentType(picture.pictureType())
+                .contentType(pictureType)
                 .build();
     }
 }
