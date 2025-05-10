@@ -21,6 +21,7 @@ import ongi.ongibe.domain.auth.repository.RefreshTokenRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.exception.InvalidTokenException;
+import ongi.ongibe.global.exception.TokenParsingException;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -133,7 +134,7 @@ public class AuthService {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(response.getBody(), KakaoTokenResponseDTO.class);
         } catch (Exception e) {
-            throw new RuntimeException("카카오 토큰 응답 파싱 실패", e);
+            throw new TokenParsingException("카카오 토큰 응답 파싱 실패", e);
         }
     }
 
@@ -145,7 +146,7 @@ public class AuthService {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(payloadJson, KakaoIdTokenPayloadDTO.class);
         } catch (Exception e) {
-            throw new RuntimeException("ID 토큰 파싱 실패", e);
+            throw new TokenParsingException("ID 토큰 파싱 실패", e);
         }
     }
 
