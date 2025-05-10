@@ -99,7 +99,7 @@ public class AuthController {
             @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
 
         if (refreshTokenRequest.refreshToken() == null) {
-            throw new InvalidTokenException("refresh token이 누락되었습니다.");
+            throw new InvalidTokenException("refresh token이 없습니다.");
         }
 
         authService.logout(authorizationHeader, refreshTokenRequest.refreshToken());
