@@ -113,6 +113,8 @@ public class AuthService {
     }
 
     private KakaoTokenResponseDTO getToken(String code) {
+        log.debug("카카오 토큰 요청 시작: code = {}", code);
+        log.debug("사용할 redirect_uri = {}", redirectUri);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -124,7 +126,6 @@ public class AuthService {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(
                 KAKAO_TOKEN_URL,
                 HttpMethod.POST,
