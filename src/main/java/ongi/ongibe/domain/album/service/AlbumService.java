@@ -151,6 +151,7 @@ public class AlbumService {
         Album album = getEmptyAlbum(albumName);
         List<Picture> pictures = createPictures(pictureUrls, album, user);
         album.setPictures(pictures);
+        album.setThumbnailPicture(pictures.getFirst());
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
