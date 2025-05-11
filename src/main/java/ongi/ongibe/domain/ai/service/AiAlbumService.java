@@ -23,7 +23,7 @@ public class AiAlbumService {
                         .map(Picture::getPictureURL)
                         .toList();
 
-        Long albumId = pictures.get(0).getAlbum().getId();
+        Long albumId = pictures.getFirst().getAlbum().getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, urls.size());
 
         // 1. 임베딩 요청

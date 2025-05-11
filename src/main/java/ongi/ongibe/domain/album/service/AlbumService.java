@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
@@ -144,7 +143,7 @@ public class AlbumService {
     }
 
     @Transactional
-    public Album createAlbum(String albumName, List<String> pictureUrls) {
+    public void createAlbum(String albumName, List<String> pictureUrls) {
         if (pictureUrls.size() > 100){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
         }
@@ -152,14 +151,14 @@ public class AlbumService {
         Album album = getEmptyAlbum(albumName);
         List<Picture> pictures = createPictures(pictureUrls, album, user);
         album.setPictures(pictures);
+        album.setThumbnailPicture(pictures.getFirst());
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
-        return album;
     }
 
     @Transactional
-    public Album addPictures(Long albumId, List<String> pictureUrls) {
+    public void addPictures(Long albumId, List<String> pictureUrls) {
         Album album = getAlbumIfMember(albumId);
 
         List<Picture> existingPictures = album.getPictures();
@@ -179,19 +178,18 @@ public class AlbumService {
 
         albumRepository.save(album);
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureUrls));
-        return album;
     }
 
     @Transactional
-    public Album updateAlbumName(Long albumId, String albumName) {
+    public void updateAlbumName(Long albumId, String albumName) {
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
         album.setName(albumName);
-        return albumRepository.save(album);
+        albumRepository.save(album);
     }
 
     @Transactional
-    public List<Picture> updatePicture(Long albumId, List<Long> pictureIds){
+    public void updatePicture(Long albumId, List<Long> pictureIds){
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
 
@@ -204,7 +202,6 @@ public class AlbumService {
                 .toList();
         pictureRepository.markPicturesDuplicatedAsStable(urls);
         pictureRepository.markPicturesShakyAsStable(urls);
-        return pictures;
     }
 
     @Transactional
