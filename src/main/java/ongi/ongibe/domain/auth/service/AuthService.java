@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -115,6 +116,7 @@ public class AuthService {
     private KakaoTokenResponseDTO getToken(String code) {
         log.debug("카카오 토큰 요청 시작: code = {}", code);
         log.debug("사용할 redirect_uri = {}", redirectUri);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -126,19 +128,25 @@ public class AuthService {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(
-                KAKAO_TOKEN_URL,
-                HttpMethod.POST,
-                request,
-                String.class
-        );
         try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    KAKAO_TOKEN_URL,
+                    HttpMethod.POST,
+                    request,
+                    String.class
+            );
+
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(response.getBody(), KakaoTokenResponseDTO.class);
+
+        } catch (HttpClientErrorException e) {
+            log.error("카카오 토큰 요청 실패: status = {}, body = {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kakao 인증 실패: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new TokenParsingException("카카오 토큰 응답 파싱 실패", e);
         }
     }
+
 
     private KakaoIdTokenPayloadDTO parseIdToken(String idToken) {
         try {
