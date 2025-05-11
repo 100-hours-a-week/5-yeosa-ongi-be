@@ -122,7 +122,15 @@ public class AiClient {
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
         HttpEntity<T> request = new HttpEntity<>(body, headers);
-        return restTemplate.postForObject(url, request, responseType);
+        try {
+            log.info("[AI] 요청 보내는 중: {} with body = {}", url, body);
+            R response = restTemplate.postForObject(url, request, responseType);
+            log.info("[AI] 응답 수신: {} => {}", url, response);
+            return response;
+        } catch (Exception e) {
+            log.error("[AI] 요청 실패: {} with body = {}", url, body, e);
+            throw e;
+        }
     }
 
 }
