@@ -1,10 +1,13 @@
 package ongi.ongibe.domain.auth.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import ongi.ongibe.global.exception.TokenNotFoundException;
 import ongi.ongibe.global.exception.TokenParsingException;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -43,13 +47,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class AuthService {
 
-    private final RestTemplate restTemplate;
     @Value("${spring.kakao.auth.client}")
     private String clientId;
 
     @Value("${spring.kakao.auth.redirect}")
     private String redirectUri;
 
+    private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final OAuthTokenRepository oauthTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -135,17 +139,35 @@ public class AuthService {
                     request,
                     String.class
             );
+            log.info("응답 상태 코드: {}", response.getStatusCode());
+            log.info("응답 헤더: {}", response.getHeaders());
+
+            log.info("ResponseEntity 수신 완료");
+
+            String responseBody = response.getBody();
+
+            if (responseBody == null) {
+                log.error("응답 바디가 null입니다");
+                throw new TokenParsingException("응답 바디가 null입니다");
+            }
+
+            log.info("Kakao 응답 원문: {}", responseBody);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(response.getBody(), KakaoTokenResponseDTO.class);
+            Map<String, Object> kakaoResponse = objectMapper.readValue(responseBody, new TypeReference<>() {});
+            log.debug("응답 map: {}", kakaoResponse);
+
+            return objectMapper.readValue(responseBody, KakaoTokenResponseDTO.class);
 
         } catch (HttpClientErrorException e) {
             log.error("카카오 토큰 요청 실패: status = {}, body = {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kakao 인증 실패: " + e.getResponseBodyAsString());
         } catch (Exception e) {
+            log.error("예상치 못한 예외 발생", e);
             throw new TokenParsingException("카카오 토큰 응답 파싱 실패", e);
         }
     }
+
 
 
     private KakaoIdTokenPayloadDTO parseIdToken(String idToken) {
