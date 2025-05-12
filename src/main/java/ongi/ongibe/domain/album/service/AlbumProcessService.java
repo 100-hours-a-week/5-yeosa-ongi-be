@@ -33,8 +33,18 @@ public class AlbumProcessService {
 
 
     @Async("asyncExecutor")
-    @Transactional
     public void processAlbumAsync(Long albumId, List<String> pictureUrls) {
+        List<Picture> pictures = geoAndKakaoAndSave(albumId, pictureUrls);
+        try{
+            aiAlbumService.process(pictures);
+        } catch (Exception e) {
+            log.error("[AI 처리 실패] pictureUrls: {}, message: {}", pictureUrls, e.getMessage(), e);
+        }
+
+    }
+
+    @Transactional
+    public List<Picture> geoAndKakaoAndSave(Long albumId, List<String> pictureUrls) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
 
@@ -43,18 +53,18 @@ public class AlbumProcessService {
                 .toList();
 
         for (Picture p : pictures) {
-            var gps = s3MetadataService.extractGPS(p.getPictureURL());
-            p.setLatitude(gps.lat());
-            p.setLongitude(gps.lon());
-            log.info("lat: {}, lon: {}", gps.lat(), gps.lon());
-            if (gps.lat() != null && gps.lon() != null) {
-                var address = kakaoMapService.reverseGeocode(gps.lat(), gps.lon());
+//            var gps = s3MetadataService.extractGPS(p.getPictureURL());
+//            p.setLatitude(gps.lat());
+//            p.setLongitude(gps.lon());
+//            log.info("lat: {}, lon: {}", gps.lat(), gps.lon());
+            Double longitude = p.getLongitude();
+            Double latitude = p.getLatitude();
+            if (longitude != null && latitude != null) {
+                var address = kakaoMapService.reverseGeocode(latitude, longitude);
                 Place place = placeService.findOrCreate(address);
                 p.setPlace(place);
             }
         }
-        pictureRepository.saveAll(pictures);
-
-        aiAlbumService.process(pictures);
+        return pictureRepository.saveAll(pictures);
     }
 }

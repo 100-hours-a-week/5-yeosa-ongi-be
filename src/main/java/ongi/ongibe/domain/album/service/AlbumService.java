@@ -10,13 +10,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO.PictureRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
+import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
@@ -143,22 +147,41 @@ public class AlbumService {
     }
 
     @Transactional
-    public void createAlbum(String albumName, List<String> pictureUrls) {
-        if (pictureUrls.size() > 100){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
+    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
+        if (pictureDTOs.size() > 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 10장을 초과하여 추가할 수 없습니다");
         }
         User user = securityUtil.getCurrentUser();
         Album album = getEmptyAlbum(albumName);
-        List<Picture> pictures = createPictures(pictureUrls, album, user);
+        List<Picture> pictures = createPictures(pictureDTOs, album, user);
         album.setPictures(pictures);
         album.setThumbnailPicture(pictures.getFirst());
+
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
+
+        List<String> pictureUrls = pictureDTOs.stream()
+                .map(PictureUrlCoordinateDTO::pictureUrl)
+                .toList();
+
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
     }
+//    public void createAlbum(String albumName, List<String> pictureUrls) {
+//        if (pictureUrls.size() > 100){
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
+//        }
+//        User user = securityUtil.getCurrentUser();
+//        Album album = getEmptyAlbum(albumName);
+//        List<Picture> pictures = createPictures(pictureUrls, album, user);
+//        album.setPictures(pictures);
+//        album.setThumbnailPicture(pictures.getFirst());
+//        associateAlbumWithUser(user, album);
+//        persistAlbum(album, pictures);
+//        eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
+//    }
 
     @Transactional
-    public void addPictures(Long albumId, List<String> pictureUrls) {
+    public void addPictures(Long albumId, List<? extends PictureUrlCoordinateDTO> pictureUrls) {
         Album album = getAlbumIfMember(albumId);
 
         List<Picture> existingPictures = album.getPictures();
@@ -177,7 +200,12 @@ public class AlbumService {
         existingPictures.addAll(newPictures);
 
         albumRepository.save(album);
-        eventPublisher.publishEvent(new AlbumEvent(albumId, pictureUrls));
+
+        List<String> pictures = pictureUrls.stream()
+                .map(PictureUrlCoordinateDTO::pictureUrl)
+                .toList();
+
+        eventPublisher.publishEvent(new AlbumEvent(albumId, pictures));
     }
 
     @Transactional
@@ -252,11 +280,27 @@ public class AlbumService {
         album.setUserAlbums(List.of(userAlbum));
     }
 
-    private static List<Picture> createPictures(List<String> pictureUrls, Album album, User user) {
-        return pictureUrls.stream()
-                .map(url -> Picture.of(album, user, url))
+    private List<Picture> createPictures(
+            List<? extends PictureUrlCoordinateDTO> pictureDTOs,
+            Album album,
+            User user
+    ) {
+        return pictureDTOs.stream()
+                .map(dto -> Picture.builder()
+                        .album(album)
+                        .user(user)
+                        .pictureURL(dto.pictureUrl())
+                        .latitude(dto.latitude())
+                        .longitude(dto.longitude())
+                        .build())
                 .toList();
     }
+
+//    private static List<Picture> createPictures(List<String> pictureUrls, Album album, User user) {
+//        return pictureUrls.stream()
+//                .map(url -> Picture.of(album, user, url))
+//                .toList();
+//    }
 
     private Album getEmptyAlbum(String albumName) {
         return Album.builder()
