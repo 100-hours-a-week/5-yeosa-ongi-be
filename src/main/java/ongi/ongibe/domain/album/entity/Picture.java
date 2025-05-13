@@ -52,6 +52,8 @@ public class Picture {
 
     @Column(length = 512)
     private String pictureURL;
+    @Column(nullable = true)
+    private String s3Key;
 
     @Column(length = 512)
     private String tag;
