@@ -1,0 +1,47 @@
+name : be 서버 배포 source 배포
+
+on:
+  push:
+    branches:
+      - test-CICD
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Github repo 불러오기
+        uses: actions/checkout@v4
+
+      - name: install jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: create resources directory
+        run: mkdir -p ./src/main/resources
+
+      - name: create application.yml
+        run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.yml
+
+      - name: gcp 연동
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          region: asia-northeast3
+
+      - name: GCP VM에 배포
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd /opt/app/5-yeosa-ongi-be
+            git pull origin dev
+            chmod +x ./gradlew
+            ./gradlew clean build -x test
+            pkill -f "5-yeosa-ongi-be-0.0.1-SNAPSHOT.jar"
+            nohup java -jar build/libs/5-yeosa-ongi-be-0.0.1-SNAPSHOT.jar > /opt/app/log/backend.log 2>&1 &
