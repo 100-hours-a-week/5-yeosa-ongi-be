@@ -24,17 +24,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class AlbumProcessService {
 
-    private final AlbumRepository albumRepository;
-    private final PictureRepository pictureRepository;
-    private final S3MetadataService s3MetadataService;
-    private final KakaoMapService kakaoMapService;
-    private final PlaceService placeService;
+    private final GeoService geoService;
     private final AiAlbumService aiAlbumService;
 
 
     @Async("asyncExecutor")
     public void processAlbumAsync(Long albumId, List<String> pictureUrls) {
-        List<Picture> pictures = geoAndKakaoAndSave(albumId, pictureUrls);
+        List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureUrls);
         try{
             aiAlbumService.process(pictures);
         } catch (Exception e) {
@@ -42,34 +38,4 @@ public class AlbumProcessService {
         }
 
     }
-
-    @Transactional
-    public List<Picture> geoAndKakaoAndSave(Long albumId, List<String> pictureUrls) {
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
-
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(pictureUrls).stream()
-                .filter(p -> p.getAlbum().getId().equals(albumId))
-                .toList();
-
-        for (Picture p : pictures) {
-//            var gps = s3MetadataService.extractGPS(p.getPictureURL());
-//            p.setLatitude(gps.lat());
-//            p.setLongitude(gps.lon());
-//            log.info("lat: {}, lon: {}", gps.lat(), gps.lon());
-            Double longitude = p.getLongitude();
-            Double latitude = p.getLatitude();
-            if (isInKorea(latitude, longitude)) {
-                var address = kakaoMapService.reverseGeocode(latitude, longitude);
-                Place place = placeService.findOrCreate(address);
-                p.setPlace(place);
-            }
-        }
-        return pictureRepository.saveAll(pictures);
-    }
-
-    private boolean isInKorea(Double lat, Double lon) {
-        return lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 132.0;
-    }
-
 }
