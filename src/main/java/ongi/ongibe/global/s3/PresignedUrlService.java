@@ -81,6 +81,37 @@ public class PresignedUrlService {
                 .build();
     }
 
+    public String generatePresignedUrl(String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        return presigner.presignGetObject(presignRequest).url().toString();
+    }
+
+
+    private String extractS3Key(String fullUrl){
+        try {
+            URI uri = URI.create(fullUrl);
+            URL url = uri.toURL();
+            String path = url.getPath();
+
+            if (path.startsWith("/" + bucket + "/")) {
+                return path.substring(("/" + bucket + "/").length());
+            } else {
+                return path.substring(1); // "/pictures/a.jpg" → "pictures/a.jpg"
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl);
+        }
+    }
+
     public String generateGetPresignedUrl(String key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
