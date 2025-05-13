@@ -79,7 +79,7 @@ public class PresignedUrlService {
                 .build();
     }
 
-    public String generatePresignedUrl(String key) {
+    public String generateGetPresignedUrl(String key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
