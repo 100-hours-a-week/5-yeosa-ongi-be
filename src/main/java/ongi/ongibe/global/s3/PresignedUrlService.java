@@ -94,19 +94,24 @@ public class PresignedUrlService {
     }
 
 
-    private String extractS3Key(String fullUrl){
+    public String extractS3Key(String fullUrl) {
         try {
             URI uri = URI.create(fullUrl);
-            URL url = uri.toURL();
-            String path = url.getPath();
+            String path = uri.getPath(); // 예: "/pictures/a.jpg" 또는 "/bucket-name/pictures/a.jpg"
 
-            if (path.startsWith("/" + bucket + "/")) {
-                return path.substring(("/" + bucket + "/").length());
-            } else {
-                return path.substring(1); // "/pictures/a.jpg" → "pictures/a.jpg"
+            // path 앞에 '/'가 항상 붙기 때문에 제거
+            if (path.startsWith("/")) {
+                path = path.substring(1);
             }
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl);
+
+            // 만약 path가 "bucket-name/pictures/a.jpg" 형태면 버킷 제거
+            if (path.startsWith(bucket + "/")) {
+                path = path.substring((bucket + "/").length());
+            }
+
+            return path;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl, e);
         }
     }
 }
