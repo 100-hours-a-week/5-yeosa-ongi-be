@@ -33,6 +33,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import ongi.ongibe.util.JwtTokenProvider;
@@ -55,6 +56,7 @@ public class AlbumService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
+    private final PresignedUrlService presignedUrlService;
 
     private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
 
@@ -82,8 +84,14 @@ public class AlbumService {
                 .map(UserAlbum::getAlbum)
                 .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
                         album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
-                .toList();
+                .map(album -> {
+                    String thumbnailKey = album.getThumbnailPicture() != null ? album.getThumbnailPicture().getPictureURL() : null;
+                    String presignedUrl = (thumbnailKey != null)
+                            ? presignedUrlService.generateGetPresignedUrl(thumbnailKey)
+                            : null;
+
+                    return AlbumInfo.of(album, presignedUrl);
+                }).toList();
     }
 
     @Transactional(readOnly = true)
