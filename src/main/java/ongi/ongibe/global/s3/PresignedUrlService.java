@@ -13,7 +13,9 @@ import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO.PictureInfo;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO.PresignedFile;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -37,8 +39,12 @@ public class PresignedUrlService {
         List<PresignedFile> result = request.pictures().stream()
                 .map(picture -> {
                     String key = picture.pictureName();
+                    String type = picture.pictureType();
+                    if (!List.of("jpg", "jpeg", "png", "webp").contains(type.toLowerCase())) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 확장자입니다: " + type);
+                    }
 
-                    PutObjectRequest putObjectRequest = getObjectRequest(picture.pictureType(), key);
+                    PutObjectRequest putObjectRequest = getObjectRequest(type, key);
 
                     PutObjectPresignRequest presignRequest = getPresignRequest(putObjectRequest);
 
