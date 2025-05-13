@@ -1,0 +1,35 @@
+# Gradle
+.gradle/
+build/
+
+# Java
+*.class
+
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# VSCode
+.vscode/
+
+# OS 별 불필요 파일
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# 환경 파일 (보안 중요)
+.env
+
+# Spring Boot 설정파일
+/src/main/resources/application.yml
+/src/main/resources/application.properties
+
+# 테스트 결과
+test-output/
+
+# 기타
+*.swp
+.rdb
