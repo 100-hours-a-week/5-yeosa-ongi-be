@@ -40,7 +40,7 @@ public class PresignedUrlService {
                 .map(picture -> {
                     String key = picture.pictureName();
                     String type = picture.pictureType();
-                    if (!List.of("jpg", "jpeg", "png", "webp").contains(type.toLowerCase())) {
+                    if (!List.of("image/jpg", "image/jpeg", "image/png", "image/webp").contains(type.toLowerCase())) {
                         throw new IllegalArgumentException("지원하지 않는 확장자입니다: " + type);
                     }
 
@@ -79,37 +79,6 @@ public class PresignedUrlService {
                 .key(key)
                 .contentType(pictureType)
                 .build();
-    }
-
-    public String generatePresignedUrl(String key) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest)
-                .build();
-
-        return presigner.presignGetObject(presignRequest).url().toString();
-    }
-
-
-    private String extractS3Key(String fullUrl){
-        try {
-            URI uri = URI.create(fullUrl);
-            URL url = uri.toURL();
-            String path = url.getPath();
-
-            if (path.startsWith("/" + bucket + "/")) {
-                return path.substring(("/" + bucket + "/").length());
-            } else {
-                return path.substring(1); // "/pictures/a.jpg" → "pictures/a.jpg"
-            }
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl);
-        }
     }
 
     public String generateGetPresignedUrl(String key) {
