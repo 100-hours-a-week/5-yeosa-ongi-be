@@ -41,10 +41,6 @@ public class PresignedUrlService {
                 .map(picture -> {
                     String key = picture.pictureName();
                     String type = picture.pictureType();
-                    if (!List.of("jpg", "jpeg", "png", "webp").contains(type.toLowerCase())) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 확장자입니다: " + type);
-                    }
-                    String type = picture.pictureType();
                     if (!List.of("image/jpg", "image/jpeg", "image/png", "image/webp").contains(type.toLowerCase())) {
                         throw new IllegalArgumentException("지원하지 않는 확장자입니다: " + type);
                     }
