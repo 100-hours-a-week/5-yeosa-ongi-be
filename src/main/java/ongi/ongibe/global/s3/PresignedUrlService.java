@@ -1,5 +1,7 @@
 package ongi.ongibe.global.s3;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
@@ -13,8 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @Service
@@ -73,5 +77,36 @@ public class PresignedUrlService {
                 .key(key)
                 .contentType(pictureType)
                 .build();
+    }
+
+    public String generatePresignedUrl(String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        return presigner.presignGetObject(presignRequest).url().toString();
+    }
+
+
+    private String extractS3Key(String fullUrl){
+        try {
+            URI uri = URI.create(fullUrl);
+            URL url = uri.toURL();
+            String path = url.getPath();
+
+            if (path.startsWith("/" + bucket + "/")) {
+                return path.substring(("/" + bucket + "/").length());
+            } else {
+                return path.substring(1); // "/pictures/a.jpg" → "pictures/a.jpg"
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl);
+        }
     }
 }
