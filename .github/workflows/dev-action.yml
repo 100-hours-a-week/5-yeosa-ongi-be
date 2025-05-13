@@ -1,4 +1,5 @@
-name: be 서버 배포 source 배포!!
+name : be 서버 배포 source 배포!!
+
 
 on:
   pull_request:
@@ -9,7 +10,6 @@ jobs:
   deploy:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-22.04
-
     steps:
       - name: Github repo 불러오기
         uses: actions/checkout@v4
