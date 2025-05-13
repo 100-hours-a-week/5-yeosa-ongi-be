@@ -44,7 +44,7 @@ public class PresignedUrlService {
                         throw new IllegalArgumentException("지원하지 않는 확장자입니다: " + type);
                     }
 
-                    PutObjectRequest putObjectRequest = getObjectRequest(type, key);
+                    PutObjectRequest putObjectRequest = getObjectRequest(picture.pictureType(), key);
 
                     PutObjectPresignRequest presignRequest = getPresignRequest(putObjectRequest);
 
