@@ -4,7 +4,7 @@ name : be 서버 배포 source 배포!!
 on:
   pull_request:
     branches:
-      - test-CICD
+      - test
 
 jobs:
   deploy:
