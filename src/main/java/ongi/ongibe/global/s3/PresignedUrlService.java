@@ -6,6 +6,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO;
 import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO.PictureInfo;
@@ -21,6 +22,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PresignedUrlService {
@@ -97,7 +99,8 @@ public class PresignedUrlService {
     public String extractS3Key(String fullUrl) {
         try {
             URI uri = URI.create(fullUrl);
-            String path = uri.getPath(); // 예: "/pictures/a.jpg" 또는 "/bucket-name/pictures/a.jpg"
+            String path = uri.getRawPath(); // 예: "/pictures/a.jpg" 또는 "/bucket-name/pictures/a.jpg"
+            log.debug("path: {}", path);
 
             // path 앞에 '/'가 항상 붙기 때문에 제거
             if (path.startsWith("/")) {
