@@ -59,7 +59,7 @@ public class AlbumProcessService {
 //            log.info("lat: {}, lon: {}", gps.lat(), gps.lon());
             Double longitude = p.getLongitude();
             Double latitude = p.getLatitude();
-            if (longitude != null && latitude != null) {
+            if (isInKorea(latitude, longitude)) {
                 var address = kakaoMapService.reverseGeocode(latitude, longitude);
                 Place place = placeService.findOrCreate(address);
                 p.setPlace(place);
@@ -67,4 +67,9 @@ public class AlbumProcessService {
         }
         return pictureRepository.saveAll(pictures);
     }
+
+    private boolean isInKorea(Double lat, Double lon) {
+        return lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 132.0;
+    }
+
 }
