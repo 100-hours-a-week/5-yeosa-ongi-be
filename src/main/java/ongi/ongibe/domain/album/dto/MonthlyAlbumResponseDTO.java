@@ -17,11 +17,11 @@ public record MonthlyAlbumResponseDTO(
             @Schema(description = "앨범 생성 일시") LocalDateTime createdAt,
             @Schema(description = "앨범 멤버들의 프로필 이미지 URL 목록") List<String> memberProfileImageURL
     ) {
-        public static AlbumInfo of(Album album) {
+        public static AlbumInfo of(Album album, String presignedThumbnailUrl) {
             return new AlbumInfo(
                     album.getId(),
                     album.getName(),
-                    album.getThumbnailPicture() != null ? album.getThumbnailPicture().getPictureURL() : null,
+                    presignedThumbnailUrl,
                     album.getCreatedAt(),
                     album.getUserAlbums().stream()
                             .map(ua -> ua.getUser().getProfileImage())

@@ -48,6 +48,7 @@ public class Album {
     @JoinColumn(name = "thumbnail_picture_id")
     private Picture thumbnailPicture;
 
+    @Column(length = 10)
     private String name;
 
     @CreationTimestamp
