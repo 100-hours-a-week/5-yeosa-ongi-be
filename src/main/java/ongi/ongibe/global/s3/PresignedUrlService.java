@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -44,7 +45,7 @@ public class PresignedUrlService {
                         throw new IllegalArgumentException("지원하지 않는 확장자입니다: " + type);
                     }
 
-                    PutObjectRequest putObjectRequest = getObjectRequest(type, key);
+                    PutObjectRequest putObjectRequest = getObjectRequest(picture.pictureType(), key);
 
                     PutObjectPresignRequest presignRequest = getPresignRequest(putObjectRequest);
 
