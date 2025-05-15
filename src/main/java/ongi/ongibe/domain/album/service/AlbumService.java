@@ -285,12 +285,20 @@ public class AlbumService {
 
     @Transactional
     public void deleteAlbum(Long albumId) {
+        User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
-        album.setDeletedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        album.setDeletedAt(now);
+        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(user, album);
+        userAlbum.setDeletedAt(now);
         for (Picture p : album.getPictures()){
-            p.setDeletedAt(LocalDateTime.now());
+            p.setDeletedAt(now);
         }
+        userAlbumRepository.save(userAlbum);
+        pictureRepository.saveAll(album.getPictures());
+        albumRepository.save(album);
+
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
