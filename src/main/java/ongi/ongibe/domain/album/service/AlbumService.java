@@ -302,8 +302,8 @@ public class AlbumService {
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
-        if (newSize > 100) {
-            int remaining = 100 - previousSize;
+        if (newSize > 10) {
+            int remaining = 10 - previousSize;
             throw new AlbumException(
                     HttpStatus.BAD_REQUEST,
                     "같은 앨범에 사진은 100장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
