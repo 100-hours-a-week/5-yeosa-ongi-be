@@ -59,6 +59,7 @@ public class AlbumService {
     private final PresignedUrlService presignedUrlService;
 
     private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
+    private static final int MAX_PICTURE_SIZE = 10;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -181,7 +182,7 @@ public class AlbumService {
 
     @Transactional
     public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
-        if (pictureDTOs.size() > 10) {
+        if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 10장을 초과하여 추가할 수 없습니다");
         }
         User user = securityUtil.getCurrentUser();
@@ -285,20 +286,28 @@ public class AlbumService {
 
     @Transactional
     public void deleteAlbum(Long albumId) {
+        User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
-        album.setDeletedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        album.setDeletedAt(now);
+        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(user, album);
+        userAlbum.setDeletedAt(now);
         for (Picture p : album.getPictures()){
-            p.setDeletedAt(LocalDateTime.now());
+            p.setDeletedAt(now);
         }
+        userAlbumRepository.save(userAlbum);
+        pictureRepository.saveAll(album.getPictures());
+        albumRepository.save(album);
+
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
-        if (newSize > 100) {
-            int remaining = 100 - previousSize;
+        if (newSize > MAX_PICTURE_SIZE) {
+            int remaining = MAX_PICTURE_SIZE - previousSize;
             throw new AlbumException(
                     HttpStatus.BAD_REQUEST,
-                    "같은 앨범에 사진은 100장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
+                    "같은 앨범에 사진은" + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
             );
         }
     }

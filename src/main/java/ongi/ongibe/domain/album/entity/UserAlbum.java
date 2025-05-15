@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.domain.user.entity.User;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @AllArgsConstructor
@@ -24,6 +27,8 @@ import ongi.ongibe.domain.user.entity.User;
 @Getter
 @Setter
 @Builder
+@SQLDelete(sql = "update user_album set deleted_at = NOW() where id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class UserAlbum {
 
     @Id
@@ -41,6 +46,8 @@ public class UserAlbum {
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private UserAlbumRole role;
+
+    private LocalDateTime deletedAt;
 
     public static UserAlbum of(User user, Album album, UserAlbumRole role) {
         return UserAlbum.builder()
