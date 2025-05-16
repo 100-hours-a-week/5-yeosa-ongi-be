@@ -22,13 +22,14 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AiClient {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
     private final PictureRepository pictureRepository;
     private final EntityManager entityManager;
 
@@ -113,14 +114,17 @@ public class AiClient {
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {
         String url = baseUrl + path;
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<T> request = new HttpEntity<>(body, headers);
         try {
             log.info("[AI] 요청 보내는 중: {} with body = {}", url, body);
-            R response = restTemplate.postForObject(url, request, responseType);
+            R response = webClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(responseType)
+                    .block();
+
             log.info("[AI] 응답 수신: {} => {}", url, response);
             return response;
         } catch (Exception e) {
@@ -128,5 +132,4 @@ public class AiClient {
             throw e;
         }
     }
-
 }

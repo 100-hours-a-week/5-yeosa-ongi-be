@@ -55,7 +55,6 @@ public class AuthService {
     private String redirectUri;
 
     private final WebClient webClient;
-    private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final OAuthTokenRepository oauthTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;

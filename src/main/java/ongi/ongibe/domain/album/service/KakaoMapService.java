@@ -21,15 +21,11 @@ public class KakaoMapService {
     @Value("${spring.kakao.auth.client}")
     private String kakaoApiKey;
 
-    private final RestTemplate restTemplate;
     private final WebClient webClient;
 
     public KakaoAddressDTO reverseGeocode(double lat, double lon) {
         String url = String.format(
                 "https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=%f&y=%f", lon, lat);
-
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Authorization", "KakaoAK " + kakaoApiKey);
 
         var response = webClient.get()
                 .uri(url)
