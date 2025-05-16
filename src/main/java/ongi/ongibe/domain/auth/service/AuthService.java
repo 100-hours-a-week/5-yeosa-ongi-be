@@ -40,6 +40,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -53,6 +54,7 @@ public class AuthService {
     @Value("${spring.kakao.auth.redirect}")
     private String redirectUri;
 
+    private final WebClient webClient;
     private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final OAuthTokenRepository oauthTokenRepository;
@@ -121,52 +123,35 @@ public class AuthService {
         log.debug("카카오 토큰 요청 시작: code = {}", code);
         log.debug("사용할 redirect_uri = {}", redirectUri);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", clientId);
-        body.add("redirect_uri", redirectUri);
-        body.add("code", code);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "authorization_code");
+        formData.add("client_id", clientId);
+        formData.add("redirect_uri", redirectUri);
+        formData.add("code", code);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    KAKAO_TOKEN_URL,
-                    HttpMethod.POST,
-                    request,
-                    String.class
-            );
-            log.info("응답 상태 코드: {}", response.getStatusCode());
-            log.info("응답 헤더: {}", response.getHeaders());
-
-            log.info("ResponseEntity 수신 완료");
-
-            String responseBody = response.getBody();
-
-            if (responseBody == null) {
-                log.error("응답 바디가 null입니다");
-                throw new TokenParsingException("응답 바디가 null입니다");
-            }
+            String responseBody = webClient.post()
+                    .uri(KAKAO_TOKEN_URL)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .bodyValue(formData)
+                    .retrieve()
+                    .onStatus(statusCode -> statusCode.is4xxClientError() || statusCode.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .map(body -> new ResponseStatusException(clientResponse.statusCode(), "Kakao 인증 실패: " + body)))
+                    .bodyToMono(String.class)
+                    .block();
 
             log.info("Kakao 응답 원문: {}", responseBody);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> kakaoResponse = objectMapper.readValue(responseBody, new TypeReference<>() {});
-            log.debug("응답 map: {}", kakaoResponse);
-
             return objectMapper.readValue(responseBody, KakaoTokenResponseDTO.class);
 
-        } catch (HttpClientErrorException e) {
-            log.error("카카오 토큰 요청 실패: status = {}, body = {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kakao 인증 실패: " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("예상치 못한 예외 발생", e);
+            log.error("카카오 토큰 요청 실패", e);
             throw new TokenParsingException("카카오 토큰 응답 파싱 실패", e);
         }
     }
+
 
 
 
