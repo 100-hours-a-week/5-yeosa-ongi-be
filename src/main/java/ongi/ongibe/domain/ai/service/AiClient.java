@@ -26,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class AiClient {
 
     private final RestTemplate restTemplate;
@@ -46,6 +45,7 @@ public class AiClient {
         postJson(EMBEDDING_PATH, new AiImageRequestDTO(urls), Void.class);
     }
 
+    @Transactional
     public void requestQuality(List<String> urls) {
         log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
@@ -60,6 +60,7 @@ public class AiClient {
         entityManager.clear();
     }
 
+    @Transactional
     public void requestDuplicates(List<String> urls) {
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
@@ -73,6 +74,7 @@ public class AiClient {
         entityManager.clear();
     }
 
+    @Transactional
     public void requestCategories(List<String> urls) {
         log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
@@ -89,6 +91,7 @@ public class AiClient {
         entityManager.clear();
     }
 
+    @Transactional
     public void requestAestheticScore(List<String> urls) {
         log.info("[AI] requestAestheticScore API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
@@ -106,13 +109,6 @@ public class AiClient {
         }
         log.info("[AI] score 반영 : {}", totalScoreUpdated);
         entityManager.clear();
-    }
-
-
-    private Map<String, Picture> toMap(List<Picture> pictures) {
-        return pictures.stream().collect(
-                Collectors.toMap(Picture::getPictureURL, p -> p)
-        );
     }
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {
