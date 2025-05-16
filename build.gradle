@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id "org.asciidoctor.jvm.convert" version "4.0.2"
 }
 
 group = 'ongi'
@@ -48,6 +48,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.27.3'
     implementation 'software.amazon.awssdk:s3control:2.27.3'
     implementation 'software.amazon.awssdk:s3outposts:2.27.3'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
