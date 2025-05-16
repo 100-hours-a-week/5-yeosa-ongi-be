@@ -262,8 +262,8 @@ public class AlbumService {
         List<String> urls = pictures.stream()
                 .map(Picture::getPictureURL)
                 .toList();
-        pictureRepository.markPicturesDuplicatedAsStable(urls);
-        pictureRepository.markPicturesShakyAsStable(urls);
+        pictureRepository.markPicturesDuplicatedAsStable(albumId, urls);
+        pictureRepository.markPicturesShakyAsStable(albumId, urls);
     }
 
     @Transactional

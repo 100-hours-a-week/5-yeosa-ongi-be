@@ -7,7 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
+import ongi.ongibe.domain.album.repository.PictureRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -15,15 +18,16 @@ import org.springframework.stereotype.Service;
 public class AiAlbumService {
 
     private final AiClient aiClient;
+    private final AsyncAiClient asyncAiClient;
     private final AlbumRepository albumRepository;
+    private final PictureRepository pictureRepository;
 
-    public void process(List<Picture> pictures) {
+    public void process(Long albumId, List<Picture> pictures) {
 
         List<String> urls = pictures.stream()
                         .map(Picture::getPictureURL)
                         .toList();
 
-        Long albumId = pictures.getFirst().getAlbum().getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, urls.size());
 
         // 1. 임베딩 요청
@@ -33,37 +37,46 @@ public class AiAlbumService {
         // 2. 병렬 요청
         CompletableFuture<Void> quality = CompletableFuture.runAsync(() -> {
             log.info("[AI] 품질 분석 시작");
-            aiClient.requestQuality(urls);
+            asyncAiClient.requestQuality(albumId, urls);
             log.info("[AI] 품질 분석 완료");
         });
 
         CompletableFuture<Void> duplicates = CompletableFuture.runAsync(() -> {
             log.info("[AI] 중복 분석 시작");
-            aiClient.requestDuplicates(urls);
+            asyncAiClient.requestDuplicates(albumId, urls);
             log.info("[AI] 중복 분석 완료");
         });
 
         CompletableFuture<Void> categories = CompletableFuture.runAsync(() -> {
             log.info("[AI] 카테고리 분석 시작");
-            aiClient.requestCategories(urls);
+            asyncAiClient.requestCategories(albumId,urls);
             log.info("[AI] 카테고리 분석 완료");
         });
 
         CompletableFuture.allOf(quality, duplicates, categories).thenRun(() -> {
             log.info("[AI] 미적 점수 분석 시작");
-            aiClient.requestAestheticScore(urls);
+            asyncAiClient.requestAestheticScore(albumId, urls);
             log.info("[AI] 미적 점수 분석 완료");
-            setThumbnail(pictures);
+            setThumbnail(albumId, pictures);
         }).join();
 
         log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
     }
 
-    private void setThumbnail(List<Picture> pictures) {
-        Picture thumbnail = pictures.stream()
-                .max((p1,p2) -> Float.compare(p1.getQualityScore(), p2.getQualityScore()))
-                .orElseGet(pictures::getFirst);
-        Album album = thumbnail.getAlbum();
+    private void setThumbnail(Long albumId, List<Picture> pictures) {
+        List<String> urls = pictures.stream()
+                .map(Picture::getPictureURL)
+                .toList();
+
+        List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndPictureURLIn(albumId, urls);
+
+        Picture thumbnail = updatedPictures.stream()
+                .max((p1, p2) -> Float.compare(p1.getQualityScore(), p2.getQualityScore()))
+                .orElseGet(updatedPictures::getFirst);
+
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+
         album.setThumbnailPicture(thumbnail);
         albumRepository.save(album);
     }

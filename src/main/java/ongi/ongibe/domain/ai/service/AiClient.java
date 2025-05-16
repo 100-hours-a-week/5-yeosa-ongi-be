@@ -46,7 +46,7 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestQuality(List<String> urls) {
+    public void requestQuality(Long albumId, List<String> urls) {
         log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
         log.info("[AI] 품질 분석 응답: {}", response);
@@ -55,13 +55,13 @@ public class AiClient {
                 .filter(urls::contains)
                 .toList();
 
-        int shakyCount = pictureRepository.markPicturesAsShaky(shakyUrls);
+        int shakyCount = pictureRepository.markPicturesAsShaky(albumId, shakyUrls);
         log.info("[AI] 흔들린 사진 : {}", shakyCount);
         entityManager.clear();
     }
 
     @Transactional
-    public void requestDuplicates(List<String> urls) {
+    public void requestDuplicates(Long albumId, List<String> urls) {
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
@@ -69,13 +69,13 @@ public class AiClient {
                 .flatMap(List::stream)
                 .toList();
 
-        int duplicatedCount = pictureRepository.markPicturesAsDuplicated(duplicatedUrls);
+        int duplicatedCount = pictureRepository.markPicturesAsDuplicated(albumId, duplicatedUrls);
         log.info("[AI] 중복 사진 : {}", duplicatedCount);
         entityManager.clear();
     }
 
     @Transactional
-    public void requestCategories(List<String> urls) {
+    public void requestCategories(Long albumId, List<String> urls) {
         log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
@@ -84,7 +84,7 @@ public class AiClient {
 
         int totalTagUpdated = 0;
         for (var categoryResult : response.data()) {
-            int count = pictureRepository.updateTagIfAbsent(categoryResult.images(), categoryResult.category());
+            int count = pictureRepository.updateTagIfAbsent(albumId, categoryResult.images(), categoryResult.category());
             totalTagUpdated += count;
         }
         log.info("[AI] tag 반영 : {}", totalTagUpdated);
@@ -92,7 +92,7 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestAestheticScore(List<String> urls) {
+    public void requestAestheticScore(Long albumId, List<String> urls) {
         log.info("[AI] requestAestheticScore API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
@@ -103,7 +103,7 @@ public class AiClient {
         int totalScoreUpdated = 0;
         for (var category : response.data()) {
             for (var entry : category.images()){
-                int count = pictureRepository.updateScore(entry.image(), entry.score());
+                int count = pictureRepository.updateScore(albumId, entry.image(), entry.score());
                 totalScoreUpdated += count;
             }
         }
