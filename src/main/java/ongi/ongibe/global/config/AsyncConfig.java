@@ -1,6 +1,7 @@
 package ongi.ongibe.global.config;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +25,6 @@ public class AsyncConfig implements AsyncConfigurer {
     @Override
     @Bean(name = "asyncExecutor")
     public Executor getAsyncExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10); // 기본 스레드 수
-        executor.setMaxPoolSize(20); // 최대 스레드 수
-        executor.setQueueCapacity(500); // 큐 대기 용량
-        executor.setThreadNamePrefix("Async-");
-        executor.initialize();
-        return executor;
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 }
