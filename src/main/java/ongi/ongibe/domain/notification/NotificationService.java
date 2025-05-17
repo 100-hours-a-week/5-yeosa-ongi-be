@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
+import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.notification.dto.NotificationListResponseDTO;
 import ongi.ongibe.domain.notification.dto.NotificationResponseDTO;
 import ongi.ongibe.domain.notification.entity.Notification;
@@ -32,6 +34,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final AlbumRepository albumRepository;
     private final UserRepository userRepository;
+    private final UserAlbumRepository userAlbumRepository;
     private final SecurityUtil securityUtil;
 
     @Transactional
@@ -96,5 +99,28 @@ public class NotificationService {
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                 "알림을를 찾을 수 없습니다. notificationId: " + notificationId)
                 );
+    }
+
+    @Transactional
+    public void albumAiCreated(Long albumId, Long actorId) {
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+
+        User actorUser = userRepository.findById(actorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        List<UserAlbum> members = userAlbumRepository.findAllByAlbum(album);
+
+        List<Notification> notifications = members.stream()
+                .map(member -> Notification.builder()
+                        .user(member.getUser())
+                        .actorUser(actorUser)
+                        .type(NotificationType.ALBUM_CREATED_AI)
+                        .refId(album.getId())
+                        .isRead(false)
+                        .build())
+                .toList();
+
+        notificationRepository.saveAll(notifications);
     }
 }
