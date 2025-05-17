@@ -1,0 +1,45 @@
+name: Deploy Backend on PR Merge
+
+on:
+  pull_request:
+    branches:
+      - test
+    types:
+      - closed
+
+jobs:
+  deploy-backend:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Backend Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean build -x test
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build & Push Backend Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest
+
+      - name: SSH into GCP and Deploy Backend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCP_HOST_DEV }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_KEY }}
+          script: |
+            cd /opt/app/ongi
+            docker-compose pull backend
+            docker-compose up -d backend
