@@ -4,10 +4,17 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.event.AlbumAiCreateNotificationEvent;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.repository.UserAlbumRepository;
+import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
+import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.global.security.util.SecurityUtil;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +28,9 @@ public class AiAlbumService {
     private final AsyncAiClient asyncAiClient;
     private final AlbumRepository albumRepository;
     private final PictureRepository pictureRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final UserAlbumRepository userAlbumRepository;
+    private final SecurityUtil securityUtil;
 
     public void process(Long albumId, List<Picture> pictures) {
 
@@ -59,6 +69,7 @@ public class AiAlbumService {
             log.info("[AI] 미적 점수 분석 완료");
             setThumbnail(albumId, pictures);
         }).join();
+        eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId, securityUtil.getCurrentUserId()));
 
         log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
     }

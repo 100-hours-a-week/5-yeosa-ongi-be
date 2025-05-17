@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.domain.auth.OAuthProvider;
-import ongi.ongibe.domain.Notification;
+import ongi.ongibe.domain.notification.entity.Notification;
 import ongi.ongibe.domain.auth.entity.OAuthToken;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.UserAlbum;
