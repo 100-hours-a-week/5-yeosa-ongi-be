@@ -90,8 +90,8 @@ public class AiClient {
     @Transactional
     public void requestCategories(Long albumId, List<String> urls) {
         log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(urls);
+        log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
         var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
         log.info("[AI] 카테고리 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
@@ -106,10 +106,11 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestAestheticScore(Long albumId, List<String> urls) {
-        log.info("[AI] requestAestheticScore API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+    public void requestAestheticScore(Long albumId, List<String> keys) {
+        log.info("[AI] requestAestheticScore API 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(keys);
+        log.info("첫번째 사진 tag : {}", pictures.getFirst().getTag());
+        log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
 
         var response = postJsonWithRetry(SCORE_PATH, AiAestheticScoreRequestDTO.from(pictures), AiAestheticScoreResponseDTO.class);
         log.info("[AI] 품질점수 분석 응답: {}", response);

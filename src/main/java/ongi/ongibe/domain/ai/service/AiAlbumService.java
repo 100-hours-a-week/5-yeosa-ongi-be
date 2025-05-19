@@ -60,13 +60,13 @@ public class AiAlbumService {
 
         CompletableFuture<Void> categories = CompletableFuture.runAsync(() -> {
             log.info("[AI] 카테고리 분석 시작");
-            asyncAiClient.requestCategories(albumId,urls);
+            aiClient.requestCategories(albumId,urls);
             log.info("[AI] 카테고리 분석 완료");
         });
 
         CompletableFuture.allOf(quality, duplicates, categories).thenRun(() -> {
             log.info("[AI] 미적 점수 분석 시작");
-            asyncAiClient.requestAestheticScore(albumId, urls);
+            aiClient.requestAestheticScore(albumId, urls);
             log.info("[AI] 미적 점수 분석 완료");
             setThumbnail(albumId, pictures);
         }).join();

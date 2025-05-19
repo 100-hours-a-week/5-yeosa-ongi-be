@@ -19,7 +19,10 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     List<Picture> findAllByPictureURLIn(List<String> pictureURLS);
 
-    @Modifying
+    @Query("SELECT p FROM Picture p WHERE p.s3Key IN :keys")
+    List<Picture> findAllByS3KeyIn(@Param("keys") List<String> keys);
+
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isShaky = true where p.s3Key in :keys and p.album.id = :albumId")
     int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
@@ -29,7 +32,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Query("update Picture p set p.isShaky = false where p.s3Key in :keys and p.album.id = :albumId")
     void markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isDuplicated = true where p.s3Key in :keys and p.album.id = :albumId")
     int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
@@ -39,12 +42,12 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Query("update Picture p set p.isDuplicated = false where p.s3Key in :keys and p.album.id = :albumId")
     void markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.tag = :tag where p.s3Key in :keys and p.tag is null and p.album.id = :albumId")
     int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("keys") List<String> keys, @Param("tag") String tag);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.qualityScore = :score where p.s3Key in :keys")
     int updateScore(@Param("albumId") Long albumId, @Param("keys") String keys, @Param("score") Double score);
