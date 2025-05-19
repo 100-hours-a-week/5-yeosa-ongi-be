@@ -6,9 +6,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,9 @@ import org.hibernate.annotations.Where;
 @Builder
 @SQLDelete(sql = "update album set deleted_at = NOW() where id = ?")
 @SQLRestriction("deleted_at IS NULL")
+@Table(name = "album", indexes = {
+        @Index(name = "idx_album_created_at", columnList = "created_at"),
+})
 public class Album {
 
     @Id
