@@ -35,10 +35,11 @@ public class AiAlbumService {
     public void process(Long albumId, List<Picture> pictures) {
 
         List<String> urls = pictures.stream()
-                        .map(Picture::getPictureURL)
+                        .map(Picture::getS3Key)
                         .toList();
 
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, urls.size());
+        log.info("[AI] urls: {}", urls);
 
         // 1. 임베딩 요청
         aiClient.requestEmbeddings(urls);
@@ -75,11 +76,11 @@ public class AiAlbumService {
     }
 
     private void setThumbnail(Long albumId, List<Picture> pictures) {
-        List<String> urls = pictures.stream()
-                .map(Picture::getPictureURL)
+        List<String> keys = pictures.stream()
+                .map(Picture::getS3Key)
                 .toList();
 
-        List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndPictureURLIn(albumId, urls);
+        List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(albumId, keys);
 
         Picture thumbnail = updatedPictures.stream()
                 .max((p1, p2) -> Float.compare(p1.getQualityScore(), p2.getQualityScore()))

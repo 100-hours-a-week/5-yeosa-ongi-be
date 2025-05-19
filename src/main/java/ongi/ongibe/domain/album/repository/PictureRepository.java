@@ -26,33 +26,33 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.isShaky = true where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = true where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isShaky = false where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = false where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isDuplicated = true where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isDuplicated = false where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isDuplicated = false where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.tag = :tag where p.pictureURL in :urls and p.tag is null and p.album.id = :albumId")
-    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("urls") List<String> urls, @Param("tag") String tag);
+    @Query("update Picture p set p.tag = :tag where p.s3Key in :keys and p.tag is null and p.album.id = :albumId")
+    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("keys") List<String> keys, @Param("tag") String tag);
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.qualityScore = :score where p.pictureURL in :url")
-    int updateScore(@Param("albumId") Long albumId, @Param("url") String url, @Param("score") Double score);
+    @Query("update Picture p set p.qualityScore = :score where p.s3Key in :keys")
+    int updateScore(@Param("albumId") Long albumId, @Param("keys") String keys, @Param("score") Double score);
 
 
     @Query("""
@@ -98,5 +98,5 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     List<Picture> findAllByUserAndCreatedAtBetween(User user, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 
-    List<Picture> findAllByAlbumIdAndPictureURLIn(Long albumId, Collection<String> pictureURLS);
+    List<Picture> findAllByAlbumIdAndS3KeyIn(Long albumId, List<String> s3Keys);
 }

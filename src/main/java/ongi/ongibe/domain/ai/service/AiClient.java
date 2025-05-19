@@ -71,6 +71,7 @@ public class AiClient {
     public void requestDuplicates(Long albumId, List<String> urls){
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+        log.info("[AI] 중복 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
         updateDuplicates(albumId, response.data());
     }
@@ -92,6 +93,7 @@ public class AiClient {
         List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
         var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        log.info("[AI] 카테고리 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
         int totalTagUpdated = 0;
@@ -110,6 +112,7 @@ public class AiClient {
         log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
 
         var response = postJsonWithRetry(SCORE_PATH, AiAestheticScoreRequestDTO.from(pictures), AiAestheticScoreResponseDTO.class);
+        log.info("[AI] 품질점수 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
         int totalScoreUpdated = 0;
