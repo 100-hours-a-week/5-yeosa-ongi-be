@@ -162,7 +162,7 @@ public class AlbumService {
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }
 
-    private Album getAlbumIfMember(Long albumId) {
+    protected Album getAlbumIfMember(Long albumId) {
         Album album = getAlbum(albumId);
         validateAlbumMember(album, securityUtil.getCurrentUser().getId());
         return album;
@@ -176,7 +176,7 @@ public class AlbumService {
         }
     }
 
-    private Album getAlbum(Long albumId) {
+    protected Album getAlbum(Long albumId) {
         return albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
     }
@@ -355,7 +355,7 @@ public class AlbumService {
                 .build();
     }
 
-    private void validAlbumOwner(Album album) {
+    protected void validAlbumOwner(Album album) {
         UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
                 album);
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {

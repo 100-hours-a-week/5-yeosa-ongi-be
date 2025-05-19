@@ -12,23 +12,18 @@ public class AsyncAiClient {
     private final AiClient aiClient;
 
     @Async("asyncExecutor")
-    public void requestQuality(Long albumId, List<String> urls) {
-        aiClient.requestQuality(albumId, urls);
+    public void requestQuality(Long albumId, List<String> keys) {
+        aiClient.requestQuality(albumId, keys);
     }
 
     @Async("asyncExecutor")
-    public void requestDuplicates(Long albumId, List<String> urls) {
-        aiClient.requestDuplicates(albumId, urls);
+    public void requestDuplicates(Long albumId, List<String> keys) {
+        aiClient.requestDuplicates(albumId, keys);
     }
 
     @Async("asyncExecutor")
-    public void requestCategories(Long albumId, List<String> urls) {
-        aiClient.requestCategories(albumId, urls);
-    }
-
-    @Async("asyncExecutor")
-    public void requestAestheticScore(Long albumId, List<String> urls) {
-        aiClient.requestAestheticScore(albumId, urls);
+    public void requestCategories(Long albumId, List<String> keys) {
+        aiClient.requestCategories(albumId, keys);
     }
 }
 
