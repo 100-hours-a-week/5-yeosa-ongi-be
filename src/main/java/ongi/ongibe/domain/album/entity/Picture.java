@@ -6,8 +6,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +34,12 @@ import org.hibernate.annotations.SQLRestriction;
 @Setter
 @Builder
 @SQLRestriction("deleted_at IS NULL")
+@Table(
+        name = "picture",
+        indexes = {
+                @Index(name = "idx_picture_id_deleted", columnList = "id, deleted_at")
+        }
+)
 public class Picture {
 
     @Id
