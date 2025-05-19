@@ -27,6 +27,7 @@ import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
+import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
@@ -198,6 +199,7 @@ public class AlbumService {
                 .map(PictureUrlCoordinateDTO::pictureUrl)
                 .toList();
 
+        eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
     }
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
