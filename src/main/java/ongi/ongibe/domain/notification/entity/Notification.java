@@ -1,4 +1,4 @@
-package ongi.ongibe.domain;
+package ongi.ongibe.domain.notification.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ongi.ongibe.NotificationType;
+import ongi.ongibe.domain.notification.NotificationType;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 

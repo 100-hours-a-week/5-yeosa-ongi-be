@@ -1,9 +1,12 @@
 package ongi.ongibe.global.s3;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO;
 import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO.PictureInfo;
@@ -13,10 +16,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PresignedUrlService {
@@ -38,7 +45,7 @@ public class PresignedUrlService {
                         throw new IllegalArgumentException("지원하지 않는 확장자입니다: " + type);
                     }
 
-                    PutObjectRequest putObjectRequest = getObjectRequest(type, key);
+                    PutObjectRequest putObjectRequest = getObjectRequest(picture.pictureType(), key);
 
                     PutObjectPresignRequest presignRequest = getPresignRequest(putObjectRequest);
 
@@ -73,5 +80,42 @@ public class PresignedUrlService {
                 .key(key)
                 .contentType(pictureType)
                 .build();
+    }
+
+    public String generateGetPresignedUrl(String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        return presigner.presignGetObject(presignRequest).url().toString();
+    }
+
+
+    public String extractS3Key(String fullUrl) {
+        try {
+            URI uri = URI.create(fullUrl);
+            String path = uri.getRawPath(); // 예: "/pictures/a.jpg" 또는 "/bucket-name/pictures/a.jpg"
+            log.debug("path: {}", path);
+
+            // path 앞에 '/'가 항상 붙기 때문에 제거
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+
+            // 만약 path가 "bucket-name/pictures/a.jpg" 형태면 버킷 제거
+            if (path.startsWith(bucket + "/")) {
+                path = path.substring((bucket + "/").length());
+            }
+
+            return path;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid S3 URL: " + fullUrl, e);
+        }
     }
 }

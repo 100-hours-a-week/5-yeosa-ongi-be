@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -25,33 +26,33 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.isShaky = true where p.pictureURL in :urls")
-    int markPicturesAsShaky(@Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = true where p.pictureURL in :urls and p.album.id = :albumId")
+    int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isShaky = false where p.pictureURL in :urls")
-    int markPicturesShakyAsStable(@Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = false where p.pictureURL in :urls and p.album.id = :albumId")
+    int markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls")
-    int markPicturesAsDuplicated(@Param("urls") List<String> urls);
+    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls and p.album.id = :albumId")
+    int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isDuplicated = false where p.pictureURL in :urls")
-    int markPicturesDuplicatedAsStable(@Param("urls") List<String> urls);
+    @Query("update Picture p set p.isDuplicated = false where p.pictureURL in :urls and p.album.id = :albumId")
+    int markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
 
     @Modifying
     @Transactional
-    @Query("update Picture p set p.tag = :tag where p.pictureURL in :urls and p.tag is null")
-    int updateTagIfAbsent(@Param("urls") List<String> urls, @Param("tag") String tag);
+    @Query("update Picture p set p.tag = :tag where p.pictureURL in :urls and p.tag is null and p.album.id = :albumId")
+    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("urls") List<String> urls, @Param("tag") String tag);
 
     @Modifying
     @Transactional
     @Query("update Picture p set p.qualityScore = :score where p.pictureURL in :url")
-    int updateScore(@Param("url") String url, @Param("score") Double score);
+    int updateScore(@Param("albumId") Long albumId, @Param("url") String url, @Param("score") Double score);
 
 
     @Query("""
@@ -96,4 +97,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
             @Param("end") LocalDateTime end);
 
     List<Picture> findAllByUserAndCreatedAtBetween(User user, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+
+    List<Picture> findAllByAlbumIdAndPictureURLIn(Long albumId, Collection<String> pictureURLS);
 }

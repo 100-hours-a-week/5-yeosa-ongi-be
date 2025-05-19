@@ -27,12 +27,14 @@ import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
+import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import ongi.ongibe.util.JwtTokenProvider;
@@ -55,8 +57,10 @@ public class AlbumService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
+    private final PresignedUrlService presignedUrlService;
 
     private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
+    private static final int MAX_PICTURE_SIZE = 10;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -82,18 +86,41 @@ public class AlbumService {
                 .map(UserAlbum::getAlbum)
                 .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
                         album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
-                .toList();
+                .map(album -> {
+                    String fullUrl = album.getThumbnailPicture() != null ? album.getThumbnailPicture().getPictureURL() : null;
+                    String key = null;
+                    if (fullUrl != null){
+                        if (album.getThumbnailPicture().getS3Key() != null){
+                            key = album.getThumbnailPicture().getS3Key();
+                        } else {
+                            key = presignedUrlService.extractS3Key(fullUrl);
+                            album.getThumbnailPicture().setS3Key(key);
+                            pictureRepository.save(album.getThumbnailPicture());
+                        }
+                    }
+                    String presignedUrl = key != null
+                            ? presignedUrlService.generateGetPresignedUrl(key)
+                            : null;
+                    return AlbumInfo.of(album, presignedUrl);
+                }).toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
         Album album = getAlbumIfMember(albumId);
 
         Map<Place, Picture> bestPictureOfPlace = getBestPictureOfPlace(album);
 
         List<AlbumSummaryResponseDTO> response = bestPictureOfPlace.values().stream()
-                .map(Picture::toAlbumSummaryResponseDTO)
+                .map(picture -> {
+                    String key = picture.getS3Key() != null ? picture.getS3Key() : presignedUrlService.extractS3Key(picture.getPictureURL());
+                    if (picture.getS3Key() == null) {
+                        picture.setS3Key(key);
+                        pictureRepository.save(picture);
+                    }
+                    String presignedUrl = presignedUrlService.generateGetPresignedUrl(key);
+                    return picture.toAlbumSummaryResponseDTO(presignedUrl);
+                })
                 .toList();
 
         return BaseApiResponse.success("ALBUM_SUMMARY_SUCCESS", "앨범 요약 조회 성공", response);
@@ -112,12 +139,20 @@ public class AlbumService {
         return bestPictureOfPlace;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
         Album album = getAlbumIfMember(albumId);
-
+        log.info(presignedUrlService.generateGetPresignedUrl("KakaoTalk_Photo_2025-02-17-14-16-38 008.jpeg"));
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
-                .map(Picture::toPictureInfo)
+                .map(picture -> {
+                    String key = picture.getS3Key() != null ?
+                            picture.getS3Key() : presignedUrlService.extractS3Key(picture.getPictureURL());
+                    picture.setS3Key(key);
+                    pictureRepository.save(picture);
+                    System.out.println("DEBUG 진입: key = " + key);
+                    String presignedUrl = presignedUrlService.generateGetPresignedUrl(key);
+                    return picture.toPictureInfo(presignedUrl);
+                })
                 .toList();
 
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
@@ -148,7 +183,7 @@ public class AlbumService {
 
     @Transactional
     public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
-        if (pictureDTOs.size() > 10) {
+        if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 10장을 초과하여 추가할 수 없습니다");
         }
         User user = securityUtil.getCurrentUser();
@@ -164,6 +199,7 @@ public class AlbumService {
                 .map(PictureUrlCoordinateDTO::pictureUrl)
                 .toList();
 
+        eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
     }
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
@@ -228,8 +264,8 @@ public class AlbumService {
         List<String> urls = pictures.stream()
                 .map(Picture::getPictureURL)
                 .toList();
-        pictureRepository.markPicturesDuplicatedAsStable(urls);
-        pictureRepository.markPicturesShakyAsStable(urls);
+        pictureRepository.markPicturesDuplicatedAsStable(albumId, urls);
+        pictureRepository.markPicturesShakyAsStable(albumId, urls);
     }
 
     @Transactional
@@ -252,20 +288,28 @@ public class AlbumService {
 
     @Transactional
     public void deleteAlbum(Long albumId) {
+        User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
-        album.setDeletedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        album.setDeletedAt(now);
+        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(user, album);
+        userAlbum.setDeletedAt(now);
         for (Picture p : album.getPictures()){
-            p.setDeletedAt(LocalDateTime.now());
+            p.setDeletedAt(now);
         }
+        userAlbumRepository.save(userAlbum);
+        pictureRepository.saveAll(album.getPictures());
+        albumRepository.save(album);
+
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
-        if (newSize > 100) {
-            int remaining = 100 - previousSize;
+        if (newSize > MAX_PICTURE_SIZE) {
+            int remaining = MAX_PICTURE_SIZE - previousSize;
             throw new AlbumException(
                     HttpStatus.BAD_REQUEST,
-                    "같은 앨범에 사진은 100장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
+                    "같은 앨범에 사진은" + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: " + remaining + "장"
             );
         }
     }
@@ -292,6 +336,7 @@ public class AlbumService {
                         .pictureURL(dto.pictureUrl())
                         .latitude(dto.latitude())
                         .longitude(dto.longitude())
+                        .s3Key(presignedUrlService.extractS3Key(dto.pictureUrl()))
                         .build())
                 .toList();
     }

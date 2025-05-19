@@ -32,10 +32,9 @@ public class AlbumProcessService {
     public void processAlbumAsync(Long albumId, List<String> pictureUrls) {
         List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureUrls);
         try{
-            aiAlbumService.process(pictures);
+            aiAlbumService.process(albumId, pictures);
         } catch (Exception e) {
             log.error("[AI 처리 실패] pictureUrls: {}, message: {}", pictureUrls, e.getMessage(), e);
         }
-
     }
 }
