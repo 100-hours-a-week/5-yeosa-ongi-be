@@ -1,13 +1,8 @@
 package ongi.ongibe.domain.album.repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
-import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.place.entity.Place;
-import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
 import ongi.ongibe.domain.user.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,7 +27,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isShaky = false where p.s3Key in :keys and p.album.id = :albumId")
-    int markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
+    void markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying
     @Transactional
@@ -42,7 +37,7 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Picture p set p.isDuplicated = false where p.s3Key in :keys and p.album.id = :albumId")
-    int markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
+    void markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying
     @Transactional
