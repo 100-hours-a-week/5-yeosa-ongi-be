@@ -3,7 +3,8 @@ name: Deploy Backend on PR Merge
 on:
   pull_request:
     branches:
-      - test
+      - dev
+      - main
     types:
       - closed
 
