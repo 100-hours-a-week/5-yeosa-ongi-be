@@ -55,7 +55,7 @@ public class Picture {
     @Column(nullable = true)
     private String s3Key;
 
-    @Column(length = 512)
+    @Column(length = 20)
     private String tag;
     private boolean isDuplicated = false;
     private boolean isShaky = false;
