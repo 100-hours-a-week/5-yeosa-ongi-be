@@ -40,6 +40,9 @@ jobs:
           username: ${{ secrets.GCP_USERNAME }}
           key: ${{ secrets.GCP_KEY_PROD }}
           script: |
+            set -e
             cd /opt/app/ongi
+            docker-compose down -v --remove-orphans
             docker-compose pull backend
             docker-compose up -d backend
+
