@@ -45,3 +45,4 @@ jobs:
             docker-compose down -v --remove-orphans
             docker-compose pull backend
             docker-compose up -d backend
+
