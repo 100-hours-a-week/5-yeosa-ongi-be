@@ -3,7 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
     id "org.asciidoctor.jvm.convert" version "4.0.2"
-    id 'org.flywaydb.flyway' version '9.22.3'
+    id 'org.flywaydb.flyway' version '10.20.1'
 }
 
 group = 'ongi'
@@ -53,6 +53,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     implementation 'org.flywaydb:flyway-mysql'
+    implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
