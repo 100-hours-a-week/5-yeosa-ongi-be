@@ -37,7 +37,8 @@ import org.hibernate.annotations.SQLRestriction;
 @Table(
         name = "picture",
         indexes = {
-                @Index(name = "idx_picture_id_deleted", columnList = "id, deleted_at")
+                @Index(name = "idx_picture_id_deleted", columnList = "id, deleted_at"),
+                @Index(name = "idx_picture_user_deleted_created", columnList = "user_id, deleted_at, created_at")
         }
 )
 public class Picture {
