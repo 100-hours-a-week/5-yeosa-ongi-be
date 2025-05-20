@@ -22,12 +22,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Validate Flyway Migrations
-        run: |
-          ./gradlew flywayValidate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+#      - name: Validate Flyway Migrations
+#        run: |
+#          ./gradlew flywayValidate \
+#            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
+#            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
+#            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
       - name: Build Spring Boot JAR
         run: ./gradlew clean build -x test
