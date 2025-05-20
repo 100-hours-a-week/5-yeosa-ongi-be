@@ -22,6 +22,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Validate Flyway Migrations
+        run: ./gradlew flywayValidate
+
       - name: Build Spring Boot JAR
         run: ./gradlew clean build -x test
 
@@ -45,3 +48,5 @@ jobs:
             docker-compose down
             docker-compose pull
             docker-compose up -d
+            sleep 5
+            docker logs --tail=100 ongi_backend_1
