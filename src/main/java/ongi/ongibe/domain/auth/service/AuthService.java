@@ -168,17 +168,21 @@ public class AuthService {
 
     @Transactional
     public BaseApiResponse<RefreshAccessTokenResponseDTO> reissueAccessToken(String refreshToken) {
+        log.info("refreshToken: {}", refreshToken);
         // 1. 리프레시 토큰 검증
         Long userId = jwtTokenProvider.validateAndExtractUserId(refreshToken);
+        log.info("userId: {}", userId);
 
         // 2. 레디스에서 유저 ID로 저장된 리프레시 토큰 조회
         String storedRefreshToken = refreshTokenRepository.findByUserId(userId);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            log.warn("유효하지 않은 토큰입니다 : {}", refreshToken);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         }
 
         // 3. 새 AccessToken 발급
         String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
+        log.info("newAccessToken: {}", newAccessToken);
 
         RefreshAccessTokenResponseDTO refreshAccessTokenResponseDTO = new RefreshAccessTokenResponseDTO(newAccessToken);
 
