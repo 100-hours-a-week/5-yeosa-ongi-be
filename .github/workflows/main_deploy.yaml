@@ -3,7 +3,7 @@ name: Deploy Backend on PR Merge
 on:
   pull_request:
     branches:
-      - dev
+      - main
     types:
       - closed
 
@@ -36,9 +36,9 @@ jobs:
       - name: SSH into GCP and Deploy Backend
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.GCP_HOST_DEV }}
+          host: ${{ secrets.GCP_HOST_PROD }}
           username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_KEY_DEV }}
+          key: ${{ secrets.GCP_KEY_PROD }}
           script: |
             set -e
             cd /opt/app/ongi
