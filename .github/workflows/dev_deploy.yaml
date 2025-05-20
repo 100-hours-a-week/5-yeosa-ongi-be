@@ -48,3 +48,5 @@ jobs:
             docker-compose down
             docker-compose pull
             docker-compose up -d
+            sleep 5
+            docker logs --tail=100 ongi_backend_1
