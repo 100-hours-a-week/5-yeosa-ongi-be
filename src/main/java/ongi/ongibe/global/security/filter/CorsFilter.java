@@ -17,8 +17,9 @@ import org.springframework.stereotype.Component;
 public class CorsFilter implements Filter {
 
     private static final Set<String> ALLOWED_ORIGINS = Set.of(
-            "http://ongi.today",
-            "http://localhost:5173"
+            "https://ongi.today",
+            "http://localhost:5173",
+            "https://dev.ongi.today"
     );
 
     @Override

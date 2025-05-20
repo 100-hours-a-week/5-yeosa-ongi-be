@@ -31,13 +31,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Builder
 @SQLDelete(sql = "update user_album set deleted_at = NOW() where id = ?")
 @SQLRestriction("deleted_at IS NULL")
-@Table(
-        name = "user_album",
-        indexes = {
-                @Index(name = "idx_user_album_albumid_deleted", columnList = "album_id, deleted_at"),
-                @Index(name = "idx_user_album_userid_deleted", columnList = "user_id, deleted_at"),
-        }
-)
 public class UserAlbum {
 
     @Id
