@@ -62,8 +62,7 @@ public class SecurityConfig {
             configuration.setAllowedOrigins(List.of(
                     "http://localhost:5173",
                     "https://ongi.today",
-                    "http://34.64.252.140:5173",
-                    "https://dev.ongi.today"
+                    "http://dev.ongi.today"
             ));
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
