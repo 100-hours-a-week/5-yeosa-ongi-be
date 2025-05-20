@@ -10,6 +10,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,13 +35,6 @@ import org.hibernate.annotations.SQLRestriction;
 @Setter
 @Builder
 @SQLRestriction("deleted_at IS NULL")
-@Table(
-        name = "picture",
-        indexes = {
-                @Index(name = "idx_picture_id_deleted", columnList = "id, deleted_at"),
-                @Index(name = "idx_picture_user_deleted_created", columnList = "user_id, deleted_at, created_at")
-        }
-)
 public class Picture {
 
     @Id
@@ -77,6 +71,9 @@ public class Picture {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "created_date", insertable = false, updatable = false) // index용
+    private LocalDate createdDate;
 
     private LocalDateTime deletedAt;
 

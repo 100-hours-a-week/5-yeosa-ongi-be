@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.album.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -54,16 +55,16 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
 
     @Query("""
-        select DATE(p.createdAt), count(p)
+        select DATE(p.createdDate), count(p)
         from Picture p
         where p.user.id = :userId
-        and p.createdAt between :startDate and :endDate
-        group by DATE(p.createdAt)
-        order by DATE(p.createdAt)
+        and p.createdDate between :startDate and :endDate
+        group by DATE(p.createdDate)
+        order by DATE(p.createdDate)
     """)
     List<Object[]> countPicturesByDate(@Param("userId") Long userId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate);
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     @Query("""
         select p.place.city, p.place.district, p.place.town

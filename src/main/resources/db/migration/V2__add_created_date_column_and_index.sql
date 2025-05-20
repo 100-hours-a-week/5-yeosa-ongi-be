@@ -1,0 +1,5 @@
+-- V2__add_created_date_column_and_index.sql
+
+-- 2. 인덱스 추가 (user_id, created_date + soft delete 조건)
+CREATE INDEX idx_picture_user_created_date_deleted
+    ON picture(user_id, created_date, deleted_at);

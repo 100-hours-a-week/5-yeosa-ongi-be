@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.user.service;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -71,22 +72,30 @@ public class UserService {
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
         YearMonth ym = DateUtil.parseOrNow(yearMonth);
-        LocalDateTime startMonth = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endMonth = DateUtil.getEndOfMonth(yearMonth);
+        LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
+        LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
         List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
-        Map<String, Integer> dailyCountMap = new LinkedHashMap<>();
+        Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
         for (int day = 1; day<=ym.lengthOfMonth(); day++){
-            LocalDateTime date = ym.atDay(day).atStartOfDay();
-            dailyCountMap.put(date.toString(), 0);
+            dailyCountMap.put(ym.atDay(day), 0);
         }
 
         for (Object[] result : results){
-            LocalDate date = (LocalDate) result[0];
-            int count = (int) result[1];
-            dailyCountMap.put(date.toString(), count);
+            LocalDate date = ((Date) result[0]).toLocalDate();
+            int count =((Number) result[1]).intValue();
+            dailyCountMap.put(date, count);
         }
 
-        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, dailyCountMap);
+        Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().toString(), // LocalDate → String
+                        Map.Entry::getValue,
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new // 순서 유지
+                ));
+
+
+        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, responseMap);
         return BaseApiResponse.success(
                 "USER_IMAGE_STATISTICS_SUCCESS",
                 "월간 일별 사진 업로드 수 조회 성공",
