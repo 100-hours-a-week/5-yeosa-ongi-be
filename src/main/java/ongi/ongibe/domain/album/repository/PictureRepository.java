@@ -1,13 +1,8 @@
 package ongi.ongibe.domain.album.repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
-import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.place.entity.Place;
-import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
 import ongi.ongibe.domain.user.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,35 +19,38 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     List<Picture> findAllByPictureURLIn(List<String> pictureURLS);
 
-    @Modifying
-    @Transactional
-    @Query("update Picture p set p.isShaky = true where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("SELECT p FROM Picture p WHERE p.s3Key IN :keys")
+    List<Picture> findAllByS3KeyIn(@Param("keys") List<String> keys);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isShaky = false where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
-
-    @Modifying
-    @Transactional
-    @Query("update Picture p set p.isDuplicated = true where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = true where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesAsShaky(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isDuplicated = false where p.pictureURL in :urls and p.album.id = :albumId")
-    int markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("urls") List<String> urls);
+    @Query("update Picture p set p.isShaky = false where p.s3Key in :keys and p.album.id = :albumId")
+    void markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.tag = :tag where p.pictureURL in :urls and p.tag is null and p.album.id = :albumId")
-    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("urls") List<String> urls, @Param("tag") String tag);
+    @Query("update Picture p set p.isDuplicated = true where p.s3Key in :keys and p.album.id = :albumId")
+    int markPicturesAsDuplicated(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.qualityScore = :score where p.pictureURL in :url")
-    int updateScore(@Param("albumId") Long albumId, @Param("url") String url, @Param("score") Double score);
+    @Query("update Picture p set p.isDuplicated = false where p.s3Key in :keys and p.album.id = :albumId")
+    void markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("update Picture p set p.tag = :tag where p.s3Key in :keys and p.tag is null and p.album.id = :albumId")
+    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("keys") List<String> keys, @Param("tag") String tag);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("update Picture p set p.qualityScore = :score where p.s3Key in :keys")
+    int updateScore(@Param("albumId") Long albumId, @Param("keys") String keys, @Param("score") Double score);
 
 
     @Query("""
@@ -98,5 +96,5 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     List<Picture> findAllByUserAndCreatedAtBetween(User user, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 
-    List<Picture> findAllByAlbumIdAndPictureURLIn(Long albumId, Collection<String> pictureURLS);
+    List<Picture> findAllByAlbumIdAndS3KeyIn(Long albumId, List<String> s3Keys);
 }

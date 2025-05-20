@@ -25,6 +25,7 @@ import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.factory.AlbumInfoFactory;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
@@ -58,11 +59,12 @@ public class AlbumService {
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
     private final PresignedUrlService presignedUrlService;
+    private final AlbumInfoFactory albumInfoFactory;
 
     private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
     private static final int MAX_PICTURE_SIZE = 10;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
@@ -86,23 +88,8 @@ public class AlbumService {
                 .map(UserAlbum::getAlbum)
                 .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
                         album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(album -> {
-                    String fullUrl = album.getThumbnailPicture() != null ? album.getThumbnailPicture().getPictureURL() : null;
-                    String key = null;
-                    if (fullUrl != null){
-                        if (album.getThumbnailPicture().getS3Key() != null){
-                            key = album.getThumbnailPicture().getS3Key();
-                        } else {
-                            key = presignedUrlService.extractS3Key(fullUrl);
-                            album.getThumbnailPicture().setS3Key(key);
-                            pictureRepository.save(album.getThumbnailPicture());
-                        }
-                    }
-                    String presignedUrl = key != null
-                            ? presignedUrlService.generateGetPresignedUrl(key)
-                            : null;
-                    return AlbumInfo.of(album, presignedUrl);
-                }).toList();
+                .map(albumInfoFactory::from)
+                .toList();
     }
 
     @Transactional
@@ -162,7 +149,7 @@ public class AlbumService {
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }
 
-    private Album getAlbumIfMember(Long albumId) {
+    protected Album getAlbumIfMember(Long albumId) {
         Album album = getAlbum(albumId);
         validateAlbumMember(album, securityUtil.getCurrentUser().getId());
         return album;
@@ -176,7 +163,7 @@ public class AlbumService {
         }
     }
 
-    private Album getAlbum(Long albumId) {
+    protected Album getAlbum(Long albumId) {
         return albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
     }
@@ -355,7 +342,7 @@ public class AlbumService {
                 .build();
     }
 
-    private void validAlbumOwner(Album album) {
+    protected void validAlbumOwner(Album album) {
         UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
                 album);
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {

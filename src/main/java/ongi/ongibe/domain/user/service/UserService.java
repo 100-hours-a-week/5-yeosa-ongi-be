@@ -25,6 +25,8 @@ import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.exception.UserException;
+import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +41,9 @@ public class UserService {
 
     private final PlaceRepository placeRepository;
     private final UserAlbumRepository userAlbumRepository;
+    private final UserRepository userRepository;
     private final PictureRepository pictureRepository;
+    private final PresignedUrlService presignedUrlService;
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
@@ -159,10 +163,28 @@ public class UserService {
                 .orElse(null);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<UserInfoResponseDTO> getUserInfo(Long userId){
         User user = getUserIfCorrectId(userId);
-        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        UserInfoResponseDTO original = UserInfoResponseDTO.of(user);
+        String rawUrl = original.profileImageURL();
+        String finalUrl = rawUrl;
+        if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
+            if (user.getS3Key() == null){
+                String key = presignedUrlService.extractS3Key(rawUrl);
+                user.setS3Key(key);
+                userRepository.save(user);
+            }
+            finalUrl = presignedUrlService.generateGetPresignedUrl(user.getS3Key());
+        }
+
+        UserInfoResponseDTO response = new UserInfoResponseDTO(
+                original.userId(),
+                original.nickname(),
+                finalUrl,
+                original.cacheTil()
+        );
+
         return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
     }
 
@@ -179,6 +201,9 @@ public class UserService {
         User user = getUserIfCorrectId(userId);
         user.setNickname(request.nickname());
         user.setProfileImage(request.profileImageURL());
+        String key = presignedUrlService.extractS3Key(request.profileImageURL());
+        user.setS3Key(key);
+        userRepository.save(user);
         UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }

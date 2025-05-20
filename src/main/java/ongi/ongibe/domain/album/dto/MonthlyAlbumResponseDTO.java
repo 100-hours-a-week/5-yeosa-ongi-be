@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.global.s3.PresignedUrlService;
 
 public record MonthlyAlbumResponseDTO(
         @Schema(description = "앨범 목록") List<AlbumInfo> albumInfo,

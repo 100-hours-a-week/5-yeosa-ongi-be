@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
 
 @Configuration
 @EnableAsync
@@ -24,10 +25,12 @@ public class AsyncConfig implements AsyncConfigurer {
         };
     }
 
+
     @Bean(name = "asyncExecutor")
     public TaskExecutor asyncExecutor() {
+        Executor virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
         return new ConcurrentTaskExecutor(
-                Executors.newVirtualThreadPerTaskExecutor()
+                new DelegatingSecurityContextExecutor(virtualThreadExecutor)
         );
     }
 

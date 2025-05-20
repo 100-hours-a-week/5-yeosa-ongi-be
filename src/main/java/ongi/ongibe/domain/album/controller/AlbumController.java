@@ -124,7 +124,7 @@ public class AlbumController {
     @Operation(summary = "앨범 초대 수락", description = "초대 링크를 통해 앨범에 참여합니다.")
     @ApiResponse(responseCode = "200", description = "초대 수락 성공", content = @Content(schema = @Schema(implementation = BaseApiResponse_AlbumInviteResponse.class)))
     @PostMapping("/invite")
-    public ResponseEntity<BaseApiResponse<AlbumInviteResponseDTO>> acceptInvite(@RequestBody String inviteToken) {
+    public ResponseEntity<BaseApiResponse<AlbumInviteResponseDTO>> acceptInvite(@RequestParam String inviteToken) {
         return ResponseEntity.ok(albumService.acceptInvite(inviteToken));
     }
 
