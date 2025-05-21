@@ -30,8 +30,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class AlbumServiceTest {
 
     @Spy
@@ -82,7 +83,6 @@ class AlbumServiceTest {
     @Test
     void createInviteToken_성공() {
         // given
-        // getAlbumIfMember, validAlbumOwner 는 실 코드에서 직접 호출한다고 가정
         doReturn(testAlbum).when(albumService).getAlbumIfMember(albumId);
         doNothing().when(albumService).validAlbumOwner(testAlbum);
         when(jwtTokenProvider.generateInviteToken(albumId)).thenReturn(token);
@@ -118,7 +118,7 @@ class AlbumServiceTest {
         // given
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(false);
 
-        // expect
+        // when, then
         assertThatThrownBy(() -> albumService.acceptInvite(token))
                 .isInstanceOf(AlbumException.class)
                 .hasMessageContaining("초대코드");
