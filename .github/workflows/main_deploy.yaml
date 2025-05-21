@@ -45,3 +45,38 @@ jobs:
             docker-compose down
             docker-compose pull
             docker-compose up -d
+      - name: Notify Discord on Success
+        if: success()
+        run: |
+          echo '{
+            "content": "**✅ PROD 백엔드 배포 완료!** 🎉",
+            "embeds": [
+              {
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                ],
+                "color": 3066993
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          echo '{
+            "content": "**❌ PROD 백엔드 배포 실패!** 🧨",
+            "embeds": [
+              {
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                ],
+                "color": 15158332
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
