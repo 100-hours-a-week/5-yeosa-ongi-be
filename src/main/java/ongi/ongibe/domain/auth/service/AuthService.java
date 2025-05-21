@@ -49,27 +49,19 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class AuthService {
 
-    @Value("${spring.kakao.auth.client}")
-    private String clientId;
-
-    @Value("${spring.kakao.auth.redirect}")
-    private String redirectUri;
-
-    private final WebClient webClient;
+    private final KakaoOauthClient kakaoOauthClient;
     private final UserRepository userRepository;
     private final OAuthTokenRepository oauthTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PresignedUrlService presignedUrlService;
 
-    private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
-
     @Transactional
     public BaseApiResponse<KakaoLoginResponseDTO> kakaoLogin(String code) {
         //access token, refresh token 요청
-        KakaoTokenResponseDTO tokenResponse = getToken(code);
+        KakaoTokenResponseDTO tokenResponse = kakaoOauthClient.getToken(code);
         //id token 파싱
-        KakaoIdTokenPayloadDTO kakaoUserInfo = parseIdToken(tokenResponse.id_token());
+        KakaoIdTokenPayloadDTO kakaoUserInfo = kakaoOauthClient.parseIdToken(tokenResponse.id_token());
         log.info("카카오 사용자 정보: email={}, nickname={}", kakaoUserInfo.email(), kakaoUserInfo.nickname());
 
         Optional<User> optionalUser = userRepository.findByProviderId(kakaoUserInfo.sub());
@@ -122,54 +114,6 @@ public class AuthService {
                 .message(isNewUser ? "회원가입을 완료했습니다. 로그인을 완료했습니다." : "로그인을 완료했습니다.")
                 .data(kakaoLoginResponseDTO)
                 .build();
-    }
-
-    private KakaoTokenResponseDTO getToken(String code) {
-        log.debug("카카오 토큰 요청 시작: code = {}", code);
-        log.debug("사용할 redirect_uri = {}", redirectUri);
-
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("grant_type", "authorization_code");
-        formData.add("client_id", clientId);
-        formData.add("redirect_uri", redirectUri);
-        formData.add("code", code);
-
-        try {
-            String responseBody = webClient.post()
-                    .uri(KAKAO_TOKEN_URL)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .bodyValue(formData)
-                    .retrieve()
-                    .onStatus(statusCode -> statusCode.is4xxClientError() || statusCode.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .map(body -> new ResponseStatusException(clientResponse.statusCode(), "Kakao 인증 실패: " + body)))
-                    .bodyToMono(String.class)
-                    .block();
-
-            log.info("Kakao 응답 원문: {}", responseBody);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(responseBody, KakaoTokenResponseDTO.class);
-
-        } catch (Exception e) {
-            log.error("카카오 토큰 요청 실패", e);
-            throw new TokenParsingException("카카오 토큰 응답 파싱 실패", e);
-        }
-    }
-
-
-
-
-    private KakaoIdTokenPayloadDTO parseIdToken(String idToken) {
-        try {
-            String[] parts = idToken.split("\\.");
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(payloadJson, KakaoIdTokenPayloadDTO.class);
-        } catch (Exception e) {
-            throw new TokenParsingException("ID 토큰 파싱 실패", e);
-        }
     }
 
     @Transactional
