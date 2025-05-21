@@ -27,7 +27,7 @@ jobs:
         continue-on-error: true
         run: |
           ./gradlew flywayValidate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
@@ -35,7 +35,7 @@ jobs:
         if: steps.validate.outcome == 'failure'
         run: |
           ./gradlew flywayRepair \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
@@ -43,7 +43,7 @@ jobs:
         if: steps.validate.outcome == 'failure'
         run: |
           ./gradlew flywayValidate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
@@ -74,43 +74,35 @@ jobs:
       - name: Notify Discord on Success
         if: success()
         run: |
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d @- ${{ secrets.DISCORD_WEBHOOK_URL }} <<EOF
-  {
-    "content": "**✅ 백엔드 배포 완료!** 🎉",
-    "embeds": [
-      {
-        "title": "${{ github.event.pull_request.title }}",
-        "url": "${{ github.event.pull_request.html_url }}",
-        "fields": [
-          { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
-          { "name": "Author", "value": "${{ github.actor }}", "inline": true }
-        ],
-        "color": 3066993
-      }
-    ]
-  }
-  EOF
+          echo '{
+            "content": "**✅ 백엔드 배포 완료!** 🎉",
+            "embeds": [
+              {
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                ],
+                "color": 3066993
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
 
-- name: Notify Discord on Failure
-  if: failure()
-  run: |
-    curl -H "Content-Type: application/json" \
-         -X POST \
-         -d @- ${{ secrets.DISCORD_WEBHOOK_URL }} <<EOF
-  {
-    "content": "**❌ 백엔드 배포 실패!** 🧨",
-    "embeds": [
-      {
-        "title": "${{ github.event.pull_request.title }}",
-        "url": "${{ github.event.pull_request.html_url }}",
-        "fields": [
-          { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
-          { "name": "Author", "value": "${{ github.actor }}", "inline": true }
-        ],
-        "color": 15158332
-      }
-    ]
-  }
-  EOF
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          echo '{
+            "content": "**❌ 백엔드 배포 실패!** 🧨",
+            "embeds": [
+              {
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                ],
+                "color": 15158332
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
