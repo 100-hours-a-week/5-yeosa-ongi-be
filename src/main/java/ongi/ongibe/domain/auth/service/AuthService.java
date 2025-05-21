@@ -26,6 +26,7 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.exception.InvalidTokenException;
 import ongi.ongibe.global.exception.TokenNotFoundException;
 import ongi.ongibe.global.exception.TokenParsingException;
+import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -59,6 +60,7 @@ public class AuthService {
     private final OAuthTokenRepository oauthTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PresignedUrlService presignedUrlService;
 
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 
@@ -101,13 +103,17 @@ public class AuthService {
         String ongiRefreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
         refreshTokenRepository.save(user.getId(), ongiRefreshToken, 14 * 24 * 60 * 60L);
 
+        String key = user.getS3Key() == null ?
+                presignedUrlService.extractS3Key(user.getProfileImage()) : user.getS3Key();
+        String presignedProfile = presignedUrlService.generateGetPresignedUrl(key);
+
         KakaoLoginResponseDTO kakaoLoginResponseDTO = KakaoLoginResponseDTO.of(
                 ongiAccessToken,
                 ongiRefreshToken,
                 60 * 60 * 24 * 14,
                 user.getId(),
                 user.getNickname(),
-                user.getProfileImage(),
+                presignedProfile,
                 300
         );
 
