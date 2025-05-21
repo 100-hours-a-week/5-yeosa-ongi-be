@@ -211,9 +211,10 @@ public class UserService {
         user.setNickname(request.nickname());
         user.setProfileImage(request.profileImageURL());
         String key = presignedUrlService.extractS3Key(request.profileImageURL());
+        String presignedNewProfileImageURL = presignedUrlService.generateGetPresignedUrl(key);
         user.setS3Key(key);
         userRepository.save(user);
-        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), presignedNewProfileImageURL, 300);
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
 }
