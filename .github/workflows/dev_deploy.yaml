@@ -75,7 +75,7 @@ jobs:
         if: success()
         run: |
           echo '{
-            "content": "**✅ 백엔드 배포 완료!** 🎉",
+            "content": "**✅ DEV 백엔드 배포 완료!** 🎉",
             "embeds": [
               {
                 "title": "'"${{ github.event.pull_request.title }}"'",
@@ -93,7 +93,7 @@ jobs:
         if: failure()
         run: |
           echo '{
-            "content": "**❌ 백엔드 배포 실패!** 🧨",
+            "content": "**❌ DEV 백엔드 배포 실패!** 🧨",
             "embeds": [
               {
                 "title": "'"${{ github.event.pull_request.title }}"'",
