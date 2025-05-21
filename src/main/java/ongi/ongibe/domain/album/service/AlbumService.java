@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
@@ -263,6 +264,10 @@ public class AlbumService {
 
         for (Picture p : pictures) {
             p.setDeletedAt(LocalDateTime.now());
+        }
+        if (pictureIds.contains(album.getThumbnailPicture().getId())){
+            Optional<Picture> newThumbnailPicture = pictureRepository.findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(album);
+            newThumbnailPicture.ifPresent(album::setThumbnailPicture);
         }
     }
 
