@@ -76,13 +76,41 @@ jobs:
         run: |
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d "{\"content\": \"✅ 백엔드 배포 완료!\n📦 Repository: $GITHUB_REPOSITORY\n🔀 PR: ${{ github.event.pull_request.title }}\n👤 By: ${{ github.actor }}\"}" \
-               ${{ secrets.DISCORD_WEBHOOK_URL }}
+               -d @- ${{ secrets.DISCORD_WEBHOOK_URL }} <<EOF
+  {
+    "content": "**✅ 백엔드 배포 완료!** 🎉",
+    "embeds": [
+      {
+        "title": "${{ github.event.pull_request.title }}",
+        "url": "${{ github.event.pull_request.html_url }}",
+        "fields": [
+          { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
+          { "name": "Author", "value": "${{ github.actor }}", "inline": true }
+        ],
+        "color": 3066993
+      }
+    ]
+  }
+  EOF
 
-      - name: Notify Discord on Failure
-        if: failure()
-        run: |
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"content\": \"❌ 백엔드 배포 실패 😭\n📦 Repository: $GITHUB_REPOSITORY\n🔀 PR: ${{ github.event.pull_request.title }}\n👤 By: ${{ github.actor }}\"}" \
-               ${{ secrets.DISCORD_WEBHOOK_URL }}
+- name: Notify Discord on Failure
+  if: failure()
+  run: |
+    curl -H "Content-Type: application/json" \
+         -X POST \
+         -d @- ${{ secrets.DISCORD_WEBHOOK_URL }} <<EOF
+  {
+    "content": "**❌ 백엔드 배포 실패!** 🧨",
+    "embeds": [
+      {
+        "title": "${{ github.event.pull_request.title }}",
+        "url": "${{ github.event.pull_request.html_url }}",
+        "fields": [
+          { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
+          { "name": "Author", "value": "${{ github.actor }}", "inline": true }
+        ],
+        "color": 15158332
+      }
+    ]
+  }
+  EOF
