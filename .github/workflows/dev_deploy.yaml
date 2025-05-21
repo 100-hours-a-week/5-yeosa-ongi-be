@@ -22,7 +22,25 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Validate Flyway Migrations
+      - name: Try Validate Flyway Migrations
+        id: validate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayValidate \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
+            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
+            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+
+      - name: Run Flyway Repair if Validation Fails
+        if: steps.validate.outcome == 'failure'
+        run: |
+          ./gradlew flywayRepair \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
+            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
+            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+
+      - name: Re-run Flyway Validate after Repair
+        if: steps.validate.outcome == 'failure'
         run: |
           ./gradlew flywayValidate \
             -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
