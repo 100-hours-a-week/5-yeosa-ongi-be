@@ -25,7 +25,7 @@ jobs:
       - name: Validate Flyway Migrations
         run: |
           ./gradlew flywayValidate \
-            -Dflyway.url=jdbc:mysql://mysql:3306/ongi  \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }}  \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
