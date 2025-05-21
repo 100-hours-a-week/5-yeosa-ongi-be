@@ -3,6 +3,8 @@ package ongi.ongibe.domain.album.repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.user.entity.User;
 import org.springframework.data.domain.Pageable;
@@ -98,4 +100,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     List<Picture> findAllByUserAndCreatedAtBetween(User user, LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
 
     List<Picture> findAllByAlbumIdAndS3KeyIn(Long albumId, List<String> s3Keys);
+
+    Optional<Picture> findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(Album album);
 }
