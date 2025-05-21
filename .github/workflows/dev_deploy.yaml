@@ -22,8 +22,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Try Validate Flyway Migrations
-        id: validate
+      - name: Initial Flyway Validate
+        id: initial-validate
         continue-on-error: true
         run: |
           ./gradlew flywayValidate \
@@ -31,21 +31,38 @@ jobs:
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
-      - name: Run Flyway Repair if Validation Fails
-        if: steps.validate.outcome == 'failure'
+      - name: Try Flyway Migrate
+        id: migrate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
+            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
+            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+
+      - name: Run Flyway Repair if Migrate Fails
+        if: steps.migrate.outcome == 'failure'
         run: |
           ./gradlew flywayRepair \
             -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
 
-      - name: Re-run Flyway Validate after Repair
-        if: steps.validate.outcome == 'failure'
+      - name: Retry Flyway Migrate after Repair
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
+            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
+            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+
+      - name: Final Flyway Validate
         run: |
           ./gradlew flywayValidate \
             -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+      
 
       - name: Build Spring Boot JAR
         run: ./gradlew clean build -x test
