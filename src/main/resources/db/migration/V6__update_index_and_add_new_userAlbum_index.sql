@@ -1,8 +1,5 @@
 -- V6 script, 인덱스 수정하고 새 인덱스 추가
 
--- 불필요 인덱스 삭제
-DROP INDEX idx_album_id_deleted ON album;
-
 -- 수정 필요한 인덱스 삭제 후 다시 인덱스 부여(순서 변경)
 -- 제약조건 삭제가 너무 번거로워 일단은 인덱스 생성만 실시
 CREATE INDEX idx_picture_userid_deletedat_created_date
