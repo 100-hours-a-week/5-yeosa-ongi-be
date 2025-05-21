@@ -30,8 +30,8 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isShaky = false where p.s3Key in :keys and p.album.id = :albumId")
-    void markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
+    @Query("update Picture p set p.isShaky = false where p.id in :ids and p.album.id = :albumId")
+    void markPicturesShakyAsStable(@Param("albumId") Long albumId, @Param("ids") List<Long> ids);
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -40,8 +40,8 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.isDuplicated = false where p.s3Key in :keys and p.album.id = :albumId")
-    void markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("keys") List<String> keys);
+    @Query("update Picture p set p.isDuplicated = false where p.id in :ids and p.album.id = :albumId")
+    void markPicturesDuplicatedAsStable(@Param("albumId") Long albumId, @Param("ids") List<Long> ids);
 
     @Modifying(clearAutomatically = true)
     @Transactional

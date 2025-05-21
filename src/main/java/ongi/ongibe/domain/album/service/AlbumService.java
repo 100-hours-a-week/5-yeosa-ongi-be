@@ -244,15 +244,8 @@ public class AlbumService {
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
 
-        List<Picture> pictures = pictureRepository.findAllById(pictureIds).stream()
-                .filter(p -> p.getAlbum().getId().equals(albumId))
-                .toList();
-
-        List<String> urls = pictures.stream()
-                .map(Picture::getPictureURL)
-                .toList();
-        pictureRepository.markPicturesDuplicatedAsStable(albumId, urls);
-        pictureRepository.markPicturesShakyAsStable(albumId, urls);
+        pictureRepository.markPicturesDuplicatedAsStable(albumId, pictureIds);
+        pictureRepository.markPicturesShakyAsStable(albumId, pictureIds);
     }
 
     @Transactional
