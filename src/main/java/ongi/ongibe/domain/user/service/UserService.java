@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
@@ -153,7 +154,7 @@ public class UserService {
                     new UserTagStatResponseDTO(null, List.of()));
         }
         List<String> pictureUrls = pictures.stream()
-                .filter(p -> p.getTag().equals(maxTag))
+                .filter(p -> Objects.equals(p.getTag(), maxTag))
                 .sorted(Comparator.comparing(Picture::getQualityScore).reversed())
                 .map(Picture::getPictureURL)
                 .limit(4)
