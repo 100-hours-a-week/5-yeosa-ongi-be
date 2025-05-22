@@ -399,24 +399,40 @@ public class AlbumService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<AlbumMemberResponseDTO> getAlbumMembers(Long albumId) {
         User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
         List<UserAlbum> members = userAlbumRepository.findAllByAlbumAndUser(album, user);
 
         List<AlbumMemberResponseDTO.UserInfo> userInfos = members.stream()
-                .map(ua -> new AlbumMemberResponseDTO.UserInfo(
-                        ua.getUser().getId(),
-                        ua.getUser().getNickname(),
-                        ua.getRole(),
-                        ua.getUser().getProfileImage()
-                ))
+                .map(ua -> {
+                    User member = ua.getUser();
+                    String rawUrl = member.getProfileImage();
+                    String finalUrl = rawUrl;
+
+                    if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
+                        if (member.getS3Key() == null) {
+                            String key = presignedUrlService.extractS3Key(rawUrl);
+                            member.setS3Key(key);
+                            userRepository.save(member); // s3Key 저장
+                        }
+                        finalUrl = presignedUrlService.generateGetPresignedUrl(member.getS3Key());
+                    }
+
+                    return new AlbumMemberResponseDTO.UserInfo(
+                            member.getId(),
+                            member.getNickname(),
+                            ua.getRole(),
+                            finalUrl
+                    );
+                })
                 .toList();
 
         return BaseApiResponse.success(
                 "ALBUM_MEMBER_LIST_SUCCESS",
                 "공동작업자 목록 조회 성공",
-                new AlbumMemberResponseDTO(userInfos));
+                new AlbumMemberResponseDTO(userInfos)
+        );
     }
 }
