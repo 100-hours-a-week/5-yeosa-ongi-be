@@ -24,7 +24,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Value("${custom.securityConfig}")
+    @Value("${custom.isProd}")
     private boolean isProd;
 
     // 인증 없이 접근 가능한 URL만 포함

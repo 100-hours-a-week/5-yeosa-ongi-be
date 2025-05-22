@@ -40,6 +40,7 @@ import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import ongi.ongibe.util.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,11 @@ public class AlbumService {
     private final PresignedUrlService presignedUrlService;
     private final AlbumInfoFactory albumInfoFactory;
 
-    private static final String INVITE_LINK_PREFIX = "https://ongi.com/invite?token=";
+    @Value("${custom.isProd}")
+    private boolean isProd;
+
+    private static final String INVITE_LINK_PREFIX_PROD = "https://ongi.today/invite?token=";
+    private static final String INVITE_LINK_PREFIX_DEV = "https://dev.ongi.today/invite?token=";
     private static final int MAX_PICTURE_SIZE = 10;
 
     @Transactional
@@ -355,7 +360,9 @@ public class AlbumService {
 
         String token = jwtTokenProvider.generateInviteToken(albumId);
         redisInviteTokenRepository.save(token, albumId);
-        return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", INVITE_LINK_PREFIX + token);
+
+        String prefix = isProd ? INVITE_LINK_PREFIX_PROD : INVITE_LINK_PREFIX_DEV;
+        return BaseApiResponse.success("INVITE_LINK_CREATED", "초대 링크가 생성되었습니다.", prefix + token);
     }
 
     @Transactional
@@ -392,24 +399,40 @@ public class AlbumService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<AlbumMemberResponseDTO> getAlbumMembers(Long albumId) {
         User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
         List<UserAlbum> members = userAlbumRepository.findAllByAlbumAndUser(album, user);
 
         List<AlbumMemberResponseDTO.UserInfo> userInfos = members.stream()
-                .map(ua -> new AlbumMemberResponseDTO.UserInfo(
-                        ua.getUser().getId(),
-                        ua.getUser().getNickname(),
-                        ua.getRole(),
-                        ua.getUser().getProfileImage()
-                ))
+                .map(ua -> {
+                    User member = ua.getUser();
+                    String rawUrl = member.getProfileImage();
+                    String finalUrl = rawUrl;
+
+                    if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
+                        if (member.getS3Key() == null) {
+                            String key = presignedUrlService.extractS3Key(rawUrl);
+                            member.setS3Key(key);
+                            userRepository.save(member); // s3Key 저장
+                        }
+                        finalUrl = presignedUrlService.generateGetPresignedUrl(member.getS3Key());
+                    }
+
+                    return new AlbumMemberResponseDTO.UserInfo(
+                            member.getId(),
+                            member.getNickname(),
+                            ua.getRole(),
+                            finalUrl
+                    );
+                })
                 .toList();
 
         return BaseApiResponse.success(
                 "ALBUM_MEMBER_LIST_SUCCESS",
                 "공동작업자 목록 조회 성공",
-                new AlbumMemberResponseDTO(userInfos));
+                new AlbumMemberResponseDTO(userInfos)
+        );
     }
 }
