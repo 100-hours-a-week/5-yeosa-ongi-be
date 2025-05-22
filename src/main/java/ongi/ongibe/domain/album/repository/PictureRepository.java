@@ -47,8 +47,8 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("update Picture p set p.tag = :tag where p.s3Key in :keys and p.tag is null and p.album.id = :albumId")
-    int updateTagIfAbsent(@Param("albumId") Long albumId, @Param("keys") List<String> keys, @Param("tag") String tag);
+    @Query("update Picture p set p.tag = :tag where p.s3Key in :keys and p.album.id = :albumId")
+    int updateTag(@Param("albumId") Long albumId, @Param("keys") List<String> keys, @Param("tag") String tag);
 
     @Modifying(clearAutomatically = true)
     @Transactional

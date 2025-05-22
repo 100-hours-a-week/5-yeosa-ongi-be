@@ -59,7 +59,7 @@ public class Picture {
     private String s3Key;
 
     @Column(length = 20)
-    private String tag;
+    private String tag = "AI 분석 전";
     private boolean isDuplicated = false;
     private boolean isShaky = false;
     private float qualityScore;
