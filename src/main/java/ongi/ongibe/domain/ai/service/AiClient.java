@@ -2,9 +2,6 @@ package ongi.ongibe.domain.ai.service;
 
 import jakarta.persistence.EntityManager;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
@@ -16,12 +13,9 @@ import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
@@ -98,7 +92,7 @@ public class AiClient {
 
         int totalTagUpdated = 0;
         for (var categoryResult : response.data()) {
-            int count = pictureRepository.updateTagIfAbsent(albumId, categoryResult.images(), categoryResult.category());
+            int count = pictureRepository.updateTag(albumId, categoryResult.images(), categoryResult.category());
             totalTagUpdated += count;
         }
         log.info("[AI] tag 반영 : {}", totalTagUpdated);
