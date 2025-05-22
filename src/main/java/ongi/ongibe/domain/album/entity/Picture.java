@@ -73,7 +73,8 @@ public class Picture {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "created_date", insertable = false, updatable = false) // index용
+    @CreationTimestamp
+    @Column(name = "created_date", updatable = false) // index용
     private LocalDate createdDate;
 
     private LocalDateTime deletedAt;
