@@ -58,6 +58,7 @@ public class Picture {
     @Column(nullable = true)
     private String s3Key;
 
+    @Builder.Default
     @Column(length = 20)
     private String tag = "AI 분석 전";
     private boolean isDuplicated = false;
