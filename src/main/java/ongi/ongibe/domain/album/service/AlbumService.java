@@ -30,6 +30,7 @@ import ongi.ongibe.domain.album.factory.AlbumInfoFactory;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
+import ongi.ongibe.domain.notification.event.InviteMemberNotificationEvent;
 import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
@@ -68,7 +69,7 @@ public class AlbumService {
 
     private static final String INVITE_LINK_PREFIX_PROD = "https://ongi.today/invite?token=";
     private static final String INVITE_LINK_PREFIX_DEV = "https://dev.ongi.today/invite?token=";
-    private static final int MAX_PICTURE_SIZE = 10;
+    private static final int MAX_PICTURE_SIZE = 30;
 
     @Transactional
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -370,11 +371,13 @@ public class AlbumService {
         if (redisInviteTokenRepository.existsByToken(token)) {
             Long tokenAlbumId = jwtTokenProvider.validateAndExtractInviteId(token);
             Album album = getAlbum(tokenAlbumId);
-            UserAlbum userAlbum = UserAlbum.of(securityUtil.getCurrentUser(), album, UserAlbumRole.NORMAL);
+            User user = securityUtil.getCurrentUser();
+            UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.NORMAL);
             userAlbumRepository.save(userAlbum);
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
+            eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
         throw new AlbumException(HttpStatus.UNAUTHORIZED, "발급되지 않은 초대코드입니다.");
