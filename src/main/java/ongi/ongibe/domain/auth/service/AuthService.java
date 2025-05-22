@@ -127,7 +127,7 @@ public class AuthService {
         String storedRefreshToken = refreshTokenRepository.findByUserId(userId);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             log.warn("유효하지 않은 토큰입니다 : {}", refreshToken);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
         }
 
         // 3. 새 AccessToken 발급

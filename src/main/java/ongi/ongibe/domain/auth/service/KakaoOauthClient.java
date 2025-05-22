@@ -9,6 +9,7 @@ import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
 import ongi.ongibe.domain.auth.dto.KakaoTokenResponseDTO;
 import ongi.ongibe.global.exception.TokenParsingException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
