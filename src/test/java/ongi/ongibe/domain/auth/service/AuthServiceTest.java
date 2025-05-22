@@ -58,8 +58,8 @@ class AuthServiceTest {
         MockitoAnnotations.openMocks(this);
 
         tokenResponse = new KakaoTokenResponseDTO(
-                "access-token",
                 "Bearer",
+                "access-token",
                 "mock-id-token",
                 3600,
                 "refresh-token",
@@ -89,14 +89,11 @@ class AuthServiceTest {
                 .email("user@email.com")
                 .build();
 
-        when(kakaoOauthClient.getToken(code)).thenReturn(tokenResponse);
-        when(kakaoOauthClient.parseIdToken(tokenResponse.id_token())).thenReturn(idTokenPayload);
-
         when(jwtTokenProvider.generateAccessToken(anyLong())).thenReturn("ongi-access-token");
         when(jwtTokenProvider.generateRefreshToken(anyLong())).thenReturn("ongi-refresh-token");
 
-        when(presignedUrlService.extractS3Key(any())).thenReturn("profile-key");
-        when(presignedUrlService.generateGetPresignedUrl("profile-key")).thenReturn("https://presigned.url");
+        when(presignedUrlService.extractS3Key(any())).thenReturn("key.img");
+        when(presignedUrlService.generateGetPresignedUrl("key.img")).thenReturn("https://presigned.url");
     }
 
     @Test
@@ -104,6 +101,9 @@ class AuthServiceTest {
         //given
         when(userRepository.findByProviderId(kakaoSub)).thenReturn(Optional.empty());
         when(userRepository.save(any())).thenReturn(mockUser);
+
+        when(kakaoOauthClient.getToken(code)).thenReturn(tokenResponse);
+        when(kakaoOauthClient.parseIdToken(tokenResponse.id_token())).thenReturn(idTokenPayload);
 
         BaseApiResponse<KakaoLoginResponseDTO> response = authService.kakaoLogin(code);
         KakaoLoginResponseDTO data = response.getData();
@@ -114,7 +114,13 @@ class AuthServiceTest {
     }
 
     @Test
+    void kakaoLogin_로그인실패_카카오토큰요청실패(){
+
+    }
+
+    @Test
     void reissueAccessToken() {
+
     }
 
     @Test
