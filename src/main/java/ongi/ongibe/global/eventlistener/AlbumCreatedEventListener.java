@@ -1,4 +1,4 @@
-package ongi.ongibe.global.event;
+package ongi.ongibe.global.eventlistener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
