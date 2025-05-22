@@ -15,6 +15,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.global.exception.InvalidTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -68,19 +69,19 @@ public class JwtTokenProvider {
 
         } catch (ExpiredJwtException e) {
             log.warn("토큰 만료: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "액세스 토큰이 만료되었습니다.");
+            throw new InvalidTokenException("토큰이 만료되었습니다.");
 
         } catch (MalformedJwtException e) {
             log.warn("잘못된 형식의 JWT: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 토큰이 잘못되었습니다.");
+            throw new InvalidTokenException("잘못된 형식의 토큰입니다.");
 
         } catch (SecurityException e) {
             log.warn("JWT 서명 검증 실패: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 JWT 서명입니다.");
+            throw new InvalidTokenException("유효하지 않은 JWT 서명입니다.");
 
         } catch (IllegalArgumentException e) {
             log.warn("JWT 파싱 시 잘못된 인자: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 파싱에 실패했습니다.");
+            throw new InvalidTokenException("JWT 파싱에 실패했습니다.");
         }
     }
 
@@ -93,7 +94,7 @@ public class JwtTokenProvider {
             return true;
         } catch (Exception e) {
             log.warn("토큰 유효성 검사 실패: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+            throw new InvalidTokenException("토큰이 유효하지 않습니다.");
         }
     }
 
@@ -115,7 +116,7 @@ public class JwtTokenProvider {
             return Long.parseLong(claims.getSubject());
         } catch (Exception e) {
             log.warn("토큰 유효성 검사 실패: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+            throw new InvalidTokenException("토큰이 유효하지 않습니다.");
         }
     }
 }

@@ -24,7 +24,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Value("${custom.securityConfig}")
+    @Value("${custom.isProd}")
     private boolean isProd;
 
     // 인증 없이 접근 가능한 URL만 포함
@@ -62,7 +62,7 @@ public class SecurityConfig {
             configuration.setAllowedOrigins(List.of(
                     "http://localhost:5173",
                     "https://ongi.today",
-                    "http://34.64.252.140:5173"
+                    "https://dev.ongi.today"
             ));
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

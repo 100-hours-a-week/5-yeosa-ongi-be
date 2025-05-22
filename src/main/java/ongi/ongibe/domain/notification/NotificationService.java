@@ -12,6 +12,8 @@ import ongi.ongibe.domain.notification.dto.NotificationListResponseDTO;
 import ongi.ongibe.domain.notification.dto.NotificationResponseDTO;
 import ongi.ongibe.domain.notification.entity.Notification;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
+import ongi.ongibe.domain.notification.event.AlbumIdEvent;
+import ongi.ongibe.domain.notification.event.InviteMemberNotificationEvent;
 import ongi.ongibe.domain.notification.repository.NotificationRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
@@ -53,6 +55,26 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public void saveInviteMemberNotification(
+            InviteMemberNotificationEvent inviteMemberNotificationEvent) {
+        Album album = getAlbum(inviteMemberNotificationEvent);
+        User actor = getUser(inviteMemberNotificationEvent);
+        log.info("notice user: {}, album: {}", actor.getId(), album.getId());
+        List<UserAlbum> albumUser = userAlbumRepository.findAllByAlbum(album);
+        List<Notification> notifications = albumUser.stream()
+                .map(ua -> Notification.builder()
+                        .user(ua.getUser())
+                        .actorUser(actor)
+                        .type(NotificationType.ALBUM_MEMBER_JOIN)
+                        .refId(album.getId())
+                        .isRead(false)
+                        .build())
+                .toList();
+
+        notificationRepository.saveAll(notifications);
+    }
+
     @Transactional(readOnly = true)
     public BaseApiResponse<NotificationListResponseDTO<NotificationResponseDTO>> getNotifications(
             Long lastNotificationId
@@ -77,19 +99,19 @@ public class NotificationService {
         notification.setRead(true);
     }
 
-    private Album getAlbum(AlbumCreatedNotificationEvent createdNotificationEvent) {
-        return albumRepository.findById(createdNotificationEvent.albumId())
+    private Album getAlbum(AlbumIdEvent event) {
+        return albumRepository.findById(event.albumId())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "앨범을 찾을 수 없습니다. albumId: " + createdNotificationEvent.albumId())
+                                "앨범을 찾을 수 없습니다. albumId: " + event.albumId())
                 );
     }
 
-    private User getUser(AlbumCreatedNotificationEvent createdNotificationEvent) {
-        return userRepository.findById(createdNotificationEvent.actorId())
+    private User getUser(AlbumIdEvent event) {
+        return userRepository.findById(event.actorId())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "유저를 찾을 수 없습니다. userId: " + createdNotificationEvent.actorId())
+                                "유저를 찾을 수 없습니다. userId: " + event.actorId())
                 );
     }
 

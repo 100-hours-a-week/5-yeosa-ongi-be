@@ -6,9 +6,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +50,7 @@ public class Album {
     @JoinColumn(name = "thumbnail_picture_id")
     private Picture thumbnailPicture;
 
-    @Column(length = 10)
+    @Column(length = 12)
     private String name;
 
     @CreationTimestamp

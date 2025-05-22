@@ -1,7 +1,6 @@
 package ongi.ongibe.domain.notification.event;
 
-public record AlbumCreatedNotificationEvent(
+public record InviteMemberNotificationEvent(
         Long albumId,
         Long actorId
 ) implements AlbumIdEvent {}
-

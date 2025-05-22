@@ -19,7 +19,7 @@ public record AiAestheticScoreRequestDTO(
                 .filter(p -> p.getTag() != null)
                 .collect(Collectors.groupingBy(
                         Picture::getTag,
-                        Collectors.mapping(Picture::getPictureURL, Collectors.toList())
+                        Collectors.mapping(Picture::getS3Key, Collectors.toList())
                 ));
 
         List<Category> categories = grouped.entrySet().stream()

@@ -65,6 +65,9 @@ public class User {
     @Column(nullable = false, length = 512)
     private String profileImage;
 
+    @Column
+    private String s3Key;
+
     @Column(length = 320)
     private String email;
 

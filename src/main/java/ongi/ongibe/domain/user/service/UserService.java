@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.user.service;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -10,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
@@ -25,6 +27,8 @@ import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.exception.UserException;
+import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +43,9 @@ public class UserService {
 
     private final PlaceRepository placeRepository;
     private final UserAlbumRepository userAlbumRepository;
+    private final UserRepository userRepository;
     private final PictureRepository pictureRepository;
+    private final PresignedUrlService presignedUrlService;
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
@@ -67,22 +73,30 @@ public class UserService {
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
         YearMonth ym = DateUtil.parseOrNow(yearMonth);
-        LocalDateTime startMonth = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endMonth = DateUtil.getEndOfMonth(yearMonth);
+        LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
+        LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
         List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
-        Map<String, Integer> dailyCountMap = new LinkedHashMap<>();
+        Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
         for (int day = 1; day<=ym.lengthOfMonth(); day++){
-            LocalDateTime date = ym.atDay(day).atStartOfDay();
-            dailyCountMap.put(date.toString(), 0);
+            dailyCountMap.put(ym.atDay(day), 0);
         }
 
         for (Object[] result : results){
-            LocalDate date = (LocalDate) result[0];
-            int count = (int) result[1];
-            dailyCountMap.put(date.toString(), count);
+            LocalDate date = ((Date) result[0]).toLocalDate();
+            int count =((Number) result[1]).intValue();
+            dailyCountMap.put(date, count);
         }
 
-        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, dailyCountMap);
+        Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().toString(), // LocalDate → String
+                        Map.Entry::getValue,
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new // 순서 유지
+                ));
+
+
+        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, responseMap);
         return BaseApiResponse.success(
                 "USER_IMAGE_STATISTICS_SUCCESS",
                 "월간 일별 사진 업로드 수 조회 성공",
@@ -140,7 +154,7 @@ public class UserService {
                     new UserTagStatResponseDTO(null, List.of()));
         }
         List<String> pictureUrls = pictures.stream()
-                .filter(p -> p.getTag().equals(maxTag))
+                .filter(p -> Objects.equals(p.getTag(), maxTag))
                 .sorted(Comparator.comparing(Picture::getQualityScore).reversed())
                 .map(Picture::getPictureURL)
                 .limit(4)
@@ -159,10 +173,28 @@ public class UserService {
                 .orElse(null);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BaseApiResponse<UserInfoResponseDTO> getUserInfo(Long userId){
         User user = getUserIfCorrectId(userId);
-        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        UserInfoResponseDTO original = UserInfoResponseDTO.of(user);
+        String rawUrl = original.profileImageURL();
+        String finalUrl = rawUrl;
+        if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
+            if (user.getS3Key() == null){
+                String key = presignedUrlService.extractS3Key(rawUrl);
+                user.setS3Key(key);
+                userRepository.save(user);
+            }
+            finalUrl = presignedUrlService.generateGetPresignedUrl(user.getS3Key());
+        }
+
+        UserInfoResponseDTO response = new UserInfoResponseDTO(
+                original.userId(),
+                original.nickname(),
+                finalUrl,
+                original.cacheTil()
+        );
+
         return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
     }
 
@@ -179,7 +211,11 @@ public class UserService {
         User user = getUserIfCorrectId(userId);
         user.setNickname(request.nickname());
         user.setProfileImage(request.profileImageURL());
-        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
+        String key = presignedUrlService.extractS3Key(request.profileImageURL());
+        String presignedNewProfileImageURL = presignedUrlService.generateGetPresignedUrl(key);
+        user.setS3Key(key);
+        userRepository.save(user);
+        UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), presignedNewProfileImageURL, 300);
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
 }

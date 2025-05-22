@@ -16,6 +16,12 @@ public enum NotificationType {
             return "앨범 분류가 완료되었습니다. 확인해보세요!";
         }
     },
+    ALBUM_MEMBER_JOIN {
+        @Override
+        public String buildMessage(Notification notification) {
+            return notification.getActorUser().getNickname() + "님이 앨범에 합류했습니다!";
+        }
+    },
     FEED_COMMENT {
         @Override
         public String buildMessage(Notification notification) {

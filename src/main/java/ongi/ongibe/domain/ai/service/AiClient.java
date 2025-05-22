@@ -2,9 +2,6 @@ package ongi.ongibe.domain.ai.service;
 
 import jakarta.persistence.EntityManager;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
@@ -16,12 +13,9 @@ import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
@@ -71,6 +65,7 @@ public class AiClient {
     public void requestDuplicates(Long albumId, List<String> urls){
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+        log.info("[AI] 중복 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
         updateDuplicates(albumId, response.data());
     }
@@ -89,14 +84,15 @@ public class AiClient {
     @Transactional
     public void requestCategories(Long albumId, List<String> urls) {
         log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(urls);
+        log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
         var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        log.info("[AI] 카테고리 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
         int totalTagUpdated = 0;
         for (var categoryResult : response.data()) {
-            int count = pictureRepository.updateTagIfAbsent(albumId, categoryResult.images(), categoryResult.category());
+            int count = pictureRepository.updateTag(albumId, categoryResult.images(), categoryResult.category());
             totalTagUpdated += count;
         }
         log.info("[AI] tag 반영 : {}", totalTagUpdated);
@@ -104,12 +100,14 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestAestheticScore(Long albumId, List<String> urls) {
-        log.info("[AI] requestAestheticScore API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(urls);
-        log.info("[AI] findAllByPictureURLIn -> {}개 결과 반환", pictures.size());
+    public void requestAestheticScore(Long albumId, List<String> keys) {
+        log.info("[AI] requestAestheticScore API 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(keys);
+        log.info("첫번째 사진 tag : {}", pictures.getFirst().getTag());
+        log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
 
         var response = postJsonWithRetry(SCORE_PATH, AiAestheticScoreRequestDTO.from(pictures), AiAestheticScoreResponseDTO.class);
+        log.info("[AI] 품질점수 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
         int totalScoreUpdated = 0;
