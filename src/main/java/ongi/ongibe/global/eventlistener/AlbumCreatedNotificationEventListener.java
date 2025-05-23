@@ -3,7 +3,7 @@ package ongi.ongibe.global.eventlistener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.event.AlbumAiCreateNotificationEvent;
-import ongi.ongibe.domain.notification.NotificationService;
+import ongi.ongibe.domain.notification.service.NotificationService;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
