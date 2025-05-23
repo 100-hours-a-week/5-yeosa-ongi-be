@@ -158,16 +158,15 @@ public class AlbumService {
 
     protected Album getAlbumIfMember(Long albumId) {
         Album album = getAlbum(albumId);
-        validateAlbumMember(album, securityUtil.getCurrentUser().getId());
+        if (!validateAlbumMember(album, securityUtil.getCurrentUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
+        };
         return album;
     }
 
-    private void validateAlbumMember(Album album, Long userId) {
-        boolean isMember = album.getUserAlbums().stream()
+    private boolean validateAlbumMember(Album album, Long userId) {
+        return album.getUserAlbums().stream()
                 .anyMatch(ua -> ua.getUser().getId().equals(userId));
-        if (!isMember){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "앨범 멤버가 아닙니다.");
-        }
     }
 
     protected Album getAlbum(Long albumId) {
@@ -350,7 +349,7 @@ public class AlbumService {
         UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
                 album);
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
-            throw new AlbumException(HttpStatus.FORBIDDEN, "소유자만 앨범 이름을 변경할 수 있습니다.");
+            throw new AlbumException(HttpStatus.FORBIDDEN, "소유자가 아닙니다.");
         }
     }
 
@@ -372,6 +371,9 @@ public class AlbumService {
             Long tokenAlbumId = jwtTokenProvider.validateAndExtractInviteId(token);
             Album album = getAlbum(tokenAlbumId);
             User user = securityUtil.getCurrentUser();
+            if (validateAlbumMember(album, user.getId())){
+                throw new AlbumException(HttpStatus.BAD_REQUEST, "이미 초대된 구성원을 또다시 초대할 수 없습니다.");
+            }
             UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.NORMAL);
             userAlbumRepository.save(userAlbum);
             redisInviteTokenRepository.remove(token);
