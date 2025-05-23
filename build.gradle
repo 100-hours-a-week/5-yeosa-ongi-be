@@ -15,6 +15,13 @@ plugins {
     id 'org.flywaydb.flyway' version '10.20.1'
 }
 
+sentry {
+    includeSourceContext = true
+    org = "ongi" // Sentry 조직명
+    projectName = "dev-ongi" // Sentry 프로젝트명
+    authToken = System.getenv("SENTRY_AUTH_TOKEN") // 환경변수로 설정
+}
+
 flyway {
     baselineOnMigrate = true
 }
