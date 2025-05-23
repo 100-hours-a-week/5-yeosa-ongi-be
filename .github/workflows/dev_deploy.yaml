@@ -12,6 +12,12 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-22.04
 
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ongi
+      SENTRY_PROJECT: dev-ongi
+      SENTRY_RELEASE: backend-${{ github.sha }}
+
     steps:
       - name: Checkout Backend Code
         uses: actions/checkout@v4
@@ -62,7 +68,6 @@ jobs:
             -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
             -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
             -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
-      
 
       - name: Build Spring Boot JAR
         run: ./gradlew clean build -x test
@@ -74,6 +79,16 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest
+
+      - name: Install Sentry CLI
+        run: curl -sL https://sentry.io/get-cli/ | bash
+
+      - name: Create and Finalize Sentry Release
+        run: |
+          sentry-cli releases new $SENTRY_RELEASE
+          sentry-cli releases set-commits $SENTRY_RELEASE --auto
+          sentry-cli releases finalize $SENTRY_RELEASE
+          sentry-cli releases deploys $SENTRY_RELEASE new -e production
 
       - name: SSH into GCP and Deploy Backend
         uses: appleboy/ssh-action@master
