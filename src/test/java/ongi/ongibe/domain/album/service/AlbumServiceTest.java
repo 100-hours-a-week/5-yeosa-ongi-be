@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
@@ -31,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 
 @SpringBootTest
 class AlbumServiceTest {
@@ -53,6 +55,9 @@ class AlbumServiceTest {
 
     @Mock
     private SecurityUtil securityUtil;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private final Long albumId = 1L;
     private final String token = "mocked.jwt.token";
@@ -91,7 +96,7 @@ class AlbumServiceTest {
         BaseApiResponse<String> result = albumService.createInviteToken(albumId);
 
         // then
-        assertThat(result.getData()).isEqualTo("https://ongi.com/invite?token=" + token);
+        assertThat(result.getData()).isEqualTo("https://dev.ongi.today/invite?token=" + token);
         verify(redisInviteTokenRepository).save(token, albumId);
     }
 
@@ -122,5 +127,22 @@ class AlbumServiceTest {
         assertThatThrownBy(() -> albumService.acceptInvite(token))
                 .isInstanceOf(AlbumException.class)
                 .hasMessageContaining("초대코드");
+    }
+
+    @Test
+    void acceptInvite_이미_구성원임(){
+        //given
+        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
+        when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+
+        UserAlbum userAlbum = UserAlbum.of(testUser, testAlbum, UserAlbumRole.NORMAL);
+        testAlbum.getUserAlbums().add(userAlbum);
+
+        //when, then
+        assertThatThrownBy(() -> albumService.acceptInvite(token))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("이미 초대된");
     }
 }
