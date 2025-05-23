@@ -1,5 +1,6 @@
 package ongi.ongibe.global.exception.handler;
 
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.exception.InvalidTokenException;
@@ -16,6 +17,7 @@ public class TokenExceptionHandler {
 
     @ExceptionHandler(TokenParsingException.class)
     public ResponseEntity<BaseApiResponse<Void>> handleTokenParsingException(TokenParsingException e) {
+        Sentry.captureException(e);
         log.warn("토큰 파싱 에러 : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -26,6 +28,7 @@ public class TokenExceptionHandler {
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<BaseApiResponse<Void>> handleInvalidTokenException(InvalidTokenException e) {
+        Sentry.captureException(e);
         log.warn("토큰 검증 에러 : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -36,6 +39,7 @@ public class TokenExceptionHandler {
 
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<BaseApiResponse<Void>> handelTokenNotFoundException(TokenNotFoundException e){
+        Sentry.captureException(e);
         log.warn("토큰을 찾을 수 없음 : {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
