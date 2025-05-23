@@ -2,7 +2,7 @@ package ongi.ongibe.domain.notification.controller;
 
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
-import ongi.ongibe.domain.notification.NotificationService;
+import ongi.ongibe.domain.notification.service.NotificationService;
 import ongi.ongibe.domain.notification.dto.NotificationListResponseDTO;
 import ongi.ongibe.domain.notification.dto.NotificationResponseDTO;
 import org.springframework.http.ResponseEntity;

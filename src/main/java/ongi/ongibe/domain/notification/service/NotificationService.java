@@ -1,4 +1,4 @@
-package ongi.ongibe.domain.notification;
+package ongi.ongibe.domain.notification.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +8,7 @@ import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
+import ongi.ongibe.domain.notification.NotificationType;
 import ongi.ongibe.domain.notification.dto.NotificationListResponseDTO;
 import ongi.ongibe.domain.notification.dto.NotificationResponseDTO;
 import ongi.ongibe.domain.notification.entity.Notification;

@@ -1,0 +1,11 @@
+ALTER TABLE notification
+    MODIFY COLUMN type ENUM(
+    'ALBUM_CREATED',
+    'ALBUM_CREATED_AI',
+    'ALBUM_MEMBER_JOIN',
+    'ALBUM_EXILE',
+    'ALBUM_TRANSFER',
+    'FEED_COMMENT',
+    'FEED_LIKE',
+    'FOLLOW'
+    );
