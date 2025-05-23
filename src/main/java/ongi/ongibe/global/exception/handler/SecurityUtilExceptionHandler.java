@@ -1,5 +1,6 @@
 package ongi.ongibe.global.exception.handler;
 
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.exception.SecurityUtilException;
@@ -14,6 +15,7 @@ public class SecurityUtilExceptionHandler {
 
     @ExceptionHandler(SecurityUtilException.class)
     public ResponseEntity<BaseApiResponse<Void>> handleSecurityUtilException(SecurityUtilException e) {
+        Sentry.captureException(e);
         log.warn("인증정보 예외 발생 : {}", e.getMessage());
         String code = switch (e.getStatusCode()){
             case HttpStatus.NOT_FOUND -> "USER_NOT_FOUND";
