@@ -4,7 +4,6 @@ ALTER TABLE notification
     'ALBUM_CREATED_AI',
     'ALBUM_MEMBER_JOIN',
     'ALBUM_EXILE',
-    'ALBUM_INVITE',
     'ALBUM_TRANSFER',
     'FEED_COMMENT',
     'FEED_LIKE',
