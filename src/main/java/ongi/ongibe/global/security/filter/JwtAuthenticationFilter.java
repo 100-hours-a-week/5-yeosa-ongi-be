@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("요청 경로: {}", path);
         log.info("Authorization 헤더: {}", authHeader);
 
-        if (path.startsWith("/api/auth")){
+        if (path.startsWith("/api/auth") || path.startsWith("/sentry/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -49,7 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+
             } catch (ResponseStatusException e) {
+                io.sentry.Sentry.captureException(e);
+
                 response.setContentType("application/json");
                 response.setStatus(e.getStatusCode().value());
                 String message = e.getReason();
