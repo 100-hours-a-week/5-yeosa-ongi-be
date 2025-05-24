@@ -18,6 +18,7 @@ import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestGeoFrontDTO;
+import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
@@ -283,7 +284,7 @@ public class AlbumService {
         validAlbumOwner(album);
         LocalDateTime now = LocalDateTime.now();
         album.setDeletedAt(now);
-        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(user, album);
+        UserAlbum userAlbum = getUserAlbum(user, album);
         userAlbum.setDeletedAt(now);
         for (Picture p : album.getPictures()){
             p.setDeletedAt(now);
@@ -292,6 +293,11 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
+    }
+
+    private UserAlbum getUserAlbum(User user, Album album) {
+        return userAlbumRepository.findByUserAndAlbum(user, album)
+                .orElseThrow(()->new AlbumException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
     }
 
     private void checkAddPictureSize(int newSize, int previousSize) {
@@ -346,8 +352,7 @@ public class AlbumService {
     }
 
     protected void validAlbumOwner(Album album) {
-        UserAlbum userAlbum = userAlbumRepository.findByUserAndAlbum(securityUtil.getCurrentUser(),
-                album);
+        UserAlbum userAlbum = getUserAlbum(securityUtil.getCurrentUser(), album);
         if (!userAlbum.getRole().equals(UserAlbumRole.OWNER)) {
             throw new AlbumException(HttpStatus.FORBIDDEN, "소유자가 아닙니다.");
         }
@@ -391,8 +396,8 @@ public class AlbumService {
         User newUser = userRepository.findById(newOwnerId).orElseThrow(
                 () -> new AlbumException(HttpStatus.NOT_FOUND, "이양할 유저 정보를 찾을 수 없습니다.")
         );
-        UserAlbum oldUserAlbum = userAlbumRepository.findByUserAndAlbum(oldOwner, getAlbumIfMember(albumId));
-        UserAlbum newUserAlbum = userAlbumRepository.findByUserAndAlbum(newUser, getAlbumIfMember(albumId));
+        UserAlbum oldUserAlbum = getUserAlbum(oldOwner, getAlbumIfMember(albumId));
+        UserAlbum newUserAlbum = getUserAlbum(newUser, getAlbumIfMember(albumId));
         if (!oldUserAlbum.getRole().equals(UserAlbumRole.OWNER)) {
             throw new AlbumException(HttpStatus.FORBIDDEN, "현재 OWNER만 소유권을 위임할 수 있습니다.");
         }
@@ -439,5 +444,22 @@ public class AlbumService {
                 "공동작업자 목록 조회 성공",
                 new AlbumMemberResponseDTO(userInfos)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public BaseApiResponse<AlbumRoleResponseDTO> getAlbumRole(Long albumId) {
+        User user = securityUtil.getCurrentUser();
+        Album album = getAlbumIfMember(albumId);
+        try{
+            UserAlbumRole role = getUserAlbum(user, album).getRole();
+            AlbumRoleResponseDTO responseDTO = new AlbumRoleResponseDTO(role);
+            return BaseApiResponse.success(
+                    "ALBUM_AUTHORIZED",
+                    "앨범 접근 권한 있음",
+                    responseDTO
+            );
+        } catch (Exception e){
+            throw new AlbumException(HttpStatus.UNAUTHORIZED, "앨범 접근 권한이 없습니다.");
+        }
     }
 }

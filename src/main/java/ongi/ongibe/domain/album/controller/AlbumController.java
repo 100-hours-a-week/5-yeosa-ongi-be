@@ -14,6 +14,7 @@ import ongi.ongibe.swagger.album.BaseApiResponse_AlbumDetailResponse;
 import ongi.ongibe.swagger.album.BaseApiResponse_AlbumInviteResponse;
 import ongi.ongibe.swagger.album.BaseApiResponse_AlbumMemberResponse;
 import ongi.ongibe.swagger.album.BaseApiResponse_AlbumOwnerTransferResponse;
+import ongi.ongibe.swagger.album.BaseApiResponse_AlbumRoleResponse;
 import ongi.ongibe.swagger.album.BaseApiResponse_AlbumSummaryResponseList;
 import ongi.ongibe.swagger.album.BaseApiResponse_MonthlyAlbumResponse;
 import ongi.ongibe.swagger.album.BaseApiResponse_String;
@@ -133,5 +134,12 @@ public class AlbumController {
     @PostMapping("/{albumId}/owner")
     public ResponseEntity<BaseApiResponse<AlbumOwnerTransferResponseDTO>> transferOwner(@PathVariable Long albumId, @RequestBody Long newOwnerId) {
         return ResponseEntity.ok(albumService.transferAlbumOwner(albumId, newOwnerId));
+    }
+
+    @Operation(summary = "앨범 접근권한 확인", description = "해당 앨범에서 유저의 접근권한을 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "앨범 접근 권한 있음", content = @Content(schema = @Schema(implementation = BaseApiResponse_AlbumRoleResponse.class)))
+    @GetMapping("/{albumId}/role")
+    public ResponseEntity<BaseApiResponse<AlbumRoleResponseDTO>> checkAlbumRole(@PathVariable Long albumId){
+        return ResponseEntity.ok(albumService.getAlbumRole(albumId));
     }
 }
