@@ -28,6 +28,6 @@ public class AlbumCreatedNotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAlbumAiCreated(AlbumAiCreateNotificationEvent event) {
         log.info("AI notification event received: {}", event.albumId());
-        notificationService.albumAiCreated(event.albumId(), event.actorId());
+        notificationService.albumAiCreated(event.albumId());
     }
 }
