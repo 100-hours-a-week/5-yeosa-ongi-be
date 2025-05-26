@@ -102,4 +102,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     List<Picture> findAllByAlbumIdAndS3KeyIn(Long albumId, List<String> s3Keys);
 
     Optional<Picture> findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(Album album);
+
+    List<Picture> findAllByAlbum(Album album);
 }

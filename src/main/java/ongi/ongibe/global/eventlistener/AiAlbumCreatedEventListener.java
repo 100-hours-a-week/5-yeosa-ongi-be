@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AlbumCreatedEventListener {
+public class AiAlbumCreatedEventListener {
 
     private final AlbumProcessService albumProcessService;
 
@@ -20,6 +20,6 @@ public class AlbumCreatedEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handledAlbumCreated(AlbumEvent event) {
         log.info("event received: {}", event.albumId());
-        albumProcessService.processAlbumAsync(event.albumId(), event.pictureUrls());
+        albumProcessService.processAlbumAsync(event.albumId(), event.pictureS3Keys());
     }
 }

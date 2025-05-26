@@ -3,6 +3,8 @@ package ongi.ongibe.domain.album.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO.PictureInfo;
 import org.hibernate.annotations.CreationTimestamp;
@@ -58,4 +61,8 @@ public class Album {
     private LocalDateTime createdAt;
 
     private LocalDateTime deletedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlbumProcessState processState = AlbumProcessState.NOT_STARTED;
 }

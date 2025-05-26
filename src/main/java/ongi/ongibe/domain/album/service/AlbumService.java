@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO.PictureRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
@@ -152,7 +153,8 @@ public class AlbumService {
 
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
                 album.getName(),
-                pictureInfos
+                pictureInfos,
+                album.getProcessState()
         );
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }

@@ -34,11 +34,11 @@ public class TokenExceptionHandler {
     public ResponseEntity<BaseApiResponse<Void>> handleInvalidTokenException(InvalidTokenException e) {
         log.warn("토큰 검증 에러 : {}", e.getMessage());
 
-        Sentry.withScope(scope -> {
-            scope.setTag("token.valid", "false");
-            scope.setExtra("exceptionMessage", e.getMessage());
-            Sentry.captureMessage("TOKEN_INVALID: 토큰 검증 실패");
-        });
+//        Sentry.withScope(scope -> {
+//            scope.setTag("token.valid", "false");
+//            scope.setExtra("exceptionMessage", e.getMessage());
+//            Sentry.captureMessage("TOKEN_INVALID: 토큰 검증 실패");
+//        });
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -49,11 +49,11 @@ public class TokenExceptionHandler {
     public ResponseEntity<BaseApiResponse<Void>> handleTokenNotFoundException(TokenNotFoundException e) {
         log.warn("토큰을 찾을 수 없음 : {}", e.getMessage());
 
-        Sentry.withScope(scope -> {
-            scope.setTag("token.exists", "false");
-            scope.setExtra("exceptionMessage", e.getMessage());
-            Sentry.captureMessage("TOKEN_NOT_FOUND: 토큰 없음");
-        });
+//        Sentry.withScope(scope -> {
+//            scope.setTag("token.exists", "false");
+//            scope.setExtra("exceptionMessage", e.getMessage());
+//            Sentry.captureMessage("TOKEN_NOT_FOUND: 토큰 없음");
+//        });
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)

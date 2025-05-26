@@ -1,0 +1,7 @@
+ALTER TABLE album
+    ADD COLUMN process_state ENUM(
+    'NOT_STARTED',
+    'IN_PROGRESS',
+    'DONE',
+    'FAILED'
+) NOT NULL DEFAULT 'NOT_STARTED';

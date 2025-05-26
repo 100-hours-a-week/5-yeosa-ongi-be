@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.service.AiAlbumService;
+import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.KakaoAddressDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -26,15 +27,20 @@ public class AlbumProcessService {
 
     private final GeoService geoService;
     private final AiAlbumService aiAlbumService;
-
+    private final AlbumRepository albumRepository;
 
     @Async("asyncExecutor")
-    public void processAlbumAsync(Long albumId, List<String> pictureUrls) {
-        List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureUrls);
+    public void processAlbumAsync(Long albumId, List<String> pictureS3Keys) {
+        List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureS3Keys);
+        Album album = albumRepository.findById(albumId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
+        );
         try{
-            aiAlbumService.process(albumId, pictures);
+            album.setProcessState(AlbumProcessState.IN_PROGRESS);
+            albumRepository.save(album);
+            aiAlbumService.process(album, pictures);
         } catch (Exception e) {
-            log.error("[AI 처리 실패] pictureUrls: {}, message: {}", pictureUrls, e.getMessage(), e);
+            album.setProcessState(AlbumProcessState.FAILED);
         }
     }
 }
