@@ -7,6 +7,7 @@ import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
+import ongi.ongibe.domain.album.event.AlbumRetryEvent;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,7 +37,7 @@ public class AlbumAiRetryScheduler {
 
                 album.setProcessState(AlbumProcessState.IN_PROGRESS);
                 log.info("[AI 재시도] 앨범 ID: {}, 사진 수: {}", album.getId(), pictureKeys.size());
-                eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureKeys));
+                eventPublisher.publishEvent(new AlbumRetryEvent(album.getId(), pictureKeys));
             } catch (Exception e) {
                 log.error("[AI 재시도 실패] 앨범 ID: {}, message: {}", album.getId(), e.getMessage(), e);
                 album.setProcessState(AlbumProcessState.FAILED);
