@@ -97,7 +97,6 @@ public class AuthService {
 
         String key = user.getS3Key() == null ?
                 presignedUrlService.extractS3Key(user.getProfileImage()) : user.getS3Key();
-        String presignedProfile = presignedUrlService.generateGetPresignedUrl(key);
 
         KakaoLoginResponseDTO kakaoLoginResponseDTO = KakaoLoginResponseDTO.of(
                 ongiAccessToken,
@@ -105,7 +104,7 @@ public class AuthService {
                 60 * 60 * 24 * 14,
                 user.getId(),
                 user.getNickname(),
-                presignedProfile,
+                user.getProfileImage(),
                 300
         );
 
