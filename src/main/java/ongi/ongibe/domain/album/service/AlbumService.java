@@ -121,7 +121,7 @@ public class AlbumService {
         return bestPictureOfPlace;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
         Album album = getAlbumIfMember(albumId);
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()

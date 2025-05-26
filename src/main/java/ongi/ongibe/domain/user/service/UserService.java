@@ -173,27 +173,10 @@ public class UserService {
                 .orElse(null);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BaseApiResponse<UserInfoResponseDTO> getUserInfo(Long userId){
         User user = getUserIfCorrectId(userId);
-        UserInfoResponseDTO original = UserInfoResponseDTO.of(user);
-        String rawUrl = original.profileImageURL();
-        String finalUrl = rawUrl;
-        if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
-            if (user.getS3Key() == null){
-                String key = presignedUrlService.extractS3Key(rawUrl);
-                user.setS3Key(key);
-                userRepository.save(user);
-            }
-            finalUrl = presignedUrlService.generateGetPresignedUrl(user.getS3Key());
-        }
-
-        UserInfoResponseDTO response = new UserInfoResponseDTO(
-                original.userId(),
-                original.nickname(),
-                finalUrl,
-                original.cacheTil()
-        );
+        UserInfoResponseDTO response = UserInfoResponseDTO.of(user);
 
         return BaseApiResponse.success("USER_INFO_SUCCESS", "유저 조회 완료했습니다.", response);
     }
@@ -212,10 +195,9 @@ public class UserService {
         user.setNickname(request.nickname());
         user.setProfileImage(request.profileImageURL());
         String key = presignedUrlService.extractS3Key(request.profileImageURL());
-        String presignedNewProfileImageURL = presignedUrlService.generateGetPresignedUrl(key);
         user.setS3Key(key);
         userRepository.save(user);
-        UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), presignedNewProfileImageURL, 300);
+        UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), user.getProfileImage(), 300);
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
 }
