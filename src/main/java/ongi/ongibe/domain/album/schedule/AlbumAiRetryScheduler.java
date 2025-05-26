@@ -9,7 +9,6 @@ import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
