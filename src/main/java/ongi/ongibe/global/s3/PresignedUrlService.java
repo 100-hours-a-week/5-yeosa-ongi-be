@@ -70,7 +70,7 @@ public class PresignedUrlService {
             PutObjectRequest putObjectRequest) {
         return PutObjectPresignRequest.builder()
                 .putObjectRequest(putObjectRequest)
-                .signatureDuration(Duration.ofMinutes(10)) // todo : 몇분 설정할지 상의
+                .signatureDuration(Duration.ofMinutes(10))
                 .build();
     }
 
@@ -81,21 +81,6 @@ public class PresignedUrlService {
                 .contentType(pictureType)
                 .build();
     }
-
-    public String generateGetPresignedUrl(String key) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest)
-                .build();
-
-        return presigner.presignGetObject(presignRequest).url().toString();
-    }
-
 
     public String extractS3Key(String fullUrl) {
         try {
