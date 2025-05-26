@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.service.AlbumProcessService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +21,7 @@ public class AlbumAiRetryScheduler {
 
     private final AlbumRepository albumRepository;
     private final PictureRepository pictureRepository;
-    private final AlbumProcessService albumProcessService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(fixedRate = 60 * 1000) // 1분에 한번
     public void retryAlbumProcess(){
@@ -35,7 +37,7 @@ public class AlbumAiRetryScheduler {
 
                 album.setProcessState(AlbumProcessState.IN_PROGRESS);
                 log.info("[AI 재시도] 앨범 ID: {}, 사진 수: {}", album.getId(), pictureKeys.size());
-                albumProcessService.processAlbumAsync(album.getId(), pictureKeys);
+                eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureKeys));
             } catch (Exception e) {
                 log.error("[AI 재시도 실패] 앨범 ID: {}, message: {}", album.getId(), e.getMessage(), e);
                 album.setProcessState(AlbumProcessState.FAILED);
