@@ -11,14 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
-import ongi.ongibe.domain.album.AlbumProcessState;
-import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
-import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO.PictureRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
-import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
@@ -28,7 +24,6 @@ import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
-import ongi.ongibe.domain.album.factory.AlbumInfoFactory;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
@@ -64,7 +59,6 @@ public class AlbumService {
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
     private final PresignedUrlService presignedUrlService;
-    private final AlbumInfoFactory albumInfoFactory;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -97,7 +91,7 @@ public class AlbumService {
                 .map(UserAlbum::getAlbum)
                 .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
                         album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(albumInfoFactory::from)
+                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
                 .toList();
     }
 
@@ -180,7 +174,7 @@ public class AlbumService {
     @Transactional
     public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
         if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 10장을 초과하여 추가할 수 없습니다");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 " + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다");
         }
         User user = securityUtil.getCurrentUser();
         Album album = getEmptyAlbum(albumName);
