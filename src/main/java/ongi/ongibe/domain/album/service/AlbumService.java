@@ -102,15 +102,7 @@ public class AlbumService {
         Map<Place, Picture> bestPictureOfPlace = getBestPictureOfPlace(album);
 
         List<AlbumSummaryResponseDTO> response = bestPictureOfPlace.values().stream()
-                .map(picture -> {
-                    String key = picture.getS3Key() != null ? picture.getS3Key() : presignedUrlService.extractS3Key(picture.getPictureURL());
-                    if (picture.getS3Key() == null) {
-                        picture.setS3Key(key);
-                        pictureRepository.save(picture);
-                    }
-                    String presignedUrl = presignedUrlService.generateGetPresignedUrl(key);
-                    return picture.toAlbumSummaryResponseDTO(presignedUrl);
-                })
+                .map(Picture::toAlbumSummaryResponseDTO)
                 .toList();
 
         return BaseApiResponse.success("ALBUM_SUMMARY_SUCCESS", "앨범 요약 조회 성공", response);
@@ -132,17 +124,8 @@ public class AlbumService {
     @Transactional
     public BaseApiResponse<AlbumDetailResponseDTO> getAlbumDetail(Long albumId) {
         Album album = getAlbumIfMember(albumId);
-        log.info(presignedUrlService.generateGetPresignedUrl("KakaoTalk_Photo_2025-02-17-14-16-38 008.jpeg"));
         List<AlbumDetailResponseDTO.PictureInfo> pictureInfos = album.getPictures().stream()
-                .map(picture -> {
-                    String key = picture.getS3Key() != null ?
-                            picture.getS3Key() : presignedUrlService.extractS3Key(picture.getPictureURL());
-                    picture.setS3Key(key);
-                    pictureRepository.save(picture);
-                    System.out.println("DEBUG 진입: key = " + key);
-                    String presignedUrl = presignedUrlService.generateGetPresignedUrl(key);
-                    return picture.toPictureInfo(presignedUrl);
-                })
+                .map(Picture::toPictureInfo)
                 .toList();
 
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
@@ -332,12 +315,6 @@ public class AlbumService {
                         .build())
                 .toList();
     }
-
-//    private static List<Picture> createPictures(List<String> pictureUrls, Album album, User user) {
-//        return pictureUrls.stream()
-//                .map(url -> Picture.of(album, user, url))
-//                .toList();
-//    }
 
     private Album getEmptyAlbum(String albumName) {
         return Album.builder()

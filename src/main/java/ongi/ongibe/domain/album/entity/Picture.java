@@ -79,10 +79,10 @@ public class Picture {
 
     private LocalDateTime deletedAt;
 
-    public AlbumDetailResponseDTO.PictureInfo toPictureInfo(String presignedUrl) {
+    public AlbumDetailResponseDTO.PictureInfo toPictureInfo() {
         return new AlbumDetailResponseDTO.PictureInfo(
                 id,
-                presignedUrl,
+                pictureURL,
                 latitude,
                 longitude,
                 tag,
@@ -93,10 +93,10 @@ public class Picture {
         );
     }
 
-    public AlbumSummaryResponseDTO toAlbumSummaryResponseDTO(String presignedUrl) {
+    public AlbumSummaryResponseDTO toAlbumSummaryResponseDTO() {
         return new AlbumSummaryResponseDTO(
                 id,
-                presignedUrl,
+                pictureURL,
                 latitude,
                 longitude
         );
