@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
@@ -321,6 +322,7 @@ public class AlbumService {
                 .name(albumName)
                 .userAlbums(new ArrayList<>())
                 .pictures(new ArrayList<>())
+                .processState(AlbumProcessState.NOT_STARTED)
                 .build();
     }
 
