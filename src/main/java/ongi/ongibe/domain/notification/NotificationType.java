@@ -28,6 +28,21 @@ public enum NotificationType {
             return notification.getActorUser().getNickname() + "님이 댓글을 남겼습니다.";
         }
     },
+
+    ALBUM_TRANSFER {
+        @Override
+        public String buildMessage(Notification notification) {
+            return "앨범의 소유자가 되었습니다.";
+        }
+    },
+
+    ALBUM_EXILE {
+        @Override
+        public String buildMessage(Notification notification) {
+            return "앨범에서 추방되었습니다.";
+        }
+    },
+
     FEED_LIKE {
         @Override
         public String buildMessage(Notification notification) {
