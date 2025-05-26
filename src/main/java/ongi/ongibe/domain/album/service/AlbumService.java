@@ -67,7 +67,7 @@ public class AlbumService {
     private static final String INVITE_LINK_PREFIX_DEV = "https://dev.ongi.today/invite?token=";
     private static final int MAX_PICTURE_SIZE = 30;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
@@ -95,7 +95,7 @@ public class AlbumService {
                 .toList();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BaseApiResponse<List<AlbumSummaryResponseDTO>> getAlbumSummary(Long albumId) {
         Album album = getAlbumIfMember(albumId);
 
@@ -382,7 +382,7 @@ public class AlbumService {
         );
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BaseApiResponse<AlbumMemberResponseDTO> getAlbumMembers(Long albumId) {
         User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
@@ -391,23 +391,12 @@ public class AlbumService {
         List<AlbumMemberResponseDTO.UserInfo> userInfos = members.stream()
                 .map(ua -> {
                     User member = ua.getUser();
-                    String rawUrl = member.getProfileImage();
-                    String finalUrl = rawUrl;
-
-                    if (rawUrl != null && rawUrl.contains("amazonaws.com")) {
-                        if (member.getS3Key() == null) {
-                            String key = presignedUrlService.extractS3Key(rawUrl);
-                            member.setS3Key(key);
-                            userRepository.save(member); // s3Key 저장
-                        }
-                        finalUrl = presignedUrlService.generateGetPresignedUrl(member.getS3Key());
-                    }
 
                     return new AlbumMemberResponseDTO.UserInfo(
                             member.getId(),
                             member.getNickname(),
                             ua.getRole(),
-                            finalUrl
+                            member.getProfileImage()
                     );
                 })
                 .toList();
