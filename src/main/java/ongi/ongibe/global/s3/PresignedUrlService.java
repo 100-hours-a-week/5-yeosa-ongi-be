@@ -23,11 +23,17 @@ public class PresignedUrlService {
 
     private final S3Presigner presigner;
 
+    @Value("${custom.isProd}")
+    private boolean isProd;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
     @Value("${cloud.aws.region.static}")
     private String region;
+
+    private final String prodCdnDomain = "https://cdn.ongi.today/";
+    private final String devCdnDomain = "https://cdn.ongi.today/"; // todo : 나중에 이거 바꾸기
 
     public BaseApiResponse<PresignedUrlResponseDTO> generatePresignedUrls(PresignedUrlRequestDTO request) {
         List<PresignedFile> result = request.pictures().stream()
@@ -44,7 +50,7 @@ public class PresignedUrlService {
 
                     URL presignedUrl = presigner.presignPutObject(presignRequest).url();
 
-                    String pictureUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key); // todo: 이거 바꾸기
+                    String pictureUrl = isProd ? prodCdnDomain+key : devCdnDomain+key; // todo: 이거 바꾸기
 
                     return new PresignedUrlResponseDTO.PresignedFile(
                             key, presignedUrl.toString(), pictureUrl
