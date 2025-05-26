@@ -41,6 +41,7 @@ public class AlbumProcessService {
             aiAlbumService.process(album, pictures);
         } catch (Exception e) {
             album.setProcessState(AlbumProcessState.FAILED);
+            albumRepository.save(album);
         }
     }
 }
