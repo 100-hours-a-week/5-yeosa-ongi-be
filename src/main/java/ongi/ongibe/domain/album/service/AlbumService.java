@@ -153,7 +153,8 @@ public class AlbumService {
 
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
                 album.getName(),
-                pictureInfos
+                pictureInfos,
+                album.getProcessState()
         );
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }

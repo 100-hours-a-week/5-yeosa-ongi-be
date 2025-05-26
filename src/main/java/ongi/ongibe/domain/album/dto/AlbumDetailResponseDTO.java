@@ -3,10 +3,12 @@ package ongi.ongibe.domain.album.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
+import ongi.ongibe.domain.album.AlbumProcessState;
 
 public record AlbumDetailResponseDTO(
         @Schema(description = "앨범 제목") String title,
-        @Schema(description = "사진 정보 목록") List<PictureInfo> picture
+        @Schema(description = "사진 정보 목록") List<PictureInfo> picture,
+        @Schema(description = "앨범 AI 분석 상태") AlbumProcessState albumProcessState
 ) {
     public record PictureInfo(
             @Schema(description = "사진 ID") Long pictureId,

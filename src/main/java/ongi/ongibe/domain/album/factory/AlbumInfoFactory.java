@@ -52,7 +52,8 @@ public class AlbumInfoFactory {
                 album.getName(),
                 presignedThumbnailUrl,
                 album.getCreatedAt(),
-                memberProfileImageUrls
+                memberProfileImageUrls,
+                album.getProcessState()
         );
     }
 }
