@@ -3,6 +3,7 @@ package ongi.ongibe.domain.notification.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;
@@ -125,14 +126,17 @@ public class NotificationService {
     }
 
     @Transactional
-    public void albumAiCreated(Long albumId, Long actorId) {
+    public void albumAiCreated(Long albumId) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
 
-        User actorUser = userRepository.findById(actorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-
         List<UserAlbum> members = userAlbumRepository.findAllByAlbum(album);
+
+        User actorUser = members.stream()
+                .filter(member -> member.getRole() == UserAlbumRole.OWNER)
+                .findFirst()
+                .map(UserAlbum::getUser)
+                .orElseThrow(() -> new IllegalStateException("OWNER 역할의 사용자가 없습니다."));
 
         List<Notification> notifications = members.stream()
                 .map(member -> Notification.builder()
