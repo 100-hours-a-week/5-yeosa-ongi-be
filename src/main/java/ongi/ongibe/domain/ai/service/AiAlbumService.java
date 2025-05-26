@@ -14,6 +14,7 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class AiAlbumService {
     private final UserAlbumRepository userAlbumRepository;
     private final SecurityUtil securityUtil;
 
+    @Transactional
     public void process(Album album, List<Picture> pictures) {
         Long albumId = album.getId();
         try{
@@ -67,7 +69,7 @@ public class AiAlbumService {
                 log.info("[AI] 미적 점수 분석 완료");
                 setThumbnail(album, pictures);
             }).join();
-            eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId, securityUtil.getCurrentUserId()));
+            eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
             log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
 
