@@ -4,5 +4,5 @@ import java.util.List;
 
 public record AlbumEvent(
         Long albumId,
-        List<String> pictureUrls
+        List<String> pictureS3Keys
 ) {}
