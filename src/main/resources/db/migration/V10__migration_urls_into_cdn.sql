@@ -4,7 +4,7 @@
 
 UPDATE users
 SET profile_image = CONCAT(
-        'https://cdn.ongi.co.kr/',
+        'https://cdn.ongi.today/',
         CASE
             WHEN profile_image LIKE 'http%' THEN
                 SUBSTRING_INDEX(profile_image, '/', -1)  -- URL이면 마지막 파일명만 추출
@@ -20,7 +20,7 @@ WHERE profile_image NOT LIKE 'http://%.kakaocdn.net/%'
 
 UPDATE picture
 SET pictureurl = CONCAT(
-        'https://cdn.ongi.co.kr/',
+        'https://cdn.ongi.today',
         CASE
             WHEN pictureurl LIKE 'http%' THEN SUBSTRING_INDEX(pictureurl, '/', -1)
             ELSE pictureurl
