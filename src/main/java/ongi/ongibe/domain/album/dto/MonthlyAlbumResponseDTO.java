@@ -20,11 +20,11 @@ public record MonthlyAlbumResponseDTO(
             @Schema(description = "앨범 멤버들의 프로필 이미지 URL 목록") List<String> memberProfileImageURL,
             @Schema(description = "앨범 AI 분석 관련 상태")AlbumProcessState albumProcessState
             ) {
-        public static AlbumInfo of(Album album, String presignedThumbnailUrl) {
+        public static AlbumInfo of(Album album) {
             return new AlbumInfo(
                     album.getId(),
                     album.getName(),
-                    presignedThumbnailUrl,
+                    album.getThumbnailPicture().getPictureURL(),
                     album.getCreatedAt(),
                     album.getUserAlbums().stream()
                             .map(ua -> ua.getUser().getProfileImage())
