@@ -1,0 +1,20 @@
+package ongi.ongibe.global.eventlistener;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.album.event.AlbumRetryEvent;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
+import org.springframework.scheduling.annotation.Async;
+
+@Slf4j
+@RequiredArgsConstructor
+public class AlbumCreataedRetryEventListener {
+
+    private final AlbumProcessService albumProcessService;
+
+    @Async
+    public void handledAlbumCreatedRetry(AlbumRetryEvent event) {
+        log.info("event received: {}", event.albumId());
+        albumProcessService.processAlbumAsync(event.albumId(), event.pictureS3Keys());
+    }
+}
