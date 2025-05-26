@@ -1,6 +1,5 @@
 package ongi.ongibe.global.s3;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
@@ -9,18 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO;
-import ongi.ongibe.global.s3.dto.PresignedUrlRequestDTO.PictureInfo;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO;
 import ongi.ongibe.global.s3.dto.PresignedUrlResponseDTO.PresignedFile;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @Slf4j
@@ -51,7 +44,7 @@ public class PresignedUrlService {
 
                     URL presignedUrl = presigner.presignPutObject(presignRequest).url();
 
-                    String pictureUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+                    String pictureUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key); // todo: 이거 바꾸기
 
                     return new PresignedUrlResponseDTO.PresignedFile(
                             key, presignedUrl.toString(), pictureUrl
