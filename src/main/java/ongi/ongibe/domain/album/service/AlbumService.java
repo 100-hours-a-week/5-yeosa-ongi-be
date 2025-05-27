@@ -23,6 +23,7 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.event.AlbumClusterEvent;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -169,12 +170,13 @@ public class AlbumService {
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
 
-        List<String> pictureUrls = pictureDTOs.stream()
-                .map(PictureUrlCoordinateDTO::pictureUrl)
+        List<String> s3Keys = pictures.stream()
+                .map(Picture::getS3Key)
                 .toList();
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-        eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
+        eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
+        eventPublisher.publishEvent(new AlbumClusterEvent(album.getId(), s3Keys));
     }
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
 //        if (pictureUrls.size() > 100){
@@ -215,6 +217,7 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        eventPublisher.publishEvent(new AlbumClusterEvent(album.getId(), pictureKeys));
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 
