@@ -1,6 +1,7 @@
 package ongi.ongibe.domain.ai.service;
 
 import jakarta.persistence.EntityManager;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +31,28 @@ public class AiClient {
     @Value("${ai.server.base-url}")
     private String baseUrl;
 
+    private static final String HEALTH_INFO_PATH = "/health/info";
     private static final String EMBEDDING_PATH = "/api/albums/embedding";
     private static final String QUALITY_PATH = "/api/albums/quality";
     private static final String DUPLICATE_PATH = "/api/albums/duplicates";
     private static final String CATEGORY_PATH = "/api/albums/categories";
     private static final String SCORE_PATH = "/api/albums/score";
     private static final int MAX_ATTEMPTS = 3;
+
+    public boolean isAiServerAvailable() {
+        try {
+            String response = webClient.get()
+                    .uri(baseUrl + HEALTH_INFO_PATH)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(Duration.ofSeconds(3)); // 타임아웃 설정
+
+            return response != null && response.contains("ok");
+        } catch (Exception e) {
+            log.warn("AI 서버 헬스체크 실패", e);
+            return false;
+        }
+    }
 
     public void requestEmbeddings(List<String> urls) {
         try {
