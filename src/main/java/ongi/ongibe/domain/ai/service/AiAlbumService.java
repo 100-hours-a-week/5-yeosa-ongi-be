@@ -29,6 +29,10 @@ public class AiAlbumService {
     private final UserAlbumRepository userAlbumRepository;
     private final SecurityUtil securityUtil;
 
+    public boolean isAiServerAvailable() {
+        return aiClient.isAiServerAvailable();
+    }
+
     @Transactional
     public void process(Album album, List<Picture> pictures) {
         Long albumId = album.getId();
