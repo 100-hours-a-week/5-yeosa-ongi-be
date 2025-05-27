@@ -31,14 +31,14 @@ public class AlbumProcessService {
 
     @Async("asyncExecutor")
     public void processAlbumAsync(Long albumId, List<String> pictureS3Keys) {
-        List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureS3Keys);
+        // List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureS3Keys);
         Album album = albumRepository.findById(albumId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
         );
         try{
             album.setProcessState(AlbumProcessState.IN_PROGRESS);
             albumRepository.save(album);
-            aiAlbumService.process(album, pictures);
+            aiAlbumService.process(album, pictureS3Keys);
         } catch (Exception e) {
             album.setProcessState(AlbumProcessState.FAILED);
             albumRepository.save(album);
