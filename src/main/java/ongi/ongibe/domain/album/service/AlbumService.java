@@ -207,15 +207,15 @@ public class AlbumService {
 
         User user = securityUtil.getCurrentUser();
         List<Picture> newPictures = createPictures(pictureUrls, album, user);
-        existingPictures.addAll(newPictures);
 
+        pictureRepository.saveAll(newPictures);
         albumRepository.save(album);
 
-        List<String> pictures = pictureUrls.stream()
-                .map(PictureUrlCoordinateDTO::pictureUrl)
+        List<String> pictureKeys = newPictures.stream()
+                .map(Picture::getS3Key)
                 .toList();
 
-        eventPublisher.publishEvent(new AlbumEvent(albumId, pictures));
+        eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 
     @Transactional
