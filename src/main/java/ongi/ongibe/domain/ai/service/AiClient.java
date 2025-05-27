@@ -37,6 +37,7 @@ public class AiClient {
     private static final String DUPLICATE_PATH = "/api/albums/duplicates";
     private static final String CATEGORY_PATH = "/api/albums/categories";
     private static final String SCORE_PATH = "/api/albums/score";
+    private static final String PEOPLE_PATH = "/api/albums/people";
     private static final int MAX_ATTEMPTS = 3;
 
     public boolean isAiServerAvailable() {
@@ -54,21 +55,21 @@ public class AiClient {
         }
     }
 
-    public void requestEmbeddings(List<String> urls) {
+    public void requestEmbeddings(List<String> keys) {
         try {
-            postJsonWithRetry(EMBEDDING_PATH, new AiImageRequestDTO(urls), Void.class);
+            postJsonWithRetry(EMBEDDING_PATH, new AiImageRequestDTO(keys), Void.class);
         } catch (Exception e) {
             throw new RuntimeException("임베딩 실패로 재시도 중단", e);
         }
     }
 
     @Transactional
-    public void requestQuality(Long albumId, List<String> urls) {
-        log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
+    public void requestQuality(Long albumId, List<String> keys) {
+        log.info("[AI] requestQuality 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        var response = postJson(QUALITY_PATH, new AiImageRequestDTO(keys), ShakyResponseDTO.class);
         if (response == null || response.data() == null) return;
         List<String> shakyUrls = response.data().stream()
-                .filter(urls::contains)
+                .filter(keys::contains)
                 .toList();
 
         int shakyCount = pictureRepository.markPicturesAsShaky(albumId, shakyUrls);
@@ -76,9 +77,9 @@ public class AiClient {
         entityManager.clear();
     }
 
-    public void requestDuplicates(Long albumId, List<String> urls){
-        log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+    public void requestDuplicates(Long albumId, List<String> keys){
+        log.info("[AI] requestDuplicates API 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(keys), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
         updateDuplicates(albumId, response.data());
     }
@@ -95,11 +96,11 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestCategories(Long albumId, List<String> urls) {
-        log.info("[AI] requestCategories API 호출됨, urls 개수: {}", urls.size());
-        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(urls);
+    public void requestCategories(Long albumId, List<String> keys) {
+        log.info("[AI] requestCategories API 호출됨, keys 개수: {}", keys.size());
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(keys);
         log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
-        var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(keys), CategoryResponseDTO.class);
         log.info("[AI] 카테고리 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
@@ -133,6 +134,9 @@ public class AiClient {
         log.info("[AI] score 반영 : {}", totalScoreUpdated);
         entityManager.clear();
     }
+
+    @Transactional
+
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {
         String url = baseUrl + path;

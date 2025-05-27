@@ -83,7 +83,6 @@ public class AiAlbumService {
         }
     }
 
-
     private void setThumbnail(Album album, List<String> keys) {
         List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(album.getId(), keys);
 

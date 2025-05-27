@@ -26,11 +26,11 @@ public class GeoService {
     private final PlaceService placeService;
 
     @Transactional
-    public List<Picture> geoAndKakaoAndSave(Long albumId, List<String> pictureUrls) {
+    public List<Picture> geoAndKakaoAndSave(Long albumId, List<String> s3keys) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
 
-        List<Picture> pictures = pictureRepository.findAllByPictureURLIn(pictureUrls).stream()
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(s3keys).stream()
                 .filter(p -> p.getAlbum().getId().equals(albumId))
                 .toList();
 
