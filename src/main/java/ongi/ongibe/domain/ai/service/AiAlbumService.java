@@ -34,15 +34,10 @@ public class AiAlbumService {
     }
 
     @Transactional
-    public void process(Album album, List<Picture> pictures) {
+    public void process(Album album, List<String> s3keys) {
         Long albumId = album.getId();
         try{
-            List<String> s3keys = pictures.stream()
-                    .map(Picture::getS3Key)
-                    .toList();
-
             log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
-            log.info("[AI] s3keys: {}", s3keys);
 
             // 1. 임베딩 요청
             aiClient.requestEmbeddings(s3keys);
@@ -71,7 +66,7 @@ public class AiAlbumService {
                 log.info("[AI] 미적 점수 분석 시작");
                 aiClient.requestAestheticScore(albumId, s3keys);
                 log.info("[AI] 미적 점수 분석 완료");
-                setThumbnail(album, pictures);
+                setThumbnail(album, s3keys);
             }).join();
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
@@ -89,11 +84,7 @@ public class AiAlbumService {
     }
 
 
-    private void setThumbnail(Album album, List<Picture> pictures) {
-        List<String> keys = pictures.stream()
-                .map(Picture::getS3Key)
-                .toList();
-
+    private void setThumbnail(Album album, List<String> keys) {
         List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(album.getId(), keys);
 
         Picture thumbnail = updatedPictures.stream()
