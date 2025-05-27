@@ -3,15 +3,23 @@ package ongi.ongibe.domain.ai.service;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
+import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
+import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.PictureFaceCluster;
+import ongi.ongibe.domain.album.repository.FaceClusterRepository;
+import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,6 +34,8 @@ public class AiClient {
 
     private final WebClient webClient;
     private final PictureRepository pictureRepository;
+    private final FaceClusterRepository faceClusterRepository;
+    private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final EntityManager entityManager;
 
     @Value("${ai.server.base-url}")
@@ -136,7 +146,52 @@ public class AiClient {
     }
 
     @Transactional
+    public void requestPeople(Long albumId, List<String> keys) {
+        log.info("[AI] people clustering api 호출, keys : {}", keys);
+        var response = postJson(PEOPLE_PATH, new AiImageRequestDTO(keys), AiClusterResponseDTO.class);
+        if (response == null || response.data() == null) return;
+        List<AiClusterResponseDTO.ClusterData> clusters = response.data();
 
+        List<Picture> pictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(albumId, keys);
+        Map<String, Picture> s3KeyToPicture = pictures.stream()
+                .collect(Collectors.toMap(Picture::getS3Key, p -> p));
+        int clusterIndex = 1;
+
+        for (AiClusterResponseDTO.ClusterData cluster : clusters) {
+            List<String> s3Keys = cluster.images();
+            String representativeKey = cluster.representativeFace().image();
+            List<Integer> bbox = cluster.representativeFace().bbox();
+
+            Picture representative = s3KeyToPicture.get(representativeKey);
+            if (representative == null) {
+                log.warn("[AI] 대표 이미지 {}에 해당하는 Picture를 찾을 수 없습니다.", representativeKey);
+                continue;
+            }
+
+            // FaceCluster 저장
+            FaceCluster faceCluster = FaceCluster.builder()
+                    .representativePicture(representative)
+                    .clusterName("사람-" + clusterIndex++)
+                    .bboxX1(bbox.get(0))
+                    .bboxY1(bbox.get(1))
+                    .bboxX2(bbox.get(2))
+                    .bboxY2(bbox.get(3))
+                    .build();
+            faceClusterRepository.save(faceCluster);
+
+            // PictureFaceCluster 저장
+            List<PictureFaceCluster> mappings = s3Keys.stream()
+                    .map(s3KeyToPicture::get)
+                    .filter(Objects::nonNull)
+                    .map(p -> PictureFaceCluster.builder()
+                            .picture(p)
+                            .faceCluster(faceCluster)
+                            .build())
+                    .toList();
+
+            pictureFaceClusterRepository.saveAll(mappings);
+        }
+    }
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {
         String url = baseUrl + path;
