@@ -27,7 +27,7 @@ public class AlbumAiRetryScheduler {
     private final ApplicationEventPublisher eventPublisher;
     private final AiAlbumService aiAlbumService;
 
-    @Scheduled(fixedRate = 5 * 60 * 1000) // 5분에 한번
+    @Scheduled(fixedRate = 60 * 1000) // 1분에 한번
     public void retryAlbumProcess() {
         if (!aiAlbumService.isAiServerAvailable()) {
             log.warn("ai 서버 현재 요청 불가. 재시도 중단");
@@ -42,6 +42,7 @@ public class AlbumAiRetryScheduler {
                 List<Picture> pictures = pictureRepository.findAllByAlbum(album);
                 List<String> pictureKeys = pictures.stream()
                         .map(Picture::getS3Key)
+                        .filter(s -> !s.isBlank())
                         .toList();
 
                 album.setProcessState(AlbumProcessState.IN_PROGRESS);
