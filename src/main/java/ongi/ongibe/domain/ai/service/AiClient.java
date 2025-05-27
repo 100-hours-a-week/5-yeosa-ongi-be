@@ -57,9 +57,7 @@ public class AiClient {
     public void requestEmbeddings(List<String> urls) {
         try {
             postJsonWithRetry(EMBEDDING_PATH, new AiImageRequestDTO(urls), Void.class);
-            log.info("[AI] 임베딩 성공: {}", urls);
         } catch (Exception e) {
-            log.error("[AI] 임베딩 실패: {}", urls, e);
             throw new RuntimeException("임베딩 실패로 재시도 중단", e);
         }
     }
@@ -68,7 +66,6 @@ public class AiClient {
     public void requestQuality(Long albumId, List<String> urls) {
         log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
-        log.info("[AI] 품질 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
         List<String> shakyUrls = response.data().stream()
                 .filter(urls::contains)
@@ -82,7 +79,6 @@ public class AiClient {
     public void requestDuplicates(Long albumId, List<String> urls){
         log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
         var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
-        log.info("[AI] 중복 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
         updateDuplicates(albumId, response.data());
     }
@@ -100,7 +96,7 @@ public class AiClient {
 
     @Transactional
     public void requestCategories(Long albumId, List<String> urls) {
-        log.info("[AI] requestCategories API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
+        log.info("[AI] requestCategories API 호출됨, urls 개수: {}", urls.size());
         List<Picture> pictures = pictureRepository.findAllByS3KeyIn(urls);
         log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
         var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
@@ -150,8 +146,6 @@ public class AiClient {
                     .retrieve()
                     .bodyToMono(responseType)
                     .block();
-
-            log.info("[AI] 응답 수신: {} => {}", url, response);
             return response;
         } catch (Exception e) {
             log.error("[AI] 요청 실패: {} with body = {}", url, body, e);
@@ -163,7 +157,6 @@ public class AiClient {
         String url = baseUrl + path;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                log.info("[AI][시도 {}] 요청: {} with body = {}", attempt, url, body);
                 return webClient.post()
                         .uri(url)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -171,7 +164,6 @@ public class AiClient {
                         .bodyValue(body)
                         .retrieve()
                         .onStatus(status -> status.value() == 422, response -> {
-                            log.warn("[AI] 422 응답 발생: {}, 임베딩 재요청 후 재시도", url);
                             if (body instanceof AiImageRequestDTO(List<String> images)) {
                                 requestEmbeddings(images); // 다시 임베딩
                             }
@@ -180,9 +172,7 @@ public class AiClient {
                         .bodyToMono(responseType)
                         .block();
             } catch (Exception e) {
-                log.error("[AI] 요청 실패 (시도 {}): {} with body = {}", attempt, url, body, e);
                 if (attempt == MAX_ATTEMPTS) throw e;
-                log.warn("[AI] 재시도 준비 중 (남은 시도: {})", MAX_ATTEMPTS - attempt);
             }
         }
         throw new IllegalStateException("예외가 발생하지 않고 종료될 수 없습니다.");
