@@ -22,9 +22,13 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.FaceClusterRepository;
+import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.notification.event.AlbumCreatedNotificationEvent;
@@ -59,6 +63,8 @@ public class AlbumService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisInviteTokenRepository redisInviteTokenRepository;
     private final UserRepository userRepository;
+    private final FaceClusterRepository faceClusterRepository;
+    private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final PresignedUrlService presignedUrlService;
 
     @Value("${custom.isProd}")
@@ -129,10 +135,35 @@ public class AlbumService {
                 .map(Picture::toPictureInfo)
                 .toList();
 
+        List<FaceCluster> faceClusters = faceClusterRepository.findAllByRepresentativePicture_Album_Id(albumId);
+
+
+        List<AlbumDetailResponseDTO.ClusterInfo> clusterInfos = faceClusters.stream()
+                .map(cluster -> {
+                    Picture representative = cluster.getRepresentativePicture();
+                    List<PictureFaceCluster> mappings = pictureFaceClusterRepository.findAllByFaceCluster(cluster);
+                    List<String> clusterPictureUrls = mappings.stream()
+                            .map(PictureFaceCluster::getPicture)
+                            .map(Picture::getPictureURL)
+                            .toList();
+
+                    return new AlbumDetailResponseDTO.ClusterInfo(
+                            cluster.getId(),
+                            cluster.getClusterName(),
+                            representative.getPictureURL(),
+                            cluster.getBboxX1(),
+                            cluster.getBboxY1(),
+                            cluster.getBboxX2(),
+                            cluster.getBboxY2(),
+                            clusterPictureUrls
+                    );
+                }).toList();
+
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
                 album.getName(),
                 pictureInfos,
-                album.getProcessState()
+                album.getProcessState(),
+                clusterInfos
         );
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
     }
