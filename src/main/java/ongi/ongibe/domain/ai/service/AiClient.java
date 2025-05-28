@@ -3,15 +3,23 @@ package ongi.ongibe.domain.ai.service;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
+import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
+import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.PictureFaceCluster;
+import ongi.ongibe.domain.album.repository.FaceClusterRepository;
+import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,6 +34,8 @@ public class AiClient {
 
     private final WebClient webClient;
     private final PictureRepository pictureRepository;
+    private final FaceClusterRepository faceClusterRepository;
+    private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final EntityManager entityManager;
 
     @Value("${ai.server.base-url}")
@@ -37,6 +47,7 @@ public class AiClient {
     private static final String DUPLICATE_PATH = "/api/albums/duplicates";
     private static final String CATEGORY_PATH = "/api/albums/categories";
     private static final String SCORE_PATH = "/api/albums/score";
+    private static final String PEOPLE_PATH = "/api/albums/people";
     private static final int MAX_ATTEMPTS = 3;
 
     public boolean isAiServerAvailable() {
@@ -54,21 +65,21 @@ public class AiClient {
         }
     }
 
-    public void requestEmbeddings(List<String> urls) {
+    public void requestEmbeddings(List<String> keys) {
         try {
-            postJsonWithRetry(EMBEDDING_PATH, new AiImageRequestDTO(urls), Void.class);
+            postJsonWithRetry(EMBEDDING_PATH, new AiImageRequestDTO(keys), Void.class);
         } catch (Exception e) {
             throw new RuntimeException("임베딩 실패로 재시도 중단", e);
         }
     }
 
     @Transactional
-    public void requestQuality(Long albumId, List<String> urls) {
-        log.info("[AI] requestQuality 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        var response = postJson(QUALITY_PATH, new AiImageRequestDTO(urls), ShakyResponseDTO.class);
+    public void requestQuality(Long albumId, List<String> keys) {
+        log.info("[AI] requestQuality 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        var response = postJson(QUALITY_PATH, new AiImageRequestDTO(keys), ShakyResponseDTO.class);
         if (response == null || response.data() == null) return;
         List<String> shakyUrls = response.data().stream()
-                .filter(urls::contains)
+                .filter(keys::contains)
                 .toList();
 
         int shakyCount = pictureRepository.markPicturesAsShaky(albumId, shakyUrls);
@@ -76,9 +87,9 @@ public class AiClient {
         entityManager.clear();
     }
 
-    public void requestDuplicates(Long albumId, List<String> urls){
-        log.info("[AI] requestDuplicates API 호출됨, urls 개수: {}, url: {}", urls.size(), urls);
-        var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(urls), DuplicateResponseDTO.class);
+    public void requestDuplicates(Long albumId, List<String> keys){
+        log.info("[AI] requestDuplicates API 호출됨, keys 개수: {}, url: {}", keys.size(), keys);
+        var response = postJsonWithRetry(DUPLICATE_PATH, new AiImageRequestDTO(keys), DuplicateResponseDTO.class);
         if (response == null || response.data() == null) return;
         updateDuplicates(albumId, response.data());
     }
@@ -95,11 +106,11 @@ public class AiClient {
     }
 
     @Transactional
-    public void requestCategories(Long albumId, List<String> urls) {
-        log.info("[AI] requestCategories API 호출됨, urls 개수: {}", urls.size());
-        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(urls);
+    public void requestCategories(Long albumId, List<String> keys) {
+        log.info("[AI] requestCategories API 호출됨, keys 개수: {}", keys.size());
+        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(keys);
         log.info("[AI] findAllByS3KeyIn -> {}개 결과 반환", pictures.size());
-        var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(urls), CategoryResponseDTO.class);
+        var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(keys), CategoryResponseDTO.class);
         log.info("[AI] 카테고리 분석 응답: {}", response);
         if (response == null || response.data() == null) return;
 
@@ -132,6 +143,54 @@ public class AiClient {
         }
         log.info("[AI] score 반영 : {}", totalScoreUpdated);
         entityManager.clear();
+    }
+
+    @Transactional
+    public void requestPeople(Long albumId, List<String> keys) {
+        log.info("[AI] people clustering api 호출, keys : {}", keys);
+        var response = postJson(PEOPLE_PATH, new AiImageRequestDTO(keys), AiClusterResponseDTO.class);
+        if (response == null || response.data() == null) return;
+        List<AiClusterResponseDTO.ClusterData> clusters = response.data();
+
+        List<Picture> pictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(albumId, keys);
+        Map<String, Picture> s3KeyToPicture = pictures.stream()
+                .collect(Collectors.toMap(Picture::getS3Key, p -> p));
+        int clusterIndex = 1;
+
+        for (AiClusterResponseDTO.ClusterData cluster : clusters) {
+            List<String> s3Keys = cluster.images();
+            String representativeKey = cluster.representativeFace().image();
+            List<Integer> bbox = cluster.representativeFace().bbox();
+
+            Picture representative = s3KeyToPicture.get(representativeKey);
+            if (representative == null) {
+                log.warn("[AI] 대표 이미지 {}에 해당하는 Picture를 찾을 수 없습니다.", representativeKey);
+                continue;
+            }
+
+            // FaceCluster 저장
+            FaceCluster faceCluster = FaceCluster.builder()
+                    .representativePicture(representative)
+                    .clusterName("사람-" + clusterIndex++)
+                    .bboxX1(bbox.get(0))
+                    .bboxY1(bbox.get(1))
+                    .bboxX2(bbox.get(2))
+                    .bboxY2(bbox.get(3))
+                    .build();
+            faceClusterRepository.save(faceCluster);
+
+            // PictureFaceCluster 저장
+            List<PictureFaceCluster> mappings = s3Keys.stream()
+                    .map(s3KeyToPicture::get)
+                    .filter(Objects::nonNull)
+                    .map(p -> PictureFaceCluster.builder()
+                            .picture(p)
+                            .faceCluster(faceCluster)
+                            .build())
+                    .toList();
+
+            pictureFaceClusterRepository.saveAll(mappings);
+        }
     }
 
     private <T, R> R postJson(String path, T body, Class<R> responseType) {

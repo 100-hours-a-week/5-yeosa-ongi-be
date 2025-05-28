@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -23,6 +24,7 @@ public class KakaoMapService {
 
     private final WebClient webClient;
 
+    @Transactional
     public KakaoAddressDTO reverseGeocode(double lat, double lon) {
         String url = String.format(
                 "https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=%f&y=%f", lon, lat);
