@@ -67,6 +67,12 @@ public class AiAlbumService {
                 aiClient.requestAestheticScore(albumId, s3keys);
                 log.info("[AI] 미적 점수 분석 완료");
                 setThumbnail(album, s3keys);
+
+                log.info("[AI] 클러스터 분석 시작");
+                List<String> allKeys = pictureRepository.findAllByAlbum(album).stream()
+                        .map(Picture::getS3Key).toList();
+                aiClient.requestPeople(albumId, allKeys);
+                log.info("[AI] 클러스너 분석 완료");
             }).join();
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
