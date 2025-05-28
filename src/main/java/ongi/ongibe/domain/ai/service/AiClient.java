@@ -34,9 +34,6 @@ public class AiClient {
 
     private final WebClient webClient;
     private final PictureRepository pictureRepository;
-    private final FaceClusterRepository faceClusterRepository;
-    private final PictureFaceClusterRepository pictureFaceClusterRepository;
-    private final EntityManager entityManager;
 
     @Value("${ai.server.base-url}")
     private String baseUrl;
@@ -88,9 +85,8 @@ public class AiClient {
         return response != null && response.data() != null ? response.data() : List.of();
     }
 
-    public List<AiAestheticScoreResponseDTO.ScoreCategory> getAestheticScore(List<String> keys) {
-        List<Picture> pictures = pictureRepository.findAllByS3KeyIn(keys);
-        var response = postJsonWithRetry(SCORE_PATH, AiAestheticScoreRequestDTO.from(pictures), AiAestheticScoreResponseDTO.class);
+    public List<AiAestheticScoreResponseDTO.ScoreCategory> getAestheticScore(List<AiAestheticScoreRequestDTO.Category> categories) {
+        var response = postJsonWithRetry(SCORE_PATH, new AiAestheticScoreRequestDTO(categories), AiAestheticScoreResponseDTO.class);
         return response != null && response.data() != null ? response.data() : List.of();
     }
 

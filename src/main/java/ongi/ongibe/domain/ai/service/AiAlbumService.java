@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
@@ -83,8 +84,10 @@ public class AiAlbumService {
             }
 
             log.info("[AI] 미적 점수 분석 시작");
-            List<AiAestheticScoreResponseDTO.ScoreCategory> scores = aiClient.getAestheticScore(
-                    s3keys);
+            List<Picture> pictures = pictureRepository.findAllByS3KeyIn(shakyKeys);
+            List<AiAestheticScoreRequestDTO.Category> categoryDTOs = AiAestheticScoreRequestDTO.from(pictures).categories();
+            List<AiAestheticScoreResponseDTO.ScoreCategory> scores = aiClient.getAestheticScore(categoryDTOs);
+
             for (var category : scores) {
                 for (var entry : category.images()) {
                     pictureRepository.updateScore(album.getId(), entry.image(), entry.score());

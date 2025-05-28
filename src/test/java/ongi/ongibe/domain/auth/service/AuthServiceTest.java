@@ -111,7 +111,6 @@ class AuthServiceTest {
         when(jwtTokenProvider.generateRefreshToken(anyLong())).thenReturn("ongi-refresh-token");
 
         when(presignedUrlService.extractS3Key(any())).thenReturn("key.img");
-        when(presignedUrlService.generateGetPresignedUrl("key.img")).thenReturn("https://presigned.url");
 
         BaseApiResponse<KakaoLoginResponseDTO> response = authService.kakaoLogin(code);
         KakaoLoginResponseDTO data = response.getData();
