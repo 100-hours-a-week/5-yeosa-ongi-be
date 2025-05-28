@@ -23,7 +23,6 @@ import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.album.event.AlbumClusterEvent;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.PictureRepository;
