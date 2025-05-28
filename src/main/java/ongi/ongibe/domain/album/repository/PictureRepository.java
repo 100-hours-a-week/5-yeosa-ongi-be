@@ -104,4 +104,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     Optional<Picture> findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(Album album);
 
     List<Picture> findAllByAlbum(Album album);
+
+    List<Picture> findAllByAlbumId(Long albumId);
 }
