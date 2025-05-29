@@ -7,9 +7,6 @@ import ongi.ongibe.domain.ai.event.AlbumAiCreateNotificationEvent;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
-import ongi.ongibe.domain.album.repository.FaceClusterRepository;
-import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
-import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +17,7 @@ public class AiAlbumService {
 
     private final AiClient aiClient;
     private final AlbumRepository albumRepository;
-    private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final FaceClusterRepository faceClusterRepository;
-    private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final AiEmbeddingService aiEmbeddingService;
     private final AiShakeDuplicateCategoryService aiShakeDuplicateCategoryService;
     private final AiAestheticScoreService aiAestheticScoreService;
