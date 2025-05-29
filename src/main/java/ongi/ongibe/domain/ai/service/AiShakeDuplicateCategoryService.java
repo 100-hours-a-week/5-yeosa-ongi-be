@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ public class AiShakeDuplicateCategoryService {
     private final PictureRepository pictureRepository;
 
     @Transactional
-    public void analyzeShakyDuplicateCategory(Long albumId, List<String> s3keys) {
+    public void analyzeShakyDuplicateCategory(Album album, List<String> s3keys) {
+        Long albumId = album.getId();
         log.info("[AI] 품질 분석 시작");
         CompletableFuture<List<String>> shakyFuture = CompletableFuture.supplyAsync(
                 () -> aiClient.getShakyKeys(albumId, s3keys));
