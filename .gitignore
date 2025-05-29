@@ -34,3 +34,4 @@ test-output/
 *.swp
 .rdb
 .sql
+src/main/resources/logback-spring.xml
