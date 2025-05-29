@@ -40,6 +40,7 @@ public class AiAlbumService {
     private final ApplicationEventPublisher eventPublisher;
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
+    private final AiEmbeddingService aiEmbeddingService;
 
     public boolean isAiServerAvailable() {
         return aiClient.isAiServerAvailable();
@@ -48,12 +49,9 @@ public class AiAlbumService {
     @Transactional
     public void process(Album album, List<String> s3keys) {
         Long albumId = album.getId();
+        log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
-            log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
-
-            // 1. 임베딩 요청
-            aiClient.requestEmbeddings(s3keys);
-            log.info("[AI] 임베딩 요청 완료");
+            aiEmbeddingService.requestEmbeddings(s3keys);
 
             // 2. 병렬 요청
             log.info("[AI] 품질 분석 시작");
