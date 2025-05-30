@@ -30,6 +30,9 @@ Thumbs.db
 # 테스트 결과
 test-output/
 
+# 부하테스트용 코드 경로
+src/main/java/ongi/ongibe/loadtest
+
 # 기타
 *.swp
 .rdb
