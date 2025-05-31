@@ -12,7 +12,7 @@
   </appender>
 
   <logger name="com.p6spy" level="DEBUG" additivity="false">
-    <appender-ref ref="QUERY-FILE" />
+    <appender-ref ref="CONSOLE" />
   </logger>
 
   <root level="INFO">

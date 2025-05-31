@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("요청 경로: {}", path);
         log.info("Authorization 헤더: {}", authHeader);
 
-        if (path.startsWith("/api/auth") || path.startsWith("/sentry/")) {
+        if (path.startsWith("/api/auth") || path.startsWith("/sentry/") || path.startsWith("/api/testauth")) {
             filterChain.doFilter(request, response);
             return;
         }

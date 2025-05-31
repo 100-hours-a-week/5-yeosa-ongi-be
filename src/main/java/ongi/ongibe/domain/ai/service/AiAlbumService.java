@@ -32,6 +32,11 @@ public class AiAlbumService {
         Long albumId = album.getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
+            // 0. 헬스체크
+            if (!aiClient.isAiServerAvailable()) {
+                throw new RuntimeException();
+            }
+
             // 1. 임베딩
             aiEmbeddingService.requestEmbeddings(s3keys);
 
