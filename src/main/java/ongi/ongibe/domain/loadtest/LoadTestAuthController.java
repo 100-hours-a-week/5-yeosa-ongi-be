@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
+@Profile("local")
 @RestController
 @RequestMapping("/api/testauth")
 @RequiredArgsConstructor
