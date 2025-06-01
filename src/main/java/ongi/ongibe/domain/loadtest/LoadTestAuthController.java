@@ -17,11 +17,6 @@ public class LoadTestAuthController {
 
     private final LoadTestAuthService loadTestAuthService;
 
-    @PostConstruct
-    public void init() {
-        System.out.println("✅ LoadTestAuthController is active!");
-    }
-
     @PostMapping
     public String issueToken() {
         String nickname = "u_" + UUID.randomUUID().toString().substring(0, 8);
