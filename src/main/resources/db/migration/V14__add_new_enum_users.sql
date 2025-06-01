@@ -1,0 +1,2 @@
+ALTER TABLE users
+    MODIFY COLUMN provider ENUM('KAKAO', 'TEST') NOT NULL;
