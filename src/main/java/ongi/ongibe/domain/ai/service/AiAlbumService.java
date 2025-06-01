@@ -33,8 +33,10 @@ public class AiAlbumService {
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
             // 0. 헬스체크
-            if (!aiClient.isAiServerAvailable()) {
-                throw new RuntimeException();
+            boolean available = aiClient.isAiServerAvailable();
+            log.info("[AI] 헬스체크 결과: {}", available);
+            if (!available) {
+                throw new IllegalStateException("AI 서버 헬스체크 실패");
             }
 
             // 1. 임베딩

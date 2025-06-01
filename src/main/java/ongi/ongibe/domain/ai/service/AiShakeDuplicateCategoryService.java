@@ -22,30 +22,27 @@ public class AiShakeDuplicateCategoryService {
     public void analyzeShakyDuplicateCategory(Album album, List<String> s3keys) {
         Long albumId = album.getId();
         log.info("[AI] 품질 분석 시작");
-        CompletableFuture<List<String>> shakyFuture = CompletableFuture.supplyAsync(
-                () -> aiClient.getShakyKeys(albumId, s3keys));
-        log.info("[AI] 품질 분석 완료");
 
-        log.info("[AI] 중복 분석 시작");
-        CompletableFuture<List<List<String>>> duplicateFuture = CompletableFuture.supplyAsync(
-                () -> aiClient.getDuplicateGroups(albumId, s3keys));
-        log.info("[AI] 중복 분석 완료");
+        try {
+            var shakyFuture = CompletableFuture.supplyAsync(() -> aiClient.getShakyKeys(albumId, s3keys));
+            var duplicateFuture = CompletableFuture.supplyAsync(() -> aiClient.getDuplicateGroups(albumId, s3keys));
+            var categoryFuture = CompletableFuture.supplyAsync(() -> aiClient.getCategories(albumId, s3keys));
 
-        log.info("[AI] 카테고리 분석 시작");
-        CompletableFuture<List<CategoryResponseDTO.CategoryResult>> categoryFuture = CompletableFuture.supplyAsync(
-                () -> aiClient.getCategories(albumId, s3keys));
-        log.info("[AI] 카테고리 분석 완료");
+            List<String> shakyKeys = shakyFuture.join(); // CompletionException 발생 시 여기서 터짐
+            pictureRepository.markPicturesAsShaky(albumId, shakyKeys);
 
-        List<String> shakyKeys = shakyFuture.join();
-        pictureRepository.markPicturesAsShaky(albumId, shakyKeys);
+            List<List<String>> duplicateGroups = duplicateFuture.join();
+            pictureRepository.markPicturesAsDuplicated(albumId, duplicateGroups.stream().flatMap(List::stream).toList());
 
-        List<List<String>> duplicateGroups = duplicateFuture.join();
-        pictureRepository.markPicturesAsDuplicated(albumId,
-                duplicateGroups.stream().flatMap(List::stream).toList());
+            List<CategoryResponseDTO.CategoryResult> categories = categoryFuture.join();
+            for (var category : categories) {
+                pictureRepository.updateTag(albumId, category.images(), category.category());
+            }
+            log.info("[AI] 품질/중복/카테고리 분석 완료");
 
-        List<CategoryResponseDTO.CategoryResult> categories = categoryFuture.join();
-        for (var category : categories) {
-            pictureRepository.updateTag(albumId, category.images(), category.category());
+        } catch (Exception e) {
+            log.error("[AI 분석 실패 - 분석 중 예외 발생]", e);
+            throw new RuntimeException("AI 분석 실패", e);
         }
     }
 
