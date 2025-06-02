@@ -12,7 +12,7 @@ public class MonthlyAlbumCache {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final Duration TTL = Duration.ofHours(7);
+    private static final Duration TTL = Duration.ofHours(12);
 
     public MonthlyAlbumResponseDTO get(Long userId, String yearMonth) {
         String key = makeKey(userId, yearMonth);
