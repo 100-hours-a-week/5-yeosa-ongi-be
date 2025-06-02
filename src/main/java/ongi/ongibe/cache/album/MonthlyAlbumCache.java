@@ -14,12 +14,12 @@ public class MonthlyAlbumCache {
 
     private static final Duration TTL = Duration.ofHours(7);
 
-    public MonthlyAlbumResponseDTO.AlbumInfo get(Long userId, String yearMonth) {
+    public MonthlyAlbumResponseDTO get(Long userId, String yearMonth) {
         String key = makeKey(userId, yearMonth);
-        return (MonthlyAlbumResponseDTO.AlbumInfo) redisTemplate.opsForValue().get(key);
+        return (MonthlyAlbumResponseDTO) redisTemplate.opsForValue().get(key);
     }
 
-    public void set(Long userId, String yearMonth, MonthlyAlbumResponseDTO.AlbumInfo value) {
+    public void set(Long userId, String yearMonth, MonthlyAlbumResponseDTO value) {
         String key = makeKey(userId, yearMonth);
         redisTemplate.opsForValue().set(key, value, TTL);
     }
