@@ -10,6 +10,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.cache.album.MonthlyAlbumCache;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
@@ -66,6 +67,7 @@ public class AlbumService {
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final PresignedUrlService presignedUrlService;
+    private final MonthlyAlbumCache monthlyAlbumCache;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -77,6 +79,11 @@ public class AlbumService {
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
+        Long userId = user.getId();
+        MonthlyAlbumResponseDTO cachedAlbum = monthlyAlbumCache.get(userId, yearMonth);
+        if (cachedAlbum != null) {
+            return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공", cachedAlbum);
+        }
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
         List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
 
@@ -87,6 +94,7 @@ public class AlbumService {
                 nextYearMonth,
                 hasNext
         );
+        monthlyAlbumCache.set(userId, yearMonth, monthlyAlbumResponseDTO);
         return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공",monthlyAlbumResponseDTO);
     }
 
