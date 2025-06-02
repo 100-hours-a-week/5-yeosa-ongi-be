@@ -1,7 +1,8 @@
 package ongi.ongibe.domain.album.event;
 
-import ongi.ongibe.domain.album.entity.Album;
+import java.util.List;
 
 public interface AlbumChangeEvent {
-    Album album();
+    String yearMonth();
+    List<Long> userIds();
 }

@@ -55,12 +55,12 @@ public class AiAlbumService {
             aiClusterService.requestCluster(album);
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
-            album.setProcessState(AlbumProcessState.DONE);
+            album.changeProcessState(AlbumProcessState.DONE);
             albumRepository.save(album);
             log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
         } catch (Exception e) {
             log.error("[AI 분석 실패] albumId: {}, message: {}", albumId, e.getMessage(), e);
-            album.setProcessState(AlbumProcessState.FAILED);
+            album.changeProcessState(AlbumProcessState.FAILED);
             albumRepository.save(album);
             throw new RuntimeException(e);
         }

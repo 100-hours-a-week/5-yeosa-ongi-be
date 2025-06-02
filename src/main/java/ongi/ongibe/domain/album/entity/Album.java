@@ -25,6 +25,7 @@ import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.event.AlbumNameChangeEvent;
 import ongi.ongibe.domain.album.event.AlbumProcessStateChangeEvent;
 import ongi.ongibe.domain.album.event.AlbumThumbnailChangeEvent;
+import ongi.ongibe.util.DateUtil;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -84,25 +85,25 @@ public class Album {
         domainEvent.clear();
     }
 
-    public void changeName(String newName) {
+    public void changeName(String newName, List<Long> memberIds) {
         if (!Objects.equals(this.name, newName)) {
             this.name = newName;
-            domainEvent.add(new AlbumNameChangeEvent(this));
+            domainEvent.add(new AlbumNameChangeEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
         }
     }
 
-    public void changeThumbnailPicture(Picture thumbnailPicture) {
+    public void changeThumbnailPicture(Picture thumbnailPicture, List<Long> memberIds) {
         if (!Objects.equals(this.thumbnailPicture, thumbnailPicture)) {
             this.thumbnailPicture = thumbnailPicture;
-            domainEvent.add(new AlbumThumbnailChangeEvent(this));
+            domainEvent.add(new AlbumThumbnailChangeEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
         }
     }
 
 
-    public void changeProcessState(AlbumProcessState newState) {
+    public void changeProcessState(AlbumProcessState newState, List<Long> memberIds) {
         if (this.processState != newState) {
             this.processState = newState;
-            domainEvent.add(new AlbumProcessStateChangeEvent(this));
+            domainEvent.add(new AlbumProcessStateChangeEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
         }
     }
 }

@@ -27,6 +27,7 @@ public class Place {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "place")
     private List<Picture> pictures = new ArrayList<>();
 

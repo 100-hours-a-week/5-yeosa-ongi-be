@@ -27,7 +27,11 @@ public class AiThumbnailService {
                 .max((p1, p2) -> Float.compare(p1.getQualityScore(), p2.getQualityScore()))
                 .orElseGet(updatedPictures::getFirst);
 
-        album.setThumbnailPicture(thumbnail);
+        List<Long> memberIds = album.getUserAlbums().stream()
+                .map(ua -> ua.getUser().getId())
+                .toList();
+
+        album.changeThumbnailPicture(thumbnail, memberIds);
         albumRepository.save(album);
         log.info("[AI] 썸네일 지정 완료");
     }

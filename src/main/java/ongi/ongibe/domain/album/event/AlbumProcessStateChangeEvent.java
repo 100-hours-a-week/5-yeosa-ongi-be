@@ -1,7 +1,5 @@
 package ongi.ongibe.domain.album.event;
 
-import ongi.ongibe.domain.album.entity.Album;
+import java.util.List;
 
-public record AlbumProcessStateChangeEvent(Album album) implements AlbumChangeEvent {
-
-}
+public record AlbumProcessStateChangeEvent(String yearMonth, List<Long> userIds) implements AlbumChangeEvent {}

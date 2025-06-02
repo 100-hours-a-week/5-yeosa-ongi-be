@@ -30,4 +30,8 @@ public class DateUtil {
         YearMonth ym = parseOrNow(yearMonth);
         return ym.minusMonths(1).format(yearMonthFormatter);
     }
+
+    public static String getYearMonth(LocalDateTime now) {
+        return now.format(yearMonthFormatter);
+    }
 }

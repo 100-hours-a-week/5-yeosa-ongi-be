@@ -6,10 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -24,7 +22,6 @@ import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Slf4j
@@ -61,7 +58,11 @@ public class Picture {
     @Builder.Default
     @Column(length = 20)
     private String tag = "AI 분석 전";
+
+    @Builder.Default
     private boolean isDuplicated = false;
+
+    @Builder.Default
     private boolean isShaky = false;
     private float qualityScore;
 
