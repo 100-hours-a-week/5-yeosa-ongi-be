@@ -8,11 +8,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,14 +22,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.domain.album.AlbumProcessState;
-import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
-import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO.PictureInfo;
-import ongi.ongibe.domain.album.event.AlbumNameChangedEvent;
-import ongi.ongibe.domain.album.event.AlbumThumbnailChangedEvent;
+import ongi.ongibe.domain.album.event.AlbumNameChangeEvent;
+import ongi.ongibe.domain.album.event.AlbumProcessStateChangeEvent;
+import ongi.ongibe.domain.album.event.AlbumThumbnailChangeEvent;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Where;
 import org.springframework.data.domain.AfterDomainEventPublication;
 import org.springframework.data.domain.DomainEvents;
 
@@ -91,14 +87,14 @@ public class Album {
     public void changeName(String newName) {
         if (!Objects.equals(this.name, newName)) {
             this.name = newName;
-            domainEvent.add(new AlbumNameChangedEvent(newName));
+            domainEvent.add(new AlbumNameChangeEvent(this));
         }
     }
 
     public void changeThumbnailPicture(Picture thumbnailPicture) {
         if (!Objects.equals(this.thumbnailPicture, thumbnailPicture)) {
             this.thumbnailPicture = thumbnailPicture;
-            domainEvent.add(new AlbumThumbnailChangedEvent(thumbnailPicture));
+            domainEvent.add(new AlbumThumbnailChangeEvent(this));
         }
     }
 
@@ -106,7 +102,7 @@ public class Album {
     public void changeProcessState(AlbumProcessState newState) {
         if (this.processState != newState) {
             this.processState = newState;
-            domainEvent.add(new AlbumProcessStateChangedEvent(this));
+            domainEvent.add(new AlbumProcessStateChangeEvent(this));
         }
     }
 }
