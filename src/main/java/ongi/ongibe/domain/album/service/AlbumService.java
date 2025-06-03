@@ -185,6 +185,9 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
+        albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
+
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }
@@ -227,6 +230,8 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        refreshAllMemberMonthlyAlbumCache(album);
+
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 
@@ -236,6 +241,19 @@ public class AlbumService {
         validAlbumOwner(album);
         album.setName(albumName);
         albumRepository.save(album);
+
+        refreshAllMemberMonthlyAlbumCache(album);
+    }
+
+    private void refreshAllMemberMonthlyAlbumCache(Album album) {
+        String yearMonth = DateUtil.getYearMonth(album.getCreatedAt());
+        List<Long> memberIds = userAlbumRepository.findAllByAlbum(album).stream()
+                .map(UserAlbum::getUser)
+                .map(User::getId).toList();
+
+        for (Long userId : memberIds) {
+            albumCacheService.refreshMonthlyAlbum(userId, yearMonth);
+        }
     }
 
     @Transactional
@@ -267,6 +285,8 @@ public class AlbumService {
             Optional<Picture> newThumbnailPicture = pictureRepository.findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(album);
             newThumbnailPicture.ifPresent(album::setThumbnailPicture);
         }
+
+        refreshAllMemberMonthlyAlbumCache(album);
     }
 
     @Transactional
@@ -285,6 +305,7 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
+        refreshAllMemberMonthlyAlbumCache(album);
     }
 
     private UserAlbum getUserAlbum(User user, Album album) {
@@ -371,6 +392,7 @@ public class AlbumService {
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
+            refreshAllMemberMonthlyAlbumCache(album);
             eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
