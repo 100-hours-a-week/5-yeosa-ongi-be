@@ -32,4 +32,6 @@ public interface UserAlbumRepository extends JpaRepository<UserAlbum, Long> {
     List<UserAlbum> findAllByAlbum(Album album);
 
     List<UserAlbum> findAllByAlbumAndUser(Album album, User user);
+
+    List<Long> findAllByUser_Id(Long userId);
 }

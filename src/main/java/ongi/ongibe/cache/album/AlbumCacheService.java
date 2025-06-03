@@ -57,12 +57,4 @@ public class AlbumCacheService {
                 .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
-
-    public void evictMonthlyAlbum(Long userId, String yearMonth) {
-        redisCacheService.evict(getKey(userId, yearMonth));
-    }
-
-    private String getKey(Long userId, String yearMonth) {
-        return "monthly_album::" + userId + "::" + yearMonth;
-    }
 }

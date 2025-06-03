@@ -23,8 +23,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.event.AlbumNameChangeEvent;
+import ongi.ongibe.domain.album.event.AlbumPictureAddEvent;
 import ongi.ongibe.domain.album.event.AlbumProcessStateChangeEvent;
 import ongi.ongibe.domain.album.event.AlbumThumbnailChangeEvent;
+import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.util.DateUtil;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
@@ -105,5 +107,10 @@ public class Album {
             this.processState = newState;
             domainEvent.add(new AlbumProcessStateChangeEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
         }
+    }
+
+    public void addPictures(List<Picture> newPictures, User user, List<Long> memberIds) {
+        this.pictures.addAll(newPictures);
+        domainEvent.add(new AlbumPictureAddEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
     }
 }

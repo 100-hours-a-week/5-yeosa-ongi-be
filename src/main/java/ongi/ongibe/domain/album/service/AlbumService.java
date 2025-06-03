@@ -33,6 +33,7 @@ import ongi.ongibe.domain.album.event.AlbumCreateCacheEvent;
 import ongi.ongibe.domain.album.event.AlbumDeleteCacheEvent;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.event.AlbumMembersChangedEvent;
+import ongi.ongibe.domain.album.event.AlbumPictureAddEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
@@ -209,11 +210,6 @@ public class AlbumService {
         Album album = getAlbumIfMember(albumId);
 
         List<Picture> existingPictures = album.getPictures();
-        if (existingPictures == null) {
-            existingPictures = new ArrayList<>();
-            album.setPictures(existingPictures);
-        }
-
         int previousSize = existingPictures.size();
         int newSize = previousSize + pictureUrls.size();
 
@@ -222,13 +218,14 @@ public class AlbumService {
         User user = securityUtil.getCurrentUser();
         List<Picture> newPictures = createAddPictures(pictureUrls, album, user);
 
+        album.addPictures(newPictures, user, getMemberIds(album));
+
         pictureRepository.saveAll(newPictures);
         albumRepository.save(album);
 
         List<String> pictureKeys = newPictures.stream()
                 .map(Picture::getS3Key)
                 .toList();
-
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 

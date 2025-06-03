@@ -1,27 +1,24 @@
-package ongi.ongibe.domain.album.listener;
+package ongi.ongibe.domain.user.listener;
 
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.domain.album.event.AlbumChangeEvent;
+import ongi.ongibe.domain.user.event.UserInfoChangeEvent;
 import ongi.ongibe.global.cache.CacheKeyUtil;
 import ongi.ongibe.global.cache.RedisCacheService;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
-public class AlbumChangeCacheEventListener {
+public class UserCacheEventListener {
 
     private final RedisCacheService cacheService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleAlbumChange(AlbumChangeEvent event) {
+    public void handleUserChange(UserInfoChangeEvent event) {
         for (Long userId : event.userIds()) {
-            String AlbumKey = CacheKeyUtil.key("monthlyAlbum", userId, event.yearMonth());
-            String UserTotalStateKey = CacheKeyUtil.key("userTotalState", userId);
-            cacheService.evict(AlbumKey);
-            cacheService.evict(UserTotalStateKey);
+            String key = CacheKeyUtil.key("UserTotalState", userId);
+            cacheService.evict(key);
         }
     }
 }
