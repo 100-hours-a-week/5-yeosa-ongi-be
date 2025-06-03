@@ -24,21 +24,25 @@ public class AlbumProcessService {
 
     @Async("asyncExecutor")
     public void processAlbumAsync(Long albumId, List<String> pictureS3Key) {
-        processAlbumTransaction(albumId, pictureS3Key);
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다."));
+
+        List<Long> memberIds = album.getUserAlbums().stream()
+                .map(ua -> ua.getUser().getId())
+                .toList();
+
+        processAlbumTransaction(album, pictureS3Key, memberIds);
     }
 
     @Transactional
-    public void processAlbumTransaction(Long albumId, List<String> pictureS3Keys) {
+    public void processAlbumTransaction(Album album, List<String> pictureS3Keys, List<Long> memberIds) {
 //        List<Picture> pictures = geoService.geoAndKakaoAndSave(albumId, pictureS3Keys);
-        Album album = albumRepository.findById(albumId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
-        );
         try{
-            album.changeProcessState(AlbumProcessState.IN_PROGRESS);
+            album.changeProcessState(AlbumProcessState.IN_PROGRESS, memberIds);
             albumRepository.save(album);
-            aiAlbumService.process(album, pictureS3Keys);
+            aiAlbumService.process(album, pictureS3Keys, memberIds);
         } catch (Exception e) {
-            album.changeProcessState(AlbumProcessState.FAILED);
+            album.changeProcessState(AlbumProcessState.FAILED, memberIds);
             albumRepository.save(album);
         }
     }

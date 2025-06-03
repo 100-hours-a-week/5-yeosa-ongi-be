@@ -54,7 +54,7 @@ public class AlbumController {
     @ApiResponse(responseCode = "200", description = "앨범 생성 요청 접수 성공")
     @PostMapping
     public ResponseEntity<BaseApiResponse<Void>> createAlbum(@RequestBody AlbumCreateRequestGeoFrontDTO request) {
-        List<? extends PictureUrlCoordinateDTO> pictureDTOs = request.pictureUrls(); // 명시적 타입
+        List<AlbumCreateRequestGeoFrontDTO.PictureRequestDTO> pictureDTOs = request.pictureUrls(); // 명시적 타입
         albumService.createAlbum(request.albumName(), pictureDTOs);
         return ResponseEntity.ok(BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null));
     }
@@ -67,7 +67,7 @@ public class AlbumController {
     @ApiResponse(responseCode = "200", description = "사진 추가 성공")
     @PostMapping("/{albumId}")
     public ResponseEntity<BaseApiResponse<Void>> addPictureAlbum(@PathVariable Long albumId, @RequestBody AlbumPictureAddRequestGeoFrontDTO request) {
-        List<? extends PictureUrlCoordinateDTO> pictureDTOs = request.pictureUrls();
+        List<AlbumPictureAddRequestGeoFrontDTO.PictureRequestDTO> pictureDTOs = request.pictureUrls();
         albumService.addPictures(albumId, pictureDTOs);
         return ResponseEntity.ok(BaseApiResponse.success("PICTURE_ADD_SUCCESS", "앨범 사진 추가 요청이 접수되었습니다.", null));
     }

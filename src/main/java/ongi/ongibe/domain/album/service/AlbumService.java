@@ -14,10 +14,12 @@ import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.cache.album.AlbumCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
@@ -172,7 +174,7 @@ public class AlbumService {
     }
 
     @Transactional
-    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
+    public void createAlbum(String albumName, List<AlbumCreateRequestGeoFrontDTO.PictureRequestDTO> pictureDTOs) {
         if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 " + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다");
         }
@@ -191,7 +193,7 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(album.getCreatedAt());
         List<Long> userIds = getMemberIds(album);
-        eventPublisher.publishEvent(new AlbumCreateCacheEvent(album.getId(), yearMonth, userIds));
+        eventPublisher.publishEvent(new AlbumCreateCacheEvent(yearMonth, userIds));
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }
@@ -203,7 +205,7 @@ public class AlbumService {
     }
 
     @Transactional
-    public void addPictures(Long albumId, List<? extends PictureUrlCoordinateDTO> pictureUrls) {
+    public void addPictures(Long albumId, List<AlbumPictureAddRequestGeoFrontDTO.PictureRequestDTO> pictureUrls) {
         Album album = getAlbumIfMember(albumId);
 
         List<Picture> existingPictures = album.getPictures();
@@ -218,7 +220,7 @@ public class AlbumService {
         checkAddPictureSize(newSize, previousSize);
 
         User user = securityUtil.getCurrentUser();
-        List<Picture> newPictures = createPictures(pictureUrls, album, user);
+        List<Picture> newPictures = createAddPictures(pictureUrls, album, user);
 
         pictureRepository.saveAll(newPictures);
         albumRepository.save(album);
@@ -283,7 +285,7 @@ public class AlbumService {
         for (Picture p : album.getPictures()){
             p.setDeletedAt(now);
         }
-        eventPublisher.publishEvent(new AlbumDeleteCacheEvent(albumId, yearMonth, getMemberIds(album)));
+        eventPublisher.publishEvent(new AlbumDeleteCacheEvent(yearMonth, getMemberIds(album)));
         userAlbumRepository.save(userAlbum);
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
@@ -314,8 +316,25 @@ public class AlbumService {
         album.setUserAlbums(List.of(userAlbum));
     }
 
+    private List<Picture> createAddPictures(
+            List<AlbumPictureAddRequestGeoFrontDTO.PictureRequestDTO> pictureDTOs,
+            Album album,
+            User user
+    ) {
+        return pictureDTOs.stream()
+                .map(dto -> Picture.builder()
+                        .album(album)
+                        .user(user)
+                        .pictureURL(dto.pictureUrl())
+                        .latitude(dto.latitude())
+                        .longitude(dto.longitude())
+                        .s3Key(presignedUrlService.extractS3Key(dto.pictureUrl()))
+                        .build())
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
     private List<Picture> createPictures(
-            List<? extends PictureUrlCoordinateDTO> pictureDTOs,
+            List<AlbumCreateRequestGeoFrontDTO.PictureRequestDTO> pictureDTOs,
             Album album,
             User user
     ) {
@@ -373,7 +392,7 @@ public class AlbumService {
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
-            eventPublisher.publishEvent(new AlbumMembersChangedEvent(tokenAlbumId, DateUtil.getYearMonth(album.getCreatedAt()), getMemberIds(album)));
+            eventPublisher.publishEvent(new AlbumMembersChangedEvent(DateUtil.getYearMonth(album.getCreatedAt()), getMemberIds(album)));
             eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
@@ -394,7 +413,7 @@ public class AlbumService {
         oldUserAlbum.setRole(UserAlbumRole.NORMAL);
         newUserAlbum.setRole(UserAlbumRole.OWNER);
         Album album = getAlbum(albumId);
-        eventPublisher.publishEvent(new AlbumMembersChangedEvent(albumId, DateUtil.getYearMonth(album.getCreatedAt()), getMemberIds(album)));
+        eventPublisher.publishEvent(new AlbumMembersChangedEvent(DateUtil.getYearMonth(album.getCreatedAt()), getMemberIds(album)));
         return BaseApiResponse.success(
                 "ALBUM_OWNERSHIP_TRANSFER_SUCCESS", "앨범 소유권이 정상적으로 이전되었습니다.",
                 new AlbumOwnerTransferResponseDTO(oldOwner.getId(), newUser.getId())

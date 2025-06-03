@@ -28,7 +28,7 @@ public class AiAlbumService {
         return aiClient.isAiServerAvailable();
     }
 
-    public void process(Album album, List<String> s3keys) {
+    public void process(Album album, List<String> s3keys, List<Long> memberIds) {
         Long albumId = album.getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
@@ -55,12 +55,12 @@ public class AiAlbumService {
             aiClusterService.requestCluster(album);
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
-            album.changeProcessState(AlbumProcessState.DONE);
+            album.changeProcessState(AlbumProcessState.DONE, memberIds);
             albumRepository.save(album);
             log.info("[AI] 앨범 {} 분석 전체 완료", albumId);
         } catch (Exception e) {
             log.error("[AI 분석 실패] albumId: {}, message: {}", albumId, e.getMessage(), e);
-            album.changeProcessState(AlbumProcessState.FAILED);
+            album.changeProcessState(AlbumProcessState.FAILED, memberIds);
             albumRepository.save(album);
             throw new RuntimeException(e);
         }

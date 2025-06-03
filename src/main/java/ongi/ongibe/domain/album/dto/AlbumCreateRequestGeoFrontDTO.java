@@ -1,7 +1,6 @@
 package ongi.ongibe.domain.album.dto;
 
 import java.util.List;
-import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 
 public record AlbumCreateRequestGeoFrontDTO(
         String albumName,
@@ -11,5 +10,5 @@ public record AlbumCreateRequestGeoFrontDTO(
             String pictureUrl,
             Double latitude,
             Double longitude
-    ) implements PictureUrlCoordinateDTO {}
+    ){}
 }

@@ -9,6 +9,5 @@ public record AlbumPictureAddRequestGeoFrontDTO(
     public record PictureRequestDTO(
             String pictureUrl,
             Double latitude,
-            Double longitude
-    ) implements PictureUrlCoordinateDTO {}
+            Double longitude){}
 }
