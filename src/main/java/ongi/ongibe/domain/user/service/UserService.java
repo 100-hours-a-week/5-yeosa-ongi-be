@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -47,20 +48,12 @@ public class UserService {
     private final PictureRepository pictureRepository;
     private final PresignedUrlService presignedUrlService;
     private final SecurityUtil securityUtil;
+    private final UserCacheService userCacheService;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
         User user = securityUtil.getCurrentUser();
-
-        List<UserTotalStateResponseDTO.PictureCoordinate> coordinateList =
-                pictureRepository.findAllByUser(user).stream()
-                        .map(Picture::toPictureCoordinate)
-                        .toList();
-        int albumCount = userAlbumRepository.countByUser(user);
-        int placeCount = placeRepository.countDistinctByPicturesByUser(user);
-
-        UserTotalStateResponseDTO userTotalStateResponseDTO =
-                new UserTotalStateResponseDTO(coordinateList, albumCount, placeCount);
+        UserTotalStateResponseDTO userTotalStateResponseDTO = userCacheService.getUserTotalState(user.getId());
 
         return BaseApiResponse.<UserTotalStateResponseDTO>builder()
                 .code("USER_TOTAL_STATISTICS_SUCCESS")

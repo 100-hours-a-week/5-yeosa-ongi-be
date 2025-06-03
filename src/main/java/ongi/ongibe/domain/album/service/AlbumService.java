@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.cache.album.AlbumCacheService;
+import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
@@ -68,6 +69,7 @@ public class AlbumService {
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final PresignedUrlService presignedUrlService;
     private final AlbumCacheService albumCacheService;
+    private final UserCacheService userCacheService;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -187,6 +189,7 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
         albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
+        userCacheService.refreshUserTotalState(user.getId());
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
@@ -231,6 +234,7 @@ public class AlbumService {
                 .toList();
 
         refreshAllMemberMonthlyAlbumCache(album);
+        userCacheService.refreshUserTotalState(user.getId());
 
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
@@ -243,6 +247,16 @@ public class AlbumService {
         albumRepository.save(album);
 
         refreshAllMemberMonthlyAlbumCache(album);
+    }
+
+    private void refreshAllMemberTotalStateCache(Album album) {
+        List<Long> memberIds = userAlbumRepository.findAllByAlbum(album).stream()
+                .map(UserAlbum::getUser)
+                .map(User::getId).toList();
+
+        for (Long userId : memberIds) {
+            userCacheService.refreshUserTotalState(userId);
+        }
     }
 
     private void refreshAllMemberMonthlyAlbumCache(Album album) {
@@ -286,6 +300,7 @@ public class AlbumService {
             newThumbnailPicture.ifPresent(album::setThumbnailPicture);
         }
 
+        refreshAllMemberTotalStateCache(album);
         refreshAllMemberMonthlyAlbumCache(album);
     }
 
@@ -305,6 +320,7 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
+        refreshAllMemberTotalStateCache(album);
         refreshAllMemberMonthlyAlbumCache(album);
     }
 
@@ -392,6 +408,7 @@ public class AlbumService {
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
+            refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
             eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
