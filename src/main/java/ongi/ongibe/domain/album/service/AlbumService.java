@@ -10,6 +10,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.cache.album.AlbumCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
@@ -66,6 +67,7 @@ public class AlbumService {
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final PresignedUrlService presignedUrlService;
+    private final AlbumCacheService albumCacheService;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -77,29 +79,8 @@ public class AlbumService {
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
-        List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
-        List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
-
-        boolean hasNext = userAlbumRepository.existsByUserAndAlbum_CreatedAtBefore(user, DateUtil.getStartOfMonth(yearMonth));
-        String nextYearMonth = hasNext ? DateUtil.getPreviousYearMonth(yearMonth) : null;
-        MonthlyAlbumResponseDTO monthlyAlbumResponseDTO = new MonthlyAlbumResponseDTO(
-                albumInfos,
-                nextYearMonth,
-                hasNext
-        );
-        return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공",monthlyAlbumResponseDTO);
-    }
-
-    private List<AlbumInfo> getAlbumInfos(List<UserAlbum> userAlbumList,
-            String yearMonth) {
-        LocalDateTime startOfMonth = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endOfMonth = DateUtil.getEndOfMonth(yearMonth);
-        return userAlbumList.stream()
-                .map(UserAlbum::getAlbum)
-                .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
-                        album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
-                .toList();
+        MonthlyAlbumResponseDTO result = albumCacheService.getMonthlyAlbum(user.getId(), yearMonth);
+        return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공", result);
     }
 
     @Transactional(readOnly = true)
