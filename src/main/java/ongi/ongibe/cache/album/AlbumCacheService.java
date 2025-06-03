@@ -30,7 +30,8 @@ public class AlbumCacheService {
 
     private static final Duration TTL = Duration.ofMinutes(10);
 
-    public MonthlyAlbumResponseDTO getMonthlyAlbum(Long userId, String yearMonth) {
+    public MonthlyAlbumResponseDTO getMonthlyAlbum(Long userId, String requestYearMonth) {
+        String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
         String key = CacheKeyUtil.key("monthlyAlbum", userId, yearMonth);
         return redisCacheService.get(key, MonthlyAlbumResponseDTO.class).orElseGet(() ->{
             User user = securityUtil.getCurrentUser();
