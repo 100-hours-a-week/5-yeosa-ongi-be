@@ -188,14 +188,17 @@ public class AlbumService {
                 .toList();
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
+
         albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
         userCacheService.refreshUserTotalState(user);
         userCacheService.refreshUserTagState(user, yearMonth);
         userCacheService.refreshUserPictureStat(user, yearMonth);
+        userCacheService.refreshUserPlaceStat(user, yearMonth);
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }
+
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
 //        if (pictureUrls.size() > 100){
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
@@ -236,9 +239,7 @@ public class AlbumService {
                 .toList();
 
         refreshAllMemberMonthlyAlbumCache(album);
-        userCacheService.refreshUserTotalState(user);
-        userCacheService.refreshUserTagState(user, DateUtil.getYearMonth(album.getCreatedAt()));
-        userCacheService.refreshUserPictureStat(user, DateUtil.getYearMonth(album.getCreatedAt()));
+        refreshAllMemberTotalStateCache(album);
 
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
@@ -262,6 +263,7 @@ public class AlbumService {
             userCacheService.refreshUserTotalState(user);
             userCacheService.refreshUserTagState(user, yearMonth);
             userCacheService.refreshUserPictureStat(user, yearMonth);
+            userCacheService.refreshUserPlaceStat(user, yearMonth);
         }
     }
 

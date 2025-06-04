@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +15,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
+import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -27,6 +30,7 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.cache.CacheKeyUtil;
 import ongi.ongibe.global.cache.RedisCacheService;
 import ongi.ongibe.util.DateUtil;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -148,6 +152,55 @@ public class UserCacheService {
     public void refreshUserPictureStat(User user, String yearMonth) {
         String key = CacheKeyUtil.key("userPictureStat", user.getId(), yearMonth);
         UserPictureStatResponseDTO response = buildUserPictureStatResponse(user, yearMonth);
+        redisCacheService.set(key, response, TTL);
+    }
+
+    public UserPlaceStatResponseDTO getUserPlaceStat(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userPlaceStat", user.getId(), yearMonth);
+        return redisCacheService.get(key, UserPlaceStatResponseDTO.class).orElseGet(() -> {
+            UserPlaceStatResponseDTO response = buildUserPlaceStatResponse(user, yearMonth);
+            redisCacheService.set(key, response, TTL);
+            return response;
+        });
+    }
+
+    private UserPlaceStatResponseDTO buildUserPlaceStatResponse(User user, String yearMonth) {
+        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
+        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
+        List<Object[]> topPlace = pictureRepository.mostVisitPlace(
+                user.getId(), startDate, endDate, PageRequest.of(0,1));
+        if (topPlace.isEmpty()){
+            return new UserPlaceStatResponseDTO(null, null, null, List.of());
+        }
+        String city = topPlace.getFirst()[0].toString();
+        String district = topPlace.getFirst()[1].toString();
+        String town = topPlace.getFirst()[2].toString();
+
+        List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
+        return new UserPlaceStatResponseDTO(city, district, town, tags);
+    }
+
+    private List<String> getTopTags(User user, String city, String district, String town,
+            LocalDateTime startDate, LocalDateTime endDate) {
+        List<Picture> pictures = pictureRepository.findByUserAndPlaceAndCreatedAtBetween(
+                user, city, district, town, startDate, endDate);
+        Map<String, Integer> tagMap = new HashMap<>();
+        for (Picture picture : pictures){
+            String tag = picture.getTag();
+            if (tag != null && !tag.isBlank() && !tag.equals("기타")){
+                tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
+            }
+        }
+        return tagMap.entrySet().stream()
+                .sorted(Entry.<String, Integer>comparingByValue().reversed())
+                .limit(6)
+                .map(Entry::getKey)
+                .toList();
+    }
+
+    public void refreshUserPlaceStat(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userPlaceStat", user.getId(), yearMonth);
+        UserPlaceStatResponseDTO response = buildUserPlaceStatResponse(user, yearMonth);
         redisCacheService.set(key, response, TTL);
     }
 }
