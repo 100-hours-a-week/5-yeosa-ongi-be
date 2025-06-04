@@ -170,13 +170,13 @@ public class UserService {
         user.setS3Key(key);
         userRepository.save(user);
         UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), user.getProfileImage(), 300);
-        List<Long> memnberIds = userAlbumRepository.findAllByUser(user).stream()
+        List<Long> memberIds = userAlbumRepository.findAllByUser(user).stream()
                         .map(UserAlbum::getAlbum)
                         .flatMap(album -> album.getUserAlbums().stream())
                         .map(UserAlbum::getUser)
                         .map(User::getId)
                         .toList();
-        eventPublisher.publishEvent(new UserInfoChangeEvent(memnberIds));
+        eventPublisher.publishEvent(new UserInfoChangeEvent(memberIds));
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
 }

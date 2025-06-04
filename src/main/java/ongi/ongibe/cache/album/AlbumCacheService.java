@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import ongi.ongibe.global.cache.CacheKeyUtil;
 import ongi.ongibe.global.cache.RedisCacheService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +29,7 @@ public class AlbumCacheService {
     private final UserAlbumRepository userAlbumRepository;
     private final SecurityUtil securityUtil;
     private final RedisCacheService redisCacheService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private static final Duration TTL = Duration.ofMinutes(10);
 
