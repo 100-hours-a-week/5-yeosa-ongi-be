@@ -78,40 +78,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPlaceStatResponseDTO> getUserPlaceStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
-        List<Object[]> topPlace = pictureRepository.mostVisitPlace(
-                user.getId(), startDate, endDate, PageRequest.of(0,1));
-        UserPlaceStatResponseDTO response;
-        if (topPlace.isEmpty()){
-            response = new UserPlaceStatResponseDTO(null, null, null, List.of());
-            return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
-        }
-        String city = topPlace.getFirst()[0].toString();
-        String district = topPlace.getFirst()[1].toString();
-        String town = topPlace.getFirst()[2].toString();
-
-        List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
-        response = new UserPlaceStatResponseDTO(city, district, town, tags);
+        UserPlaceStatResponseDTO response = userCacheService.getUserPlaceStat(user, yearMonth);
         return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
-    }
-
-    private List<String> getTopTags(User user, String city, String district, String town,
-            LocalDateTime startDate, LocalDateTime endDate) {
-        List<Picture> pictures = pictureRepository.findByUserAndPlaceAndCreatedAtBetween(
-                user, city, district, town, startDate, endDate);
-        Map<String, Integer> tagMap = new HashMap<>();
-        for (Picture picture : pictures){
-            String tag = picture.getTag();
-            if (tag != null && !tag.isBlank() && !tag.equals("기타")){
-                tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
-            }
-        }
-        return tagMap.entrySet().stream()
-                .sorted(Entry.<String, Integer>comparingByValue().reversed())
-                .limit(6)
-                .map(Entry::getKey)
-                .toList();
     }
 
     @Transactional(readOnly = true)

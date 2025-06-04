@@ -113,6 +113,6 @@ public class Album {
     public void addPictures(List<Picture> newPictures, User user, List<Long> memberIds) {
         this.pictures.addAll(newPictures);
         domainEvent.add(new AlbumPictureAddEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
-        domainEvent.add(new PictureStatChangeEvent(memberIds, DateUtil.getYearMonth(this.createdAt)));
+        domainEvent.add(new PictureStatChangeEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
     }
 }

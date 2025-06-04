@@ -19,7 +19,9 @@ public class PictureStateChangeEventListener {
         String yearMonth = event.yearMonth();
         for (Long userId: event.memberId()){
             String UserPictureStateKey = CacheKeyUtil.key("userPictureStat", userId, yearMonth);
+            String UserPlaceStatKey = CacheKeyUtil.key("userPlaceStat", userId, yearMonth);
             redisCacheService.evict(UserPictureStateKey);
+            redisCacheService.evict(UserPlaceStatKey);
         }
     }
 }

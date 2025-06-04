@@ -181,7 +181,7 @@ public class AlbumService {
         User user = securityUtil.getCurrentUser();
         Album album = getEmptyAlbum(albumName);
         List<Picture> pictures = createPictures(pictureDTOs, album, user);
-        album.setPictures(pictures);
+        album.addPictures(pictures, user, List.of(user.getId()));
         album.setThumbnailPicture(pictures.getFirst());
 
         associateAlbumWithUser(user, album);
