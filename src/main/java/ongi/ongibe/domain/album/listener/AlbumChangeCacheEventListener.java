@@ -17,10 +17,11 @@ public class AlbumChangeCacheEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAlbumChange(AlbumChangeEvent event) {
+        String yearMonth = event.yearMonth();
         for (Long userId : event.userIds()) {
-            String AlbumKey = CacheKeyUtil.key("monthlyAlbum", userId, event.yearMonth());
+            String AlbumKey = CacheKeyUtil.key("monthlyAlbum", userId, yearMonth);
             String UserTotalStateKey = CacheKeyUtil.key("userTotalState", userId);
-            String UserTagStateKey = CacheKeyUtil.key("userTagState", userId, event.yearMonth());
+            String UserTagStateKey = CacheKeyUtil.key("userTagState", userId, yearMonth);
             cacheService.evict(AlbumKey);
             cacheService.evict(UserTotalStateKey);
             cacheService.evict(UserTagStateKey);

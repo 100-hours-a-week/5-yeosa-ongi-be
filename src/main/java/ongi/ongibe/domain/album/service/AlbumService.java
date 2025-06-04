@@ -23,7 +23,6 @@ import ongi.ongibe.domain.album.dto.AlbumPictureAddRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
-import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -33,7 +32,7 @@ import ongi.ongibe.domain.album.event.AlbumCreateCacheEvent;
 import ongi.ongibe.domain.album.event.AlbumDeleteCacheEvent;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.event.AlbumMembersChangedEvent;
-import ongi.ongibe.domain.album.event.AlbumPictureAddEvent;
+import ongi.ongibe.domain.album.event.PictureStatChangeEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
@@ -195,6 +194,7 @@ public class AlbumService {
         String yearMonth = DateUtil.getYearMonth(album.getCreatedAt());
         List<Long> userIds = getMemberIds(album);
         eventPublisher.publishEvent(new AlbumCreateCacheEvent(yearMonth, userIds));
+        eventPublisher.publishEvent(new PictureStatChangeEvent(yearMonth, userIds));
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }

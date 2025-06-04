@@ -26,6 +26,7 @@ import ongi.ongibe.domain.album.event.AlbumNameChangeEvent;
 import ongi.ongibe.domain.album.event.AlbumPictureAddEvent;
 import ongi.ongibe.domain.album.event.AlbumProcessStateChangeEvent;
 import ongi.ongibe.domain.album.event.AlbumThumbnailChangeEvent;
+import ongi.ongibe.domain.album.event.PictureStatChangeEvent;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.util.DateUtil;
 import org.hibernate.annotations.CreationTimestamp;
@@ -112,5 +113,6 @@ public class Album {
     public void addPictures(List<Picture> newPictures, User user, List<Long> memberIds) {
         this.pictures.addAll(newPictures);
         domainEvent.add(new AlbumPictureAddEvent(DateUtil.getYearMonth(this.createdAt), memberIds));
+        domainEvent.add(new PictureStatChangeEvent(memberIds, DateUtil.getYearMonth(this.createdAt)));
     }
 }

@@ -1,9 +1,13 @@
 package ongi.ongibe.cache.user;
 
 
+import java.sql.Date;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +20,7 @@ import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
+import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -83,5 +88,34 @@ public class UserCacheService {
                 .max(Entry.comparingByValue())
                 .map(Entry::getKey)
                 .orElse(null);
+    }
+
+    public UserPictureStatResponseDTO getUserPictureStat(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userPictureState", user.getId(), yearMonth);
+        return redisCacheService.get(key, UserPictureStatResponseDTO.class).orElseGet(() -> {
+            YearMonth ym = DateUtil.parseOrNow(yearMonth);
+            LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
+            LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
+            List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
+            Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
+            for (int day = 1; day<=ym.lengthOfMonth(); day++){
+                dailyCountMap.put(ym.atDay(day), 0);
+            }
+
+            for (Object[] result : results){
+                LocalDate date = ((Date) result[0]).toLocalDate();
+                int count =((Number) result[1]).intValue();
+                dailyCountMap.put(date, count);
+            }
+
+            Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            e -> e.getKey().toString(), // LocalDate → String
+                            Map.Entry::getValue,
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new // 순서 유지
+                    ));
+            return new UserPictureStatResponseDTO(yearMonth, responseMap);
+        });
     }
 }
