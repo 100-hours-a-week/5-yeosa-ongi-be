@@ -18,7 +18,7 @@ public class PictureStateChangeEventListener {
     public void handleEvent(PictureStatChangeEvent event) {
         String yearMonth = event.yearMonth();
         for (Long userId: event.memberId()){
-            String UserPictureStateKey = CacheKeyUtil.key("userPictureState", userId, yearMonth);
+            String UserPictureStateKey = CacheKeyUtil.key("userPictureStat", userId, yearMonth);
             redisCacheService.evict(UserPictureStateKey);
         }
     }

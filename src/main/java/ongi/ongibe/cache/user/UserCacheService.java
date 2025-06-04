@@ -44,7 +44,7 @@ public class UserCacheService {
     private static final Duration TTL = Duration.ofHours(12);
 
     public UserTotalStateResponseDTO getUserTotalState(User user) {
-        String key = CacheKeyUtil.key("userTotalState", user.getId());
+        String key = CacheKeyUtil.key("userTotalStat", user.getId());
         return redisCacheService.get(key, UserTotalStateResponseDTO.class).orElseGet(() -> {
             List<PictureCoordinate> coordinateList =
                     pictureRepository.findAllByUser(user).stream()
@@ -61,7 +61,7 @@ public class UserCacheService {
     }
 
     public UserTagStatResponseDTO getUserTagStat(User user, String yearMonth) {
-        String key = CacheKeyUtil.key("userTagState", user.getId(), yearMonth);
+        String key = CacheKeyUtil.key("userTagStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserTagStatResponseDTO.class).orElseGet(() -> {
             LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
             LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
@@ -91,7 +91,7 @@ public class UserCacheService {
     }
 
     public UserPictureStatResponseDTO getUserPictureStat(User user, String yearMonth) {
-        String key = CacheKeyUtil.key("userPictureState", user.getId(), yearMonth);
+        String key = CacheKeyUtil.key("userPictureStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserPictureStatResponseDTO.class).orElseGet(() -> {
             YearMonth ym = DateUtil.parseOrNow(yearMonth);
             LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();

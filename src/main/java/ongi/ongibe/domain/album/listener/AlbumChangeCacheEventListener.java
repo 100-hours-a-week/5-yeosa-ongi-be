@@ -20,8 +20,8 @@ public class AlbumChangeCacheEventListener {
         String yearMonth = event.yearMonth();
         for (Long userId : event.userIds()) {
             String AlbumKey = CacheKeyUtil.key("monthlyAlbum", userId, yearMonth);
-            String UserTotalStateKey = CacheKeyUtil.key("userTotalState", userId);
-            String UserTagStateKey = CacheKeyUtil.key("userTagState", userId, yearMonth);
+            String UserTotalStateKey = CacheKeyUtil.key("userTotalStat", userId);
+            String UserTagStateKey = CacheKeyUtil.key("userTagStat", userId, yearMonth);
             cacheService.evict(AlbumKey);
             cacheService.evict(UserTotalStateKey);
             cacheService.evict(UserTagStateKey);
