@@ -56,8 +56,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
-        Long userId = securityUtil.getCurrentUserId();
-        UserTotalStateResponseDTO userTotalStateResponseDTO = userCacheService.getUserTotalState(userId);
+        User user = securityUtil.getCurrentUser();
+        UserTotalStateResponseDTO userTotalStateResponseDTO = userCacheService.getUserTotalState(user);
         return BaseApiResponse.<UserTotalStateResponseDTO>builder()
                 .code("USER_TOTAL_STATISTICS_SUCCESS")
                 .message("유저 통계 조회 성공")
@@ -141,32 +141,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTagStatResponseDTO> getUserTagStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
-        List<Picture> pictures = pictureRepository.findAllByUserAndCreatedAtBetween(user, startDate, endDate);
-        String maxTag = getMaxTag(pictures);
-        if (maxTag == null){
-            return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공",
-                    new UserTagStatResponseDTO(null, List.of()));
-        }
-        List<String> pictureUrls = pictures.stream()
-                .filter(p -> Objects.equals(p.getTag(), maxTag))
-                .sorted(Comparator.comparing(Picture::getQualityScore).reversed())
-                .map(Picture::getPictureURL)
-                .limit(4)
-                .toList();
-        UserTagStatResponseDTO response = new UserTagStatResponseDTO(maxTag, pictureUrls);
+        UserTagStatResponseDTO response = userCacheService.getUserTagStat(user, yearMonth);
         return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공", response);
-    }
-
-    private static String getMaxTag(List<Picture> pictures) {
-        Map<String, Long> tagCount = pictures.stream()
-                .filter(p->p.getTag() != null && !p.getTag().isBlank() && !p.getTag().equals("기타"))
-                .collect(Collectors.groupingBy(Picture::getTag, Collectors.counting()));
-        return tagCount.entrySet().stream()
-                .max(Entry.comparingByValue())
-                .map(Entry::getKey)
-                .orElse(null);
     }
 
     @Transactional(readOnly = true)
