@@ -189,7 +189,7 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
         albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
-        userCacheService.refreshUserTotalState(user.getId());
+        userCacheService.refreshUserTotalState(user);
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
@@ -234,7 +234,7 @@ public class AlbumService {
                 .toList();
 
         refreshAllMemberMonthlyAlbumCache(album);
-        userCacheService.refreshUserTotalState(user.getId());
+        userCacheService.refreshUserTotalState(user);
 
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
@@ -250,12 +250,11 @@ public class AlbumService {
     }
 
     private void refreshAllMemberTotalStateCache(Album album) {
-        List<Long> memberIds = userAlbumRepository.findAllByAlbum(album).stream()
-                .map(UserAlbum::getUser)
-                .map(User::getId).toList();
+        List<User> members = userAlbumRepository.findAllByAlbum(album).stream()
+                .map(UserAlbum::getUser).toList();
 
-        for (Long userId : memberIds) {
-            userCacheService.refreshUserTotalState(userId);
+        for (User user : members) {
+            userCacheService.refreshUserTotalState(user);
         }
     }
 

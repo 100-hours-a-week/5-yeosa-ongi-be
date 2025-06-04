@@ -57,9 +57,8 @@ public class UserCacheService {
         return new UserTotalStateResponseDTO(coordinateList, albumCount, placeCount);
     }
 
-    public void refreshUserTotalState(Long userId) {
-        String key = CacheKeyUtil.key("userTotalState", userId);
-        User user = userRepository.findById(userId).orElseThrow();
+    public void refreshUserTotalState(User user) {
+        String key = CacheKeyUtil.key("userTotalState", user.getId());
         UserTotalStateResponseDTO response = buildUserTotalStateResponse(user);
         redisCacheService.set(key, response, TTL);
     }
@@ -71,6 +70,12 @@ public class UserCacheService {
             redisCacheService.set(key, response, TTL);
             return response;
         });
+    }
+
+    public void refreshUserTagState(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userTagState", user.getId(), yearMonth);
+        UserTagStatResponseDTO response = buildUserTagStatResponse(user, yearMonth);
+        redisCacheService.set(key, response, TTL);
     }
 
     private UserTagStatResponseDTO buildUserTagStatResponse(User user, String yearMonth) {
