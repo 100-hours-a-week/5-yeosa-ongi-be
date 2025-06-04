@@ -16,8 +16,9 @@ public class UserCacheEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserChange(UserInfoChangeEvent event) {
+        String yearMonth = event.yearMonth();
         for (Long userId : event.userIds()) {
-            String key = CacheKeyUtil.key("UserTotalState", userId);
+            String key = CacheKeyUtil.key("monthlyAlbum", userId, yearMonth);
             cacheService.evict(key);
         }
     }
