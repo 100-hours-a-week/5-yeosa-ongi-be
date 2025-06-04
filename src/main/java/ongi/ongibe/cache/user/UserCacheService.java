@@ -1,8 +1,12 @@
 package ongi.ongibe.cache.user;
 
+import java.sql.Date;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,6 +18,7 @@ import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
+import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -38,7 +43,7 @@ public class UserCacheService {
     private static final Duration TTL = Duration.ofHours(12);
 
     public UserTotalStateResponseDTO getUserTotalState(User user) {
-        String key = CacheKeyUtil.key("userTotalState", user.getId());
+        String key = CacheKeyUtil.key("userTotalStat", user.getId());
         return redisCacheService.get(key, UserTotalStateResponseDTO.class).orElseGet(() -> {
             UserTotalStateResponseDTO response = buildUserTotalStateResponse(user);
             redisCacheService.set(key, response, TTL);
@@ -58,13 +63,13 @@ public class UserCacheService {
     }
 
     public void refreshUserTotalState(User user) {
-        String key = CacheKeyUtil.key("userTotalState", user.getId());
+        String key = CacheKeyUtil.key("userTotalStat", user.getId());
         UserTotalStateResponseDTO response = buildUserTotalStateResponse(user);
         redisCacheService.set(key, response, TTL);
     }
 
     public UserTagStatResponseDTO getUserTagState(User user, String yearMonth) {
-        String key = CacheKeyUtil.key("userTagState", user.getId(), yearMonth);
+        String key = CacheKeyUtil.key("userTagStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserTagStatResponseDTO.class).orElseGet(() -> {
             UserTagStatResponseDTO response = buildUserTagStatResponse(user, yearMonth);
             redisCacheService.set(key, response, TTL);
@@ -73,7 +78,7 @@ public class UserCacheService {
     }
 
     public void refreshUserTagState(User user, String yearMonth) {
-        String key = CacheKeyUtil.key("userTagState", user.getId(), yearMonth);
+        String key = CacheKeyUtil.key("userTagStat", user.getId(), yearMonth);
         UserTagStatResponseDTO response = buildUserTagStatResponse(user, yearMonth);
         redisCacheService.set(key, response, TTL);
     }
@@ -103,5 +108,46 @@ public class UserCacheService {
                 .max(Entry.comparingByValue())
                 .map(Entry::getKey)
                 .orElse(null);
+    }
+
+    public UserPictureStatResponseDTO getUserPictureStat(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userPictureStat", user.getId(), yearMonth);
+        return redisCacheService.get(key, UserPictureStatResponseDTO.class).orElseGet(() -> {
+            UserPictureStatResponseDTO response = buildUserPictureStatResponse(user, yearMonth);
+            redisCacheService.set(key, response, TTL);
+            return response;
+        });
+    }
+
+    private UserPictureStatResponseDTO buildUserPictureStatResponse(User user, String yearMonth) {
+        YearMonth ym = DateUtil.parseOrNow(yearMonth);
+        LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
+        LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
+        List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
+        Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
+        for (int day = 1; day<=ym.lengthOfMonth(); day++){
+            dailyCountMap.put(ym.atDay(day), 0);
+        }
+
+        for (Object[] result : results){
+            LocalDate date = ((Date) result[0]).toLocalDate();
+            int count =((Number) result[1]).intValue();
+            dailyCountMap.put(date, count);
+        }
+
+        Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().toString(), // LocalDate → String
+                        Map.Entry::getValue,
+                        (v1, v2) -> v1,
+                        LinkedHashMap::new // 순서 유지
+                ));
+        return new UserPictureStatResponseDTO(yearMonth, responseMap);
+    }
+
+    public void refreshUserPictureStat(User user, String yearMonth) {
+        String key = CacheKeyUtil.key("userPictureStat", user.getId(), yearMonth);
+        UserPictureStatResponseDTO response = buildUserPictureStatResponse(user, yearMonth);
+        redisCacheService.set(key, response, TTL);
     }
 }

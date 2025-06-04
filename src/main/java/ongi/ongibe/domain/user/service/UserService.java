@@ -63,31 +63,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        YearMonth ym = DateUtil.parseOrNow(yearMonth);
-        LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
-        LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
-        List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
-        Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
-        for (int day = 1; day<=ym.lengthOfMonth(); day++){
-            dailyCountMap.put(ym.atDay(day), 0);
-        }
-
-        for (Object[] result : results){
-            LocalDate date = ((Date) result[0]).toLocalDate();
-            int count =((Number) result[1]).intValue();
-            dailyCountMap.put(date, count);
-        }
-
-        Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> e.getKey().toString(), // LocalDate → String
-                        Map.Entry::getValue,
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new // 순서 유지
-                ));
-
-
-        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, responseMap);
+        UserPictureStatResponseDTO response = userCacheService.getUserPictureStat(user, yearMonth);
         return BaseApiResponse.success(
                 "USER_IMAGE_STATISTICS_SUCCESS",
                 "월간 일별 사진 업로드 수 조회 성공",
