@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class DateUtil {
 
@@ -32,6 +33,9 @@ public class DateUtil {
     }
 
     public static String getYearMonth(LocalDateTime now) {
+        if (Objects.isNull(now)){
+            return LocalDateTime.now().format(yearMonthFormatter);
+        }
         return now.format(yearMonthFormatter);
     }
 }

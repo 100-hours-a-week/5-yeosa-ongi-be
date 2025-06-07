@@ -63,15 +63,19 @@ public class UserCacheService {
         });
     }
 
-    public UserTagStatResponseDTO getUserTagStat(User user, String yearMonth) {
+    public UserTagStatResponseDTO getUserTagStat(User user, String requestYearMonth) {
+        String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
         String key = CacheKeyUtil.key("userTagStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserTagStatResponseDTO.class).orElseGet(() -> {
             LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
             LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
             List<Picture> pictures = pictureRepository.findAllByUserAndCreatedAtBetween(user, startDate, endDate);
             String maxTag = getMaxTag(pictures);
+            UserTagStatResponseDTO response;
             if (maxTag == null){
-                return new UserTagStatResponseDTO(null, List.of());
+                response = new UserTagStatResponseDTO(null, List.of());
+                redisCacheService.set(key, response, TTL);
+                return response;
             }
             List<String> pictureUrls = pictures.stream()
                     .filter(p -> Objects.equals(p.getTag(), maxTag))
@@ -79,7 +83,9 @@ public class UserCacheService {
                     .map(Picture::getPictureURL)
                     .limit(4)
                     .toList();
-            return new UserTagStatResponseDTO(maxTag, pictureUrls);
+            response = new UserTagStatResponseDTO(maxTag, pictureUrls);
+            redisCacheService.set(key, response, TTL);
+            return response;
         });
     }
 
@@ -93,7 +99,8 @@ public class UserCacheService {
                 .orElse(null);
     }
 
-    public UserPictureStatResponseDTO getUserPictureStat(User user, String yearMonth) {
+    public UserPictureStatResponseDTO getUserPictureStat(User user, String requestYearMonth) {
+        String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
         String key = CacheKeyUtil.key("userPictureStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserPictureStatResponseDTO.class).orElseGet(() -> {
             YearMonth ym = DateUtil.parseOrNow(yearMonth);
@@ -118,26 +125,34 @@ public class UserCacheService {
                             (v1, v2) -> v1,
                             LinkedHashMap::new // 순서 유지
                     ));
-            return new UserPictureStatResponseDTO(yearMonth, responseMap);
+            UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, responseMap);
+            redisCacheService.set(key, response, TTL);
+            return response;
         });
     }
 
-    public UserPlaceStatResponseDTO getUserPlaceStat(User user, String yearMonth) {
+    public UserPlaceStatResponseDTO getUserPlaceStat(User user, String requestYearMonth) {
+        String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
         String key = CacheKeyUtil.key("userPlaceStat", user.getId(), yearMonth);
         return redisCacheService.get(key, UserPlaceStatResponseDTO.class).orElseGet(() -> {
             LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
             LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
             List<Object[]> topPlace = pictureRepository.mostVisitPlace(
                     user.getId(), startDate, endDate, PageRequest.of(0,1));
+            UserPlaceStatResponseDTO response;
             if (topPlace.isEmpty()){
-                return new UserPlaceStatResponseDTO(null, null, null, List.of());
+                response = new UserPlaceStatResponseDTO(null, null, null, List.of());
+                redisCacheService.set(key, response, TTL);
+                return response;
             }
             String city = topPlace.getFirst()[0].toString();
             String district = topPlace.getFirst()[1].toString();
             String town = topPlace.getFirst()[2].toString();
 
             List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
-            return new UserPlaceStatResponseDTO(city, district, town, tags);
+            response = new UserPlaceStatResponseDTO(city, district, town, tags);
+            redisCacheService.set(key, response, TTL);
+            return response;
         });
     }
 
