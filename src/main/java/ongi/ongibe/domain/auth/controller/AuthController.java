@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.auth.dto.RefreshAccessTokenRequestDTO;
 import ongi.ongibe.domain.auth.dto.RefreshAccessTokenResponseDTO;
@@ -32,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     @Value("${spring.kakao.auth.client}")
@@ -76,7 +78,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = RefreshAccessTokenRequestDTO.class))
             )
             @RequestBody RefreshAccessTokenRequestDTO request) {
-
+        log.info("리프레시 토큰 요청 도달: {}", request.refreshToken());
         BaseApiResponse<RefreshAccessTokenResponseDTO> response = authService.reissueAccessToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
