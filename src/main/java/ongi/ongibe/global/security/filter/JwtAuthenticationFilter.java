@@ -2,7 +2,7 @@ package ongi.ongibe.global.security.filter;
 
 import java.io.IOException;
 
-import io.sentry.Sentry;
+//import io.sentry.Sentry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,15 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 에러 로그 기록
                 log.warn("JWT 인증 예외 발생: {}", e.getReason());
 
-                // Sentry에 요약 메시지 + 추가 정보 함께 전송
-                Sentry.withScope(scope -> {
-                    scope.setTag("jwt.error_type", e.getReason().contains("만료") ? "expired" : "invalid");
-                    scope.setTag("request.path", path);
-                    scope.setExtra("authHeader", authHeader);
-                    scope.setExtra("token", authHeader != null ? authHeader.substring(7) : "없음");
-                    scope.setExtra("reason", e.getReason());
-                    Sentry.captureMessage("JWT_ERROR: " + e.getReason());
-                });
+//                // Sentry에 요약 메시지 + 추가 정보 함께 전송
+//                Sentry.withScope(scope -> {
+//                    scope.setTag("jwt.error_type", e.getReason().contains("만료") ? "expired" : "invalid");
+//                    scope.setTag("request.path", path);
+//                    scope.setExtra("authHeader", authHeader);
+//                    scope.setExtra("token", authHeader != null ? authHeader.substring(7) : "없음");
+//                    scope.setExtra("reason", e.getReason());
+//                    Sentry.captureMessage("JWT_ERROR: " + e.getReason());
+//                });
 
                 // 응답 JSON 구성
                 response.setContentType("application/json");
