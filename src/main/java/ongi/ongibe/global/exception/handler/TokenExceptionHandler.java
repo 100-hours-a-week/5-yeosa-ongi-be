@@ -1,6 +1,6 @@
 package ongi.ongibe.global.exception.handler;
 
-import io.sentry.Sentry;
+//import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.exception.InvalidTokenException;
@@ -19,11 +19,11 @@ public class TokenExceptionHandler {
     public ResponseEntity<BaseApiResponse<Void>> handleTokenParsingException(TokenParsingException e) {
         log.warn("토큰 파싱 에러 : {}", e.getMessage());
 
-        Sentry.withScope(scope -> {
-            scope.setTag("token.type", "kakao");
-            scope.setExtra("exceptionMessage", e.getMessage());
-            Sentry.captureMessage("KAKAO_TOKEN_ERROR: 토큰 파싱 실패");
-        });
+//        Sentry.withScope(scope -> {
+//            scope.setTag("token.type", "kakao");
+//            scope.setExtra("exceptionMessage", e.getMessage());
+//            Sentry.captureMessage("KAKAO_TOKEN_ERROR: 토큰 파싱 실패");
+//        });
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
