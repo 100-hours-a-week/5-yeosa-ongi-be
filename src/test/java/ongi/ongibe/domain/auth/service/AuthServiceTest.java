@@ -4,12 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import java.util.Base64;
 import java.util.Optional;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.auth.OAuthProvider;
@@ -116,6 +113,28 @@ class AuthServiceTest {
         KakaoLoginResponseDTO data = response.getData();
 
         assertThat(response.getCode()).isEqualTo("USER_REGISTERED");
+        assertThat(data.user().userId()).isEqualTo(mockUser.getId());
+        assertThat(data.accessToken()).isEqualTo("ongi-access-token");
+    }
+
+    @Test
+    void kakaoLogin_기존가입자_성공() {
+        //given
+        when(userRepository.findByProviderId(kakaoSub)).thenReturn(Optional.ofNullable(mockUser));
+
+        when(kakaoOauthClient.getToken(code)).thenReturn(tokenResponse);
+        when(kakaoOauthClient.parseIdToken(tokenResponse.id_token())).thenReturn(idTokenPayload);
+
+        when(jwtTokenProvider.generateAccessToken(anyLong())).thenReturn("ongi-access-token");
+        when(jwtTokenProvider.generateRefreshToken(anyLong())).thenReturn("ongi-refresh-token");
+
+        when(presignedUrlService.extractS3Key(any())).thenReturn("key.img");
+
+        //when
+        BaseApiResponse<KakaoLoginResponseDTO> response = authService.kakaoLogin(code);
+        KakaoLoginResponseDTO data = response.getData();
+        //then
+        assertThat(response.getCode()).isEqualTo("USER_ALREADY_REGISTERED");
         assertThat(data.user().userId()).isEqualTo(mockUser.getId());
         assertThat(data.accessToken()).isEqualTo("ongi-access-token");
     }
