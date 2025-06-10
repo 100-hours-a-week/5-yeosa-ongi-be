@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 import ongi.ongibe.UserAlbumRole;
@@ -63,6 +64,7 @@ class AlbumInviteServiceTest {
 
     private Album testAlbum;
     private User testUser;
+    private User inviteTestUser;
     private UserAlbum testUserAlbum;
 
     @BeforeEach
@@ -72,10 +74,21 @@ class AlbumInviteServiceTest {
                 .name("여행 앨범")
                 .pictures(new ArrayList<>())
                 .userAlbums(new ArrayList<>())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         testUser = User.builder()
                 .id(123L)
+                .nickname("test-user")
+                .providerId("abc123")
+                .provider(OAuthProvider.KAKAO)
+                .userStatus(UserStatus.ACTIVE)
+                .profileImage("image.png")
+                .userAlbums(new ArrayList<>())
+                .build();
+
+        inviteTestUser = User.builder()
+                .id(124L)
                 .nickname("test-user")
                 .providerId("abc123")
                 .provider(OAuthProvider.KAKAO)
@@ -117,7 +130,7 @@ class AlbumInviteServiceTest {
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
         when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
-        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(securityUtil.getCurrentUser()).thenReturn(inviteTestUser);
 
         // when
         BaseApiResponse<AlbumInviteResponseDTO> result = albumService.acceptInvite(token);
