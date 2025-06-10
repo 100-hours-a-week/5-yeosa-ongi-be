@@ -1,6 +1,7 @@
 package ongi.ongibe.domain.album.service;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -370,6 +371,8 @@ public class AlbumService {
                         .latitude(dto.latitude())
                         .longitude(dto.longitude())
                         .s3Key(presignedUrlService.extractS3Key(dto.pictureUrl()))
+                        .createdAt(LocalDateTime.now())
+                        .createdDate(LocalDate.now())
                         .build())
                 .toList();
     }
