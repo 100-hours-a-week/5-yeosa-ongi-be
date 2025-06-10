@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,6 +69,8 @@ class AlbumServiceTest {
             new String[]{"강원", "춘천시", "석사동"}
     );
 
+    private static final List<String> tags = List.of("개", "고양이", "사람", "술");
+
     User testUser = User.builder()
             .nickname("testUser")
             .email("test@example.com")
@@ -76,8 +79,18 @@ class AlbumServiceTest {
             .providerId("providerId")
             .build();
 
+    User invalidTestUser = User.builder()
+            .nickname("invalidTestUser")
+            .email("invalidTestUser@example.com")
+            .profileImage("default.png")
+            .provider(OAuthProvider.KAKAO)
+            .providerId("providerId")
+            .build();
+
+
     @BeforeEach
     void setUp() {
+        userRepository.save(invalidTestUser);
         testUser = userRepository.save(testUser);
         System.out.println("Mocked currentUserId = " + testUser.getId());
 
@@ -99,12 +112,19 @@ class AlbumServiceTest {
                     .toList();
 
             List<Picture> pictures = new ArrayList<>();
+            List<String> tagList = new ArrayList<>(tags);
             for (int j = 1; j <= 10; j++) {
                 Place place = albumPlaces.get(j % 3); // 순환적으로 3개 중 하나씩 부여
                 Picture picture = Picture.builder()
                         .user(testUser)
                         .pictureURL("https://cdn.ongi.today/pic-" + i + "-" + j + ".jpg")
                         .place(place)
+                        .tag(tags.get((j - 1) % tags.size()))       // 개, 고양이, 사람, 술 순환
+                        .isDuplicated(j % 2 == 0)                   // true/false 번갈아
+                        .isShaky(j % 2 != 0)                        // true/false 번갈아
+                        .qualityScore((float) (50 + Math.random() * 50)) // 50~100 사이 랜덤 float
+                        .createdAt(LocalDateTime.of(2025, 7 - i, 1, 0, 0))
+                        .createdDate(LocalDate.of(2025, 7 - i, 1))
                         .build();
                 pictures.add(picture);
             }
@@ -149,6 +169,19 @@ class AlbumServiceTest {
         // then
         assertThat(response.getData().albumInfo()).hasSize(1);
         assertThat(response.getData().albumInfo().getFirst().albumName()).isEqualTo("앨범 5");
+    }
+
+    @Test
+    void getMonthlyAlbum_새로운유저_접근_빈값반환() {
+        //given
+        when(securityUtil.getCurrentUserId()).thenReturn(invalidTestUser.getId());
+        when(securityUtil.getCurrentUser()).thenReturn(invalidTestUser);
+
+        //when
+        BaseApiResponse<MonthlyAlbumResponseDTO> response = albumService.getMonthlyAlbum("2025-06");
+
+        //then
+        assertThat(response.getData().albumInfo()).hasSize(0);
     }
 
     @Test
