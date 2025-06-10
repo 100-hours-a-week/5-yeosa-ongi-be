@@ -10,6 +10,8 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.cache.album.AlbumCacheService;
+import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
@@ -66,6 +68,8 @@ public class AlbumService {
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
     private final PresignedUrlService presignedUrlService;
+    private final AlbumCacheService albumCacheService;
+    private final UserCacheService userCacheService;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -77,29 +81,8 @@ public class AlbumService {
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
         User user = securityUtil.getCurrentUser();
-        List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
-        List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
-
-        boolean hasNext = userAlbumRepository.existsByUserAndAlbum_CreatedAtBefore(user, DateUtil.getStartOfMonth(yearMonth));
-        String nextYearMonth = hasNext ? DateUtil.getPreviousYearMonth(yearMonth) : null;
-        MonthlyAlbumResponseDTO monthlyAlbumResponseDTO = new MonthlyAlbumResponseDTO(
-                albumInfos,
-                nextYearMonth,
-                hasNext
-        );
-        return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공",monthlyAlbumResponseDTO);
-    }
-
-    private List<AlbumInfo> getAlbumInfos(List<UserAlbum> userAlbumList,
-            String yearMonth) {
-        LocalDateTime startOfMonth = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endOfMonth = DateUtil.getEndOfMonth(yearMonth);
-        return userAlbumList.stream()
-                .map(UserAlbum::getAlbum)
-                .filter(album -> album.getCreatedAt().isAfter(startOfMonth.minusNanos(1)) &&
-                        album.getCreatedAt().isBefore(endOfMonth.plusNanos(1)))
-                .map(MonthlyAlbumResponseDTO.AlbumInfo::of)
-                .toList();
+        MonthlyAlbumResponseDTO result = albumCacheService.getMonthlyAlbum(user.getId(), yearMonth);
+        return BaseApiResponse.success("MONTHLY_ALBUM_SUCCESS", "앨범 조회 성공", result);
     }
 
     @Transactional(readOnly = true)
@@ -204,9 +187,18 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
+
+        albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
+        userCacheService.refreshUserTotalState(user);
+        userCacheService.refreshUserTagState(user, yearMonth);
+        userCacheService.refreshUserPictureStat(user, yearMonth);
+        userCacheService.refreshUserPlaceStat(user, yearMonth);
+
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }
+
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
 //        if (pictureUrls.size() > 100){
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
@@ -246,6 +238,9 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        refreshAllMemberMonthlyAlbumCache(album);
+        refreshAllMemberTotalStateCache(album);
+
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 
@@ -255,6 +250,32 @@ public class AlbumService {
         validAlbumOwner(album);
         album.setName(albumName);
         albumRepository.save(album);
+
+        refreshAllMemberMonthlyAlbumCache(album);
+    }
+
+    private void refreshAllMemberTotalStateCache(Album album) {
+        List<User> members = userAlbumRepository.findAllByAlbum(album).stream()
+                .map(UserAlbum::getUser).toList();
+
+        String yearMonth = DateUtil.getYearMonth(album.getCreatedAt());
+        for (User user : members) {
+            userCacheService.refreshUserTotalState(user);
+            userCacheService.refreshUserTagState(user, yearMonth);
+            userCacheService.refreshUserPictureStat(user, yearMonth);
+            userCacheService.refreshUserPlaceStat(user, yearMonth);
+        }
+    }
+
+    private void refreshAllMemberMonthlyAlbumCache(Album album) {
+        String yearMonth = DateUtil.getYearMonth(album.getCreatedAt());
+        List<Long> memberIds = userAlbumRepository.findAllByAlbum(album).stream()
+                .map(UserAlbum::getUser)
+                .map(User::getId).toList();
+
+        for (Long userId : memberIds) {
+            albumCacheService.refreshMonthlyAlbum(userId, yearMonth);
+        }
     }
 
     @Transactional
@@ -286,6 +307,9 @@ public class AlbumService {
             Optional<Picture> newThumbnailPicture = pictureRepository.findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(album);
             newThumbnailPicture.ifPresent(album::setThumbnailPicture);
         }
+
+        refreshAllMemberTotalStateCache(album);
+        refreshAllMemberMonthlyAlbumCache(album);
     }
 
     @Transactional
@@ -304,6 +328,8 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
+        refreshAllMemberTotalStateCache(album);
+        refreshAllMemberMonthlyAlbumCache(album);
     }
 
     private UserAlbum getUserAlbum(User user, Album album) {
@@ -390,6 +416,8 @@ public class AlbumService {
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
+            refreshAllMemberTotalStateCache(album);
+            refreshAllMemberMonthlyAlbumCache(album);
             eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
