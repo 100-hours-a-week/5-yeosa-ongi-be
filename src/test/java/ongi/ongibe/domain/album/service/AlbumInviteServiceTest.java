@@ -34,10 +34,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 
-@SpringBootTest
-class AlbumServiceTest {
+@ExtendWith(MockitoExtension.class)
+class AlbumInviteServiceTest {
 
-    @Spy
     @InjectMocks
     private AlbumService albumService;
 
@@ -64,6 +63,7 @@ class AlbumServiceTest {
 
     private Album testAlbum;
     private User testUser;
+    private UserAlbum testUserAlbum;
 
     @BeforeEach
     void setUp() {
@@ -83,13 +83,24 @@ class AlbumServiceTest {
                 .profileImage("image.png")
                 .userAlbums(new ArrayList<>())
                 .build();
+
+        testUserAlbum = UserAlbum.builder()
+                .id(123L)
+                .album(testAlbum)
+                .user(testUser)
+                .role(UserAlbumRole.OWNER)
+                .build();
+
+        testAlbum.getUserAlbums().add(testUserAlbum);
+        testUser.getUserAlbums().add(testUserAlbum);
     }
 
     @Test
     void createInviteToken_성공() {
         // given
-        doReturn(testAlbum).when(albumService).getAlbumIfMember(albumId);
-        doNothing().when(albumService).validAlbumOwner(testAlbum);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(userAlbumRepository.findByUserAndAlbum(testUser, testAlbum)).thenReturn(Optional.of(testUserAlbum));
         when(jwtTokenProvider.generateInviteToken(albumId)).thenReturn(token);
 
         // when
