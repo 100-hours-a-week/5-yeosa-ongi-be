@@ -38,4 +38,18 @@ public class WebClientConfig {
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)) // 필요 시 메모리 제한 조정
                 .build();
     }
+
+    @Bean
+    public WebClient healthCheckWebClient() {
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 2000)
+                .doOnConnected(conn ->
+                        conn.addHandlerLast(new ReadTimeoutHandler(2, TimeUnit.SECONDS))
+                                .addHandlerLast(new WriteTimeoutHandler(2, TimeUnit.SECONDS))
+                );
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
 }
