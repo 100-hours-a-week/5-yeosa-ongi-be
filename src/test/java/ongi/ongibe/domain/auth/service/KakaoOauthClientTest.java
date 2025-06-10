@@ -157,7 +157,7 @@ class KakaoOauthClientTest {
     @Test
     void getToken_kakao측_에러코드_500() {
         // given
-        when(kakaoOauthProperties.getClient)).thenReturn("test-client-id");
+        when(kakaoOauthProperties.getClient()).thenReturn("test-client-id");
         when(kakaoOauthProperties.getRedirect()).thenReturn("http://localhost/redirect");
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
