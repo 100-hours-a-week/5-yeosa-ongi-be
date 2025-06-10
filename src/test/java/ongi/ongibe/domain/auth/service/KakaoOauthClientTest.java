@@ -92,8 +92,8 @@ class KakaoOauthClientTest {
 
     @Test
     void getToken_정상(){
-        when(kakaoOauthProperties.getClientId()).thenReturn(clientId);
-        when(kakaoOauthProperties.getRedirectUri()).thenReturn(redirectUri);
+        when(kakaoOauthProperties.getClient()).thenReturn(clientId);
+        when(kakaoOauthProperties.getRedirect()).thenReturn(redirectUri);
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
@@ -115,8 +115,8 @@ class KakaoOauthClientTest {
     @Test
     void getToken_잘못된Json이면_예외발생() {
         // given
-        when(kakaoOauthProperties.getClientId()).thenReturn("test-client-id");
-        when(kakaoOauthProperties.getRedirectUri()).thenReturn("http://localhost/redirect");
+        when(kakaoOauthProperties.getClient()).thenReturn("test-client-id");
+        when(kakaoOauthProperties.getRedirect()).thenReturn("http://localhost/redirect");
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
@@ -135,8 +135,8 @@ class KakaoOauthClientTest {
     @Test
     void getToken_kakao측_에러코드_400() {
         // given
-        when(kakaoOauthProperties.getClientId()).thenReturn("test-client-id");
-        when(kakaoOauthProperties.getRedirectUri()).thenReturn("http://localhost/redirect");
+        when(kakaoOauthProperties.getClient()).thenReturn("test-client-id");
+        when(kakaoOauthProperties.getRedirect()).thenReturn("http://localhost/redirect");
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
@@ -157,8 +157,8 @@ class KakaoOauthClientTest {
     @Test
     void getToken_kakao측_에러코드_500() {
         // given
-        when(kakaoOauthProperties.getClientId()).thenReturn("test-client-id");
-        when(kakaoOauthProperties.getRedirectUri()).thenReturn("http://localhost/redirect");
+        when(kakaoOauthProperties.getClient)).thenReturn("test-client-id");
+        when(kakaoOauthProperties.getRedirect()).thenReturn("http://localhost/redirect");
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
