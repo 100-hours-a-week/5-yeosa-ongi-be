@@ -380,6 +380,7 @@ public class AlbumService {
                 .userAlbums(new ArrayList<>())
                 .pictures(new ArrayList<>())
                 .processState(AlbumProcessState.NOT_STARTED)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
