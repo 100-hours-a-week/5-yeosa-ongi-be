@@ -29,8 +29,8 @@ public class KakaoOauthClient {
     private final KakaoOauthProperties kakaoOauthProperties;
 
     public KakaoTokenResponseDTO getToken(String code) {
-        String redirectUri = kakaoOauthProperties.getRedirectUri();
-        String clientId = kakaoOauthProperties.getClientId();
+        String redirectUri = kakaoOauthProperties.getRedirect();
+        String clientId = kakaoOauthProperties.getClient();
         log.debug("카카오 토큰 요청 시작: code = {}", code);
         log.debug("사용할 redirect_uri = {}", redirectUri);
 

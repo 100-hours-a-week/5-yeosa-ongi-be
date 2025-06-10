@@ -8,6 +8,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "spring.kakao.auth")
 @Data
 public class KakaoOauthProperties {
-    private String clientId;
-    private String redirectUri;
+    private String client;
+    private String redirect;
 }
