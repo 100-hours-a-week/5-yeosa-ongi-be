@@ -53,7 +53,7 @@ public class AiClient {
                     .uri(baseUrl + HEALTH_INFO_PATH)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .block(Duration.ofSeconds(3)); // 타임아웃 설정
+                    .block(Duration.ofSeconds(1)); // 타임아웃 설정
 
             return response != null && response.contains("ok");
         } catch (Exception e) {
