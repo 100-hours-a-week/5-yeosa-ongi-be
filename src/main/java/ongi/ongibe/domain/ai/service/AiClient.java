@@ -21,6 +21,7 @@ import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -32,8 +33,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Slf4j
 public class AiClient {
 
+    @Qualifier("webClient")
     private final WebClient webClient;
-    private final PictureRepository pictureRepository;
+
+    @Qualifier("healthCheckWebClient")
+    private final WebClient healthCheckWebClient;
 
     @Value("${ai.server.base-url}")
     private String baseUrl;
@@ -49,7 +53,7 @@ public class AiClient {
 
     public boolean isAiServerAvailable() {
         try {
-            String response = webClient.get()
+            String response = healthCheckWebClient.get()
                     .uri(baseUrl + HEALTH_INFO_PATH)
                     .retrieve()
                     .bodyToMono(String.class)
