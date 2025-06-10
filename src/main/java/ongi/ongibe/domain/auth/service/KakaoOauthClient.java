@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.auth.config.KakaoOauthProperties;
 import ongi.ongibe.domain.auth.dto.KakaoIdTokenPayloadDTO;
 import ongi.ongibe.domain.auth.dto.KakaoTokenResponseDTO;
 import ongi.ongibe.global.exception.TokenParsingException;
@@ -22,17 +23,14 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class KakaoOauthClient {
 
-    @Value("${spring.kakao.auth.client}")
-    private String clientId;
-
-    @Value("${spring.kakao.auth.redirect}")
-    private String redirectUri;
-
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 
     private final WebClient webClient;
+    private final KakaoOauthProperties kakaoOauthProperties;
 
     public KakaoTokenResponseDTO getToken(String code) {
+        String redirectUri = kakaoOauthProperties.getRedirectUri();
+        String clientId = kakaoOauthProperties.getClientId();
         log.debug("카카오 토큰 요청 시작: code = {}", code);
         log.debug("사용할 redirect_uri = {}", redirectUri);
 
