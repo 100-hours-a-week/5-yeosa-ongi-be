@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import java.util.Base64;
 import java.util.Optional;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.auth.OAuthProvider;
@@ -31,12 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
-import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -48,7 +41,6 @@ class AuthServiceTest {
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private PresignedUrlService presignedUrlService;
-    @Mock private WebClient webClient;
     @Mock private KakaoOauthClient kakaoOauthClient;
 
 
@@ -121,6 +113,28 @@ class AuthServiceTest {
     }
 
     @Test
+    void kakaoLogin_기존가입자_성공() {
+        //given
+        when(userRepository.findByProviderId(kakaoSub)).thenReturn(Optional.ofNullable(mockUser));
+
+        when(kakaoOauthClient.getToken(code)).thenReturn(tokenResponse);
+        when(kakaoOauthClient.parseIdToken(tokenResponse.id_token())).thenReturn(idTokenPayload);
+
+        when(jwtTokenProvider.generateAccessToken(anyLong())).thenReturn("ongi-access-token");
+        when(jwtTokenProvider.generateRefreshToken(anyLong())).thenReturn("ongi-refresh-token");
+
+        when(presignedUrlService.extractS3Key(any())).thenReturn("key.img");
+
+        //when
+        BaseApiResponse<KakaoLoginResponseDTO> response = authService.kakaoLogin(code);
+        KakaoLoginResponseDTO data = response.getData();
+        //then
+        assertThat(response.getCode()).isEqualTo("USER_ALREADY_REGISTERED");
+        assertThat(data.user().userId()).isEqualTo(mockUser.getId());
+        assertThat(data.accessToken()).isEqualTo("ongi-access-token");
+    }
+
+    @Test
     void kakaoLogin_로그인실패_카카오토큰요청실패(){
         //given
         when(kakaoOauthClient.getToken(code)).thenThrow(new TokenParsingException("토큰 파싱 실패"));
@@ -163,9 +177,18 @@ class AuthServiceTest {
     }
 
     @Test
-    void reissueAccessToken_refreshToken조회실패(){
+    void reissueAccessToken_refreshToken조회실패_토큰_레디스에_없음(){
         when(jwtTokenProvider.validateAndExtractUserId("refresh-token")).thenReturn(1L);
-        when(refreshTokenRepository.findByUserId(1L)).thenThrow(new InvalidTokenException("토큰을 찾을 수 없습니다."));
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn(null);
+
+        assertThatThrownBy(() -> authService.reissueAccessToken("refresh-token"))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    @Test
+    void reissueAccessToken_refreshToken조회실패_토큰_불일치(){
+        when(jwtTokenProvider.validateAndExtractUserId("refresh-token")).thenReturn(1L);
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn("not-same-refresh-token");
 
         assertThatThrownBy(() -> authService.reissueAccessToken("refresh-token"))
                 .isInstanceOf(InvalidTokenException.class);
