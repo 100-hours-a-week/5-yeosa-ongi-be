@@ -35,9 +35,11 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @SpringBootTest
+@Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AlbumServiceTest {
 
@@ -157,8 +159,6 @@ class AlbumServiceTest {
                 .findFirst()
                 .orElseThrow()
                 .getId();
-        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
-        when(securityUtil.getCurrentUser()).thenReturn(testUser);
         //when
         BaseApiResponse<List<AlbumSummaryResponseDTO>> response = albumService.getAlbumSummary(albumId);
 
