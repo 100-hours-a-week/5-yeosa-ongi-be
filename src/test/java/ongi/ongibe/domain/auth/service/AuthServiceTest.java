@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -176,9 +177,18 @@ class AuthServiceTest {
     }
 
     @Test
-    void reissueAccessToken_refreshToken조회실패(){
+    void reissueAccessToken_refreshToken조회실패_토큰_레디스에_없음(){
         when(jwtTokenProvider.validateAndExtractUserId("refresh-token")).thenReturn(1L);
-        when(refreshTokenRepository.findByUserId(1L)).thenThrow(new InvalidTokenException("토큰을 찾을 수 없습니다."));
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn(null);
+
+        assertThatThrownBy(() -> authService.reissueAccessToken("refresh-token"))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    @Test
+    void reissueAccessToken_refreshToken조회실패_토큰_불일치(){
+        when(jwtTokenProvider.validateAndExtractUserId("refresh-token")).thenReturn(1L);
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn("not-same-refresh-token");
 
         assertThatThrownBy(() -> authService.reissueAccessToken("refresh-token"))
                 .isInstanceOf(InvalidTokenException.class);
