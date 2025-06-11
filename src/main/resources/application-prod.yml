@@ -5,7 +5,7 @@ spring:
 
   data:
     redis:
-      host: 10.0.20.9
+      host: ${REDIS_SERVER_URL}
       port: 6379
 
   kakao:
@@ -50,7 +50,7 @@ cloud:
       access-key: ${AWS_ACCESS_KEY_ID}
       secret-key: ${AWS_SECRET_ACCESS_KEY}
     region:
-      static: ap-northeast-2
+      static: ${AWS_REGION}
     s3:
       bucket: ${S3_BUCKET_NAME}
     stack:

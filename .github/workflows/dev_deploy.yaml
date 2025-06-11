@@ -53,6 +53,7 @@ jobs:
           docker push asia-northeast3-docker.pkg.dev/YOUR_PROJECT/dev-repo/backend:$TAG
 
       - name: Trigger Cloud Build Deploy
+
         run: |
           TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
           gcloud builds submit .gcp/dev-deploy \
