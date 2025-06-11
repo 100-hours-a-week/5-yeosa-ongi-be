@@ -11,9 +11,7 @@ steps:
       - -c
       - |
         set -e
-
         echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
-
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
           --subnet=dev-ongi-server-subnet \
@@ -29,8 +27,18 @@ steps:
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
 
-        echo "▶ Rolling update for managed instance group: ongi-backend-mig"
+        echo "▶ Ensure MIG exists: ongi-backend-mig"
+        if ! gcloud compute instance-groups managed describe ongi-backend-mig \
+             --region=asia-northeast3 > /dev/null 2>&1; then
+          echo "▶ MIG not found. Creating ongi-backend-mig"
+          gcloud compute instance-groups managed create ongi-backend-mig \
+            --base-instance-name=ongi-backend \
+            --template="${_TEMPLATE_NAME}" \
+            --size=1 \
+            --region=asia-northeast3
+        fi
 
+        echo "▶ Rolling update for managed instance group: ongi-backend-mig"
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
           --version template="${_TEMPLATE_NAME}" \
