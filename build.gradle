@@ -110,13 +110,23 @@ jacocoTestReport {
                 fileTree(dir: it, exclude: [
                         // 패키지 기준
                         'ongi/ongibe/domain/**/dto/**',
-                        'ongi/ongibe/common/**',
-                        'ongi/ongibe/domain/**/dto/**',
+                        'ongi/ongibe/domain/**/event/**',
+                        'ongi/ongibe/domain/**/entity/**',
                         'ongi/ongibe/domain/**/exception/**',
+                        'ongi/ongibe/domain/**/repository/**',
+                        'ongi/ongibe/domain/**/schedule/**',
+                        'ongi/ongibe/domain/loadtest/**',
+                        'ongi/ongibe/domain/ai/**',
+                        'ongi/ongibe/domain/album/AlbumProcessState.java',
+                        'ongi/ongibe/domain/album/UserAlbumRole.java',
+                        'ongi/ongibe/domain/notification/NotificationType.java',
+                        'ongi/ongibe/common/**',
+                        'ongi/ongibe/global/**/config/**',
+                        'ongi/ongibe/global/**/eventlistener/**',
+                        'ongi/ongibe/global/**/s3/**',
+                        'ongi/ongibe/global/**/security/**',
                         'ongi/ongibe/global/**/config/**',
 
-                        // Querydsl 자동 생성 파일
-                        '**/Q*.class'
                 ])
             })
     )
