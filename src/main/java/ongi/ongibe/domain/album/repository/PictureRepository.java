@@ -106,4 +106,6 @@ public interface PictureRepository extends JpaRepository<Picture, Long> {
     List<Picture> findAllByAlbum(Album album);
 
     List<Picture> findAllByAlbumId(Long albumId);
+
+    Long album(Album album);
 }
