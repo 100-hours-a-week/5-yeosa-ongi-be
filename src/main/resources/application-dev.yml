@@ -3,20 +3,25 @@ spring:
     virtual:
       enabled: true
 
+  cloud:
+    gcp:
+      secretmanager:
+        enabled: true
+
   data:
     redis:
-      host: ${sm://redis_server_url}  # Secret Manager에서 가져오기
+      host: ${redis_server_url}  # sm:// 제거
       port: 6379
 
   kakao:
     auth:
-      client: ${sm://kakao-client-id}  # Secret Manager에서 가져오기
+      client: ${kakao-client-id}  # sm:// 제거
       redirect: https://dev.ongi.today/auth/callback/kakao
 
   datasource:
-    url: ${sm://db-url-dev}           # Secret Manager에서 가져오기
-    username: ${sm://db-user-dev}     # Secret Manager에서 가져오기
-    password: ${sm://db-password-dev} # Secret Manager에서 가져오기
+    url: ${db-url-dev}           # sm:// 제거
+    username: ${db-user-dev}     # sm:// 제거
+    password: ${db-password-dev} # sm:// 제거
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       leak-detection-threshold: 30000
@@ -37,9 +42,9 @@ spring:
       mode: never
 
   flyway:
-    url: ${sm://flyway-url-dev}         # Secret Manager에서 가져오기
-    user: ${sm://flyway-user-dev}       # Secret Manager에서 가져오기
-    password: ${sm://flyway-password-dev} # Secret Manager에서 가져오기
+    url: ${flyway-url-dev}         # sm:// 제거
+    user: ${flyway-user-dev}       # sm:// 제거
+    password: ${flyway-password-dev} # sm:// 제거
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
@@ -47,21 +52,21 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${sm://aws-access-key-id}     # Secret Manager에서 가져오기
-      secret-key: ${sm://aws-secret-access-key} # Secret Manager에서 가져오기
+      access-key: ${aws-access-key-id}     # sm:// 제거
+      secret-key: ${aws-secret-access-key} # sm:// 제거
     region:
-      static: ${sm://aws-region}                # Secret Manager에서 가져오기
+      static: ${aws-region}                # sm:// 제거
     s3:
-      bucket: ${sm://s3-bucket-name-dev}        # Secret Manager에서 가져오기
+      bucket: ${s3-bucket-name-dev}        # sm:// 제거
     stack:
       auto: false
 
 jwt:
-  secret: ${sm://jwt-secret}  # Secret Manager에서 가져오기
+  secret: ${jwt-secret}  # sm:// 제거
 
 ai:
   server:
-    base-url: ${sm://ai-server-url-dev}  # Secret Manager에서 가져오기
+    base-url: ${ai-server-url-dev}  # sm:// 제거
 
 custom:
   isProd: false
