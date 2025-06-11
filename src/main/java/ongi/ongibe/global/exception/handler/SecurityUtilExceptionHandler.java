@@ -1,6 +1,6 @@
 package ongi.ongibe.global.exception.handler;
 
-import io.sentry.Sentry;
+//import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.global.exception.SecurityUtilException;
@@ -23,13 +23,13 @@ public class SecurityUtilExceptionHandler {
             default -> "UNKNOWN_ERROR";
         };
 
-        // Sentry에 커스터마이징된 메시지 전송
-        Sentry.withScope(scope -> {
-            scope.setTag("auth.status", e.getStatusCode().toString());
-            scope.setTag("auth.code", code);
-            scope.setExtra("reason", e.getReason());
-            Sentry.captureMessage("SECURITY_ERROR: " + code + " - " + e.getReason());
-        });
+//        // Sentry에 커스터마이징된 메시지 전송
+//        Sentry.withScope(scope -> {
+//            scope.setTag("auth.status", e.getStatusCode().toString());
+//            scope.setTag("auth.code", code);
+//            scope.setExtra("reason", e.getReason());
+//            Sentry.captureMessage("SECURITY_ERROR: " + code + " - " + e.getReason());
+//        });
 
         return ResponseEntity
                 .status(e.getStatusCode())

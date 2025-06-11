@@ -84,8 +84,8 @@ dependencies {
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'io.sentry:sentry-spring-boot-starter:6.28.0'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:6.2.1'
 }
 
 tasks.named('test') {

@@ -1,0 +1,45 @@
+substitutions:
+  _IMAGE_TAG: dev-latest
+  _SSH_KEYS: ""
+  _TEMPLATE_NAME: ongi-dev-template-dev-latest
+
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy-backend
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
+        gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
+          --network=dev-ongi-vpc \
+          --subnet=dev-ongi-server-subnet \
+          --machine-type=e2-medium \
+          --region=asia-northeast3 \
+          --boot-disk-size=20GB \
+          --image-family=cos-stable \
+          --image-project=cos-cloud \
+          --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
+          --container-env=SPRING_PROFILES_ACTIVE=dev \
+          --metadata=ssh-keys="${_SSH_KEYS}" \
+          --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
+          --scopes=https://www.googleapis.com/auth/cloud-platform \
+          --tags=dev-backend
+
+        echo "▶ Ensure MIG exists: ongi-backend-mig"
+        if ! gcloud compute instance-groups managed describe ongi-backend-mig \
+             --region=asia-northeast3 > /dev/null 2>&1; then
+          echo "▶ MIG not found. Creating ongi-backend-mig"
+          gcloud compute instance-groups managed create ongi-backend-mig \
+            --base-instance-name=ongi-backend \
+            --template="${_TEMPLATE_NAME}" \
+            --size=1 \
+            --region=asia-northeast3
+        fi
+
+        echo "▶ Rolling update for managed instance group: ongi-backend-mig"
+        gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
+          --region=asia-northeast3 \
+          --version template="${_TEMPLATE_NAME}" \
+          --type=proactive

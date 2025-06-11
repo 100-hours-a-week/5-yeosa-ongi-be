@@ -1,4 +1,4 @@
-name: Deploy Backend on PR Merge
+name: Deploy DEV Backend on PR Merge
 
 on:
   pull_request:
@@ -8,115 +8,60 @@ on:
       - closed
 
 jobs:
-  deploy-backend:
+  deploy-dev-backend:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-22.04
 
-    env:
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ORG: ongi
-      SENTRY_PROJECT: dev-ongi
-      SENTRY_RELEASE: backend-${{ github.sha }}
-
     steps:
-      - name: Checkout Backend Code
+      - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Java
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Initial Flyway Validate
-        id: initial-validate
-        continue-on-error: true
-        run: |
-          ./gradlew flywayValidate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-      - name: Try Flyway Migrate
-        id: migrate
-        continue-on-error: true
-        run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
-
-      - name: Run Flyway Repair if Migrate Fails
-        if: steps.migrate.outcome == 'failure'
-        run: |
-          ./gradlew flywayRepair \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
-
-      - name: Retry Flyway Migrate after Repair
-        if: steps.migrate.outcome == 'failure'
-        run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
-
-      - name: Final Flyway Validate
-        run: |
-          ./gradlew flywayValidate \
-            -Dflyway.url=${{ secrets.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ secrets.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ secrets.FLYWAY_DB_PASSWORD }}
-
-      - name: Build Spring Boot JAR
+      - name: Build Application
         run: ./gradlew clean build -x test
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
 
-      - name: Build & Push Backend Image
+      - name: Build & Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ongi-backend:latest
+          TAG=dev-$(date +%Y%m%d-%H%M%S)-pr${{ github.event.pull_request.number }}
+          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Install Sentry CLI
-        run: curl -sL https://sentry.io/get-cli/ | bash
-
-      - name: Create and Finalize Sentry Release
+      - name: Trigger Cloud Build Deploy
         run: |
-          sentry-cli releases new $SENTRY_RELEASE
-          sentry-cli releases set-commits $SENTRY_RELEASE --auto
-          sentry-cli releases finalize $SENTRY_RELEASE
-          sentry-cli releases deploys $SENTRY_RELEASE new -e production
+          TEMPLATE_NAME="ongi-dev-template-${{ env.IMAGE_TAG }}"
 
-      - name: SSH into GCP and Deploy Backend
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.GCP_HOST_DEV }}
-          username: ${{ secrets.GCP_USERNAME }}
-          key: ${{ secrets.GCP_KEY_DEV }}
-          script: |
-            set -e
-            cd /opt/app/ongi
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d
+          # 동기식 실행 (완료까지 기다림)
+          gcloud builds submit . \
+            --config=.gcp/cloudbuild-dev.yaml \
+            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME"
 
       - name: Notify Discord on Success
         if: success()
         run: |
           echo '{
-            "content": "**✅ DEV 백엔드 배포 완료!** 🎉",
+            "content": "**✅ DEV 백엔드 배포 완료!**",
             "embeds": [
               {
                 "title": "'"${{ github.event.pull_request.title }}"'",
                 "url": "'"${{ github.event.pull_request.html_url }}"'",
                 "fields": [
                   { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true },
+                  { "name": "Image Tag", "value": "'"${{ env.IMAGE_TAG }}"'", "inline": true }
                 ],
                 "color": 3066993
               }
@@ -127,7 +72,7 @@ jobs:
         if: failure()
         run: |
           echo '{
-            "content": "**❌ DEV 백엔드 배포 실패!** 🧨",
+            "content": "**❌ DEV 백엔드 배포 실패!**",
             "embeds": [
               {
                 "title": "'"${{ github.event.pull_request.title }}"'",
