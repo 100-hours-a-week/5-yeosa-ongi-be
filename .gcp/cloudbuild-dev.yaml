@@ -12,7 +12,8 @@ steps:
         set -e
 
         IMAGE="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}"
-        TEMPLATE_NAME="ongi-dev-template-${_IMAGE_TAG}"
+        TAG=${_IMAGE_TAG}
+        TEMPLATE_NAME=ongi-dev-template-${TAG}
 
         echo "▶ Creating instance template: $TEMPLATE_NAME"
 
