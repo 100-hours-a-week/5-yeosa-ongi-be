@@ -9,23 +9,29 @@ steps:
     args:
       - -c
       - |
-        TEMPLATE_NAME=ongi-dev-template-${_IMAGE_TAG}
-        IMAGE=asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}
+        set -e
 
-        gcloud compute instance-templates create-with-container $TEMPLATE_NAME \
+        IMAGE="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}"
+        TEMPLATE_NAME="ongi-dev-template-${_IMAGE_TAG}"
+
+        echo "▶ Creating instance template: $TEMPLATE_NAME"
+
+        gcloud compute instance-templates create-with-container "$TEMPLATE_NAME" \
           --machine-type=e2-medium \
           --region=asia-northeast3 \
           --boot-disk-size=20GB \
           --image-family=cos-stable \
           --image-project=cos-cloud \
-          --container-image=$IMAGE \
+          --container-image="$IMAGE" \
           --container-env=SPRING_PROFILES_ACTIVE=dev \
           --metadata=ssh-keys="${_SSH_KEYS}" \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
 
+        echo "▶ Rolling update for managed instance group: ongi-backend-mig"
+
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
-          --version template=$TEMPLATE_NAME \
+          --version template="$TEMPLATE_NAME" \
           --type proactive

@@ -41,7 +41,7 @@ jobs:
 
       - name: Trigger Cloud Build Deploy
         run: |
-          TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
+          TAG=dev-$(date +%Y%m%d-%H%M%S)-pr${{ github.event.pull_request.number }}
           gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
             --substitutions=_IMAGE_TAG=$TAG,_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}"
