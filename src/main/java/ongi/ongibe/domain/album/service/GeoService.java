@@ -26,7 +26,7 @@ public class GeoService {
     private final PlaceService placeService;
 
     @Transactional
-    public List<Picture> geoAndKakaoAndSave(Long albumId, List<String> s3keys) {
+    public void geoAndKakaoAndSave(Long albumId, List<String> s3keys) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범 없음"));
 
@@ -55,7 +55,7 @@ public class GeoService {
                         p.getId(), latitude, longitude);
             }
         }
-        return pictureRepository.saveAll(pictures);
+        pictureRepository.saveAll(pictures);
     }
 
     private boolean isInKorea(Double lat, Double lon) {
