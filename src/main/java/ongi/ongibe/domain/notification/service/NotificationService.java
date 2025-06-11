@@ -3,7 +3,7 @@ package ongi.ongibe.domain.notification.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.album.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;

@@ -12,14 +12,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.album.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
-import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
-import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
 import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO.PictureRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;

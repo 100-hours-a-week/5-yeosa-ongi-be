@@ -1,7 +1,6 @@
 package ongi.ongibe.domain.album.dto;
 
-import ongi.ongibe.UserAlbumRole;
-import ongi.ongibe.domain.album.entity.UserAlbum;
+import ongi.ongibe.domain.album.UserAlbumRole;
 
 public record AlbumRoleResponseDTO(
         UserAlbumRole role

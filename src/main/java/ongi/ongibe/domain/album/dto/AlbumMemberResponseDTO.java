@@ -2,7 +2,7 @@ package ongi.ongibe.domain.album.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
-import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.album.UserAlbumRole;
 
 public record AlbumMemberResponseDTO(
         @Schema(description = "유저정보") List<UserInfo> userInfo
