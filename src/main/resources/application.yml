@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: ongiBE
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+server:
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+
+logging:
+  level:
+    root: INFO
+    ongi.ongibe: DEBUG
+    org.springframework.security.web.FilterChainProxy: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.security.web.access: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.apache.http: DEBUG
