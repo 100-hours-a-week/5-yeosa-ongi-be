@@ -43,9 +43,16 @@ jobs:
       - name: Trigger Cloud Build Deploy
         run: |
           TEMPLATE_NAME="ongi-dev-template-${{ env.IMAGE_TAG }}"
-          gcloud builds submit . \
+          BUILD_ID=$(gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME"
+            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME" \
+            --format="value(id)")
+          
+          echo "Cloud Build started with ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+          
+          # Wait for build completion
+          gcloud builds wait $BUILD_ID --timeout=600
 
       - name: Notify Discord on Success
         if: success()
