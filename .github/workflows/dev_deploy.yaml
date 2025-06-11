@@ -43,10 +43,11 @@ jobs:
       - name: Trigger Cloud Build Deploy
         run: |
           TEMPLATE_NAME="ongi-dev-template-${{ env.IMAGE_TAG }}"
-          # --no-stream 없이 submit만으로 완료 대기
+          # --no-stream 추가: ID만 순수하게 받아오기
           BUILD_ID=$(gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
             --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME" \
+            --no-stream \
             --format="value(id)")
           
           echo "Cloud Build started with ID: $BUILD_ID"
