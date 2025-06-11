@@ -16,6 +16,8 @@ public record MonthlyAlbumResponseDTO(
             @Schema(description = "앨범 ID") Long albumId,
             @Schema(description = "앨범 이름") String albumName,
             @Schema(description = "썸네일 사진 URL") String thumbnailPictureURL,
+            @Schema(description = "썸네일 위도") Double latitude,
+            @Schema(description = "썸네일 경도") Double longitude,
             @Schema(description = "앨범 생성 일시") LocalDateTime createdAt,
             @Schema(description = "앨범 멤버들의 프로필 이미지 URL 목록") List<String> memberProfileImageURL,
             @Schema(description = "앨범 AI 분석 관련 상태")AlbumProcessState albumProcessState
@@ -25,6 +27,8 @@ public record MonthlyAlbumResponseDTO(
                     album.getId(),
                     album.getName(),
                     album.getThumbnailPicture().getPictureURL(),
+                    album.getThumbnailPicture().getLatitude(),
+                    album.getThumbnailPicture().getLongitude(),
                     album.getCreatedAt(),
                     album.getUserAlbums().stream()
                             .map(ua -> ua.getUser().getProfileImage())

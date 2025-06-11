@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -41,26 +42,16 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final PlaceRepository placeRepository;
-    private final UserAlbumRepository userAlbumRepository;
     private final UserRepository userRepository;
     private final PictureRepository pictureRepository;
     private final PresignedUrlService presignedUrlService;
     private final SecurityUtil securityUtil;
+    private final UserCacheService userCacheService;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
         User user = securityUtil.getCurrentUser();
-
-        List<UserTotalStateResponseDTO.PictureCoordinate> coordinateList =
-                pictureRepository.findAllByUser(user).stream()
-                        .map(Picture::toPictureCoordinate)
-                        .toList();
-        int albumCount = userAlbumRepository.countByUser(user);
-        int placeCount = placeRepository.countDistinctByPicturesByUser(user);
-
-        UserTotalStateResponseDTO userTotalStateResponseDTO =
-                new UserTotalStateResponseDTO(coordinateList, albumCount, placeCount);
+        UserTotalStateResponseDTO userTotalStateResponseDTO = userCacheService.getUserTotalState(user);
 
         return BaseApiResponse.<UserTotalStateResponseDTO>builder()
                 .code("USER_TOTAL_STATISTICS_SUCCESS")
@@ -72,31 +63,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPictureStatResponseDTO> getUserPictureStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        YearMonth ym = DateUtil.parseOrNow(yearMonth);
-        LocalDate startMonth = DateUtil.getStartOfMonth(yearMonth).toLocalDate();
-        LocalDate endMonth = DateUtil.getEndOfMonth(yearMonth).toLocalDate();
-        List<Object[]> results = pictureRepository.countPicturesByDate(user.getId(), startMonth, endMonth);
-        Map<LocalDate, Integer> dailyCountMap = new LinkedHashMap<>();
-        for (int day = 1; day<=ym.lengthOfMonth(); day++){
-            dailyCountMap.put(ym.atDay(day), 0);
-        }
-
-        for (Object[] result : results){
-            LocalDate date = ((Date) result[0]).toLocalDate();
-            int count =((Number) result[1]).intValue();
-            dailyCountMap.put(date, count);
-        }
-
-        Map<String, Integer> responseMap = dailyCountMap.entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> e.getKey().toString(), // LocalDate → String
-                        Map.Entry::getValue,
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new // 순서 유지
-                ));
-
-
-        UserPictureStatResponseDTO response = new UserPictureStatResponseDTO(yearMonth, responseMap);
+        UserPictureStatResponseDTO response = userCacheService.getUserPictureStat(user, yearMonth);
         return BaseApiResponse.success(
                 "USER_IMAGE_STATISTICS_SUCCESS",
                 "월간 일별 사진 업로드 수 조회 성공",
@@ -106,71 +73,15 @@ public class UserService {
     @Transactional(readOnly = true)
     public BaseApiResponse<UserPlaceStatResponseDTO> getUserPlaceStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
-        List<Object[]> topPlace = pictureRepository.mostVisitPlace(
-                user.getId(), startDate, endDate, PageRequest.of(0,1));
-        UserPlaceStatResponseDTO response;
-        if (topPlace.isEmpty()){
-            response = new UserPlaceStatResponseDTO(null, null, null, List.of());
-            return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
-        }
-        String city = topPlace.getFirst()[0].toString();
-        String district = topPlace.getFirst()[1].toString();
-        String town = topPlace.getFirst()[2].toString();
-
-        List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
-        response = new UserPlaceStatResponseDTO(city, district, town, tags);
+        UserPlaceStatResponseDTO response = userCacheService.getUserPlaceStat(user, yearMonth);
         return BaseApiResponse.success("USER_PLACE_SUCCESS", "유저 방문 조회 성공", response);
-    }
-
-    private List<String> getTopTags(User user, String city, String district, String town,
-            LocalDateTime startDate, LocalDateTime endDate) {
-        List<Picture> pictures = pictureRepository.findByUserAndPlaceAndCreatedAtBetween(
-                user, city, district, town, startDate, endDate);
-        Map<String, Integer> tagMap = new HashMap<>();
-        for (Picture picture : pictures){
-            String tag = picture.getTag();
-            if (tag != null && !tag.isBlank() && !tag.equals("기타")){
-                tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
-            }
-        }
-        return tagMap.entrySet().stream()
-                .sorted(Entry.<String, Integer>comparingByValue().reversed())
-                .limit(6)
-                .map(Entry::getKey)
-                .toList();
     }
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTagStatResponseDTO> getUserTagStat(String yearMonth){
         User user = securityUtil.getCurrentUser();
-        LocalDateTime startDate = DateUtil.getStartOfMonth(yearMonth);
-        LocalDateTime endDate = DateUtil.getEndOfMonth(yearMonth);
-        List<Picture> pictures = pictureRepository.findAllByUserAndCreatedAtBetween(user, startDate, endDate);
-        String maxTag = getMaxTag(pictures);
-        if (maxTag == null){
-            return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공",
-                    new UserTagStatResponseDTO(null, List.of()));
-        }
-        List<String> pictureUrls = pictures.stream()
-                .filter(p -> Objects.equals(p.getTag(), maxTag))
-                .sorted(Comparator.comparing(Picture::getQualityScore).reversed())
-                .map(Picture::getPictureURL)
-                .limit(4)
-                .toList();
-        UserTagStatResponseDTO response = new UserTagStatResponseDTO(maxTag, pictureUrls);
+        UserTagStatResponseDTO response = userCacheService.getUserTagState(user, yearMonth);
         return BaseApiResponse.success("USER_TAG_STATISTICS_SUCCESS", "월별 최다기록 태그 및 사진 조회 성공", response);
-    }
-
-    private static String getMaxTag(List<Picture> pictures) {
-        Map<String, Long> tagCount = pictures.stream()
-                .filter(p->p.getTag() != null && !p.getTag().isBlank() && !p.getTag().equals("기타"))
-                .collect(Collectors.groupingBy(Picture::getTag, Collectors.counting()));
-        return tagCount.entrySet().stream()
-                .max(Entry.comparingByValue())
-                .map(Entry::getKey)
-                .orElse(null);
     }
 
     @Transactional(readOnly = true)

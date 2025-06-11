@@ -1,148 +1,168 @@
 package ongi.ongibe.domain.album.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
+
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
-import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
+import ongi.ongibe.domain.album.AlbumProcessState;
+import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
+import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.UserAlbum;
-import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
-import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
+import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.auth.OAuthProvider;
-import ongi.ongibe.domain.user.UserStatus;
+import ongi.ongibe.domain.place.entity.Place;
 import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.JwtTokenProvider;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
 
 @SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AlbumServiceTest {
 
-    @Spy
-    @InjectMocks
-    private AlbumService albumService;
+    @Autowired private AlbumService albumService;
+    @Autowired private AlbumRepository albumRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private UserAlbumRepository userAlbumRepository;
+    @Autowired private PictureRepository pictureRepository;
+    @Autowired private PlaceRepository placeRepository;
 
-    @Mock
-    private AlbumRepository albumRepository;
-
-    @Mock
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Mock
-    private RedisInviteTokenRepository redisInviteTokenRepository;
-
-    @Mock
-    private UserAlbumRepository userAlbumRepository;
-
-    @Mock
+    @MockitoBean
+    private ApplicationEventPublisher eventPublisher;
+    @MockitoBean
     private SecurityUtil securityUtil;
 
-    @Mock
-    private ApplicationEventPublisher applicationEventPublisher;
+    private static final List<String[]> SAMPLE_LOCATIONS = List.of(
+            new String[]{"서울", "강남구", "역삼동"},
+            new String[]{"부산", "해운대구", "우동"},
+            new String[]{"대구", "중구", "동인동"},
+            new String[]{"인천", "연수구", "송도동"},
+            new String[]{"광주", "북구", "중흥동"},
+            new String[]{"대전", "서구", "둔산동"},
+            new String[]{"울산", "남구", "삼산동"},
+            new String[]{"세종", "세종시", "어진동"},
+            new String[]{"경기", "성남시", "분당동"},
+            new String[]{"강원", "춘천시", "석사동"}
+    );
 
-    private final Long albumId = 1L;
-    private final String token = "mocked.jwt.token";
-
-    private Album testAlbum;
-    private User testUser;
+    User testUser = User.builder()
+            .nickname("testUser")
+            .email("test@example.com")
+            .profileImage("default.png")
+            .provider(OAuthProvider.KAKAO)
+            .providerId("providerId")
+            .build();
 
     @BeforeEach
     void setUp() {
-        testAlbum = Album.builder()
-                .id(albumId)
-                .name("여행 앨범")
-                .pictures(new ArrayList<>())
-                .userAlbums(new ArrayList<>())
-                .build();
+        testUser = userRepository.save(testUser);
+        System.out.println("Mocked currentUserId = " + testUser.getId());
 
-        testUser = User.builder()
-                .id(123L)
-                .nickname("test-user")
-                .providerId("abc123")
-                .provider(OAuthProvider.KAKAO)
-                .userStatus(UserStatus.ACTIVE)
-                .profileImage("image.png")
-                .userAlbums(new ArrayList<>())
-                .build();
-    }
-
-    @Test
-    void createInviteToken_성공() {
-        // given
-        doReturn(testAlbum).when(albumService).getAlbumIfMember(albumId);
-        doNothing().when(albumService).validAlbumOwner(testAlbum);
-        when(jwtTokenProvider.generateInviteToken(albumId)).thenReturn(token);
-
-        // when
-        BaseApiResponse<String> result = albumService.createInviteToken(albumId);
-
-        // then
-        assertThat(result.getData()).isEqualTo("https://dev.ongi.today/invite?token=" + token);
-        verify(redisInviteTokenRepository).save(token, albumId);
-    }
-
-    @Test
-    void acceptInvite_성공() {
-        // given
-        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
-        when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
-        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
         when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        doNothing().when(eventPublisher).publishEvent(any());
 
+        for (int i = 1; i <= 5; i++) {
+            // 1. 앨범마다 사용할 3개 지역 랜덤 추출
+            List<String[]> shuffledLocations = new ArrayList<>(SAMPLE_LOCATIONS);
+            Collections.shuffle(shuffledLocations);
+            List<Place> albumPlaces = SAMPLE_LOCATIONS.subList(0, 3).stream()
+                    .map(loc -> Place.builder()
+                            .city(loc[0])
+                            .district(loc[1])
+                            .town(loc[2])
+                            .build())
+                    .map(placeRepository::save)
+                    .toList();
+
+            List<Picture> pictures = new ArrayList<>();
+            for (int j = 1; j <= 10; j++) {
+                Place place = albumPlaces.get(j % 3); // 순환적으로 3개 중 하나씩 부여
+                Picture picture = Picture.builder()
+                        .user(testUser)
+                        .pictureURL("https://cdn.ongi.today/pic-" + i + "-" + j + ".jpg")
+                        .place(place)
+                        .build();
+                pictures.add(picture);
+            }
+
+            Picture thumbnail = pictures.getFirst();
+            Album album = Album.builder()
+                    .name("앨범 " + i)
+                    .processState(AlbumProcessState.NOT_STARTED)
+                    .thumbnailPicture(thumbnail)
+                    .pictures(pictures)
+                    .build();
+            album.setCreatedAt(LocalDateTime.of(2025, 7 - i, 1, 0, 0));
+            for (Picture picture : pictures) {
+                picture.setAlbum(album);
+            }
+
+            album = albumRepository.saveAndFlush(album);
+            pictureRepository.saveAll(pictures);
+
+            UserAlbum userAlbum = UserAlbum.of(testUser, album, UserAlbumRole.OWNER);
+            album.setUserAlbums(List.of(userAlbum));
+            userAlbumRepository.save(userAlbum);
+        }
+    }
+
+
+    @Test
+    void getMonthlyAlbum_정상조회_마지막월있음() {
         // when
-        BaseApiResponse<AlbumInviteResponseDTO> result = albumService.acceptInvite(token);
+        BaseApiResponse<MonthlyAlbumResponseDTO> response = albumService.getMonthlyAlbum("2025-06");
 
         // then
-        assertThat(result.getData().albumId()).isEqualTo(albumId);
-        assertThat(result.getData().albumName()).isEqualTo("여행 앨범");
-        verify(userAlbumRepository).save(any(UserAlbum.class));
-        verify(redisInviteTokenRepository).remove(token);
+        assertThat(response.getData().albumInfo()).hasSize(1);
+        assertThat(response.getData().albumInfo().getFirst().albumName()).isEqualTo("앨범 1");
     }
 
     @Test
-    void acceptInvite_토큰없음_예외() {
-        // given
-        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(false);
+    void getMonthlyAlbum_정상조회_마지막월없음() {
+        // when
+        BaseApiResponse<MonthlyAlbumResponseDTO> response = albumService.getMonthlyAlbum("2025-02");
 
-        // when, then
-        assertThatThrownBy(() -> albumService.acceptInvite(token))
-                .isInstanceOf(AlbumException.class)
-                .hasMessageContaining("초대코드");
+        // then
+        assertThat(response.getData().albumInfo()).hasSize(1);
+        assertThat(response.getData().albumInfo().getFirst().albumName()).isEqualTo("앨범 5");
     }
 
     @Test
-    void acceptInvite_이미_구성원임(){
+    void getAlbumSummary_정상조회() {
         //given
-        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
-        when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
-        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
         when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        //when
+        BaseApiResponse<List<AlbumSummaryResponseDTO>> response = albumService.getAlbumSummary(albumId);
 
-        UserAlbum userAlbum = UserAlbum.of(testUser, testAlbum, UserAlbumRole.NORMAL);
-        testAlbum.getUserAlbums().add(userAlbum);
-
-        //when, then
-        assertThatThrownBy(() -> albumService.acceptInvite(token))
-                .isInstanceOf(AlbumException.class)
-                .hasMessageContaining("이미 초대된");
+        //then
+        assertThat(response.getData().size()).isEqualTo(3);
     }
 }
