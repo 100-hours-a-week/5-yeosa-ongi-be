@@ -1,6 +1,10 @@
+substitutions:
+  _IMAGE_TAG: dev-latest
+  _SSH_KEYS: ""
+
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'load-secrets'
+    id: load-secrets
     entrypoint: bash
     args:
       - -c
@@ -11,6 +15,26 @@ steps:
         FLYWAY_URL=$(gcloud secrets versions access latest --secret=flyway-url-dev)
         FLYWAY_USER=$(gcloud secrets versions access latest --secret=flyway-user-dev)
         FLYWAY_PASSWORD=$(gcloud secrets versions access latest --secret=flyway-password-dev)
+
+        echo "FLYWAY_URL=$FLYWAY_URL" >> /workspace/.env
+        echo "FLYWAY_USER=$FLYWAY_USER" >> /workspace/.env
+        echo "FLYWAY_PASSWORD=$FLYWAY_PASSWORD" >> /workspace/.env
+        echo "DB_URL=$DB_URL" >> /workspace/.env
+        echo "DB_USER=$DB_USER" >> /workspace/.env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> /workspace/.env
+        export DB_URL DB_USER DB_PASSWORD FLYWAY_URL FLYWAY_USER FLYWAY_PASSWORD
+
+        ./gradlew flywayMigrate \
+          -Dflyway.url=$FLYWAY_URL \
+          -Dflyway.user=$FLYWAY_USER \
+          -Dflyway.password=$FLYWAY_PASSWORD
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy-backend
+    entrypoint: bash
+    args:
+      - -c
+      - |
         REDIS_SERVER_URL=$(gcloud secrets versions access latest --secret=redis_server_url)
         KAKAO_CLIENT_ID=$(gcloud secrets versions access latest --secret=kakao-client-id)
         AWS_ACCESS_KEY_ID=$(gcloud secrets versions access latest --secret=aws-access-key-id)
@@ -20,8 +44,7 @@ steps:
         JWT_SECRET=$(gcloud secrets versions access latest --secret=jwt-secret)
         AI_SERVER_URL=$(gcloud secrets versions access latest --secret=ai-server-url-dev)
 
-        export DB_URL DB_USER DB_PASSWORD FLYWAY_URL FLYWAY_USER FLYWAY_PASSWORD \
-               REDIS_SERVER_URL KAKAO_CLIENT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
+        export REDIS_SERVER_URL KAKAO_CLIENT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
                AWS_REGION S3_BUCKET_NAME JWT_SECRET AI_SERVER_URL
 
         TEMPLATE_NAME=ongi-dev-template-${_IMAGE_TAG}
