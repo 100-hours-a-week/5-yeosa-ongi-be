@@ -35,16 +35,17 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
+          TAG=dev-$(date +%Y%m%d-%H%M%S)-pr${{ github.event.pull_request.number }}
           docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Trigger Cloud Build Deploy
         run: |
-          TAG=dev-$(date +%Y%m%d-%H%M%S)-pr${{ github.event.pull_request.number }}
+          TEMPLATE_NAME="ongi-dev-template-${{ env.IMAGE_TAG }}"
           gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=$TAG,_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}"
+            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME=$TEMPLATE_NAME
 
       - name: Notify Discord on Success
         if: success()
@@ -57,7 +58,8 @@ jobs:
                 "url": "'"${{ github.event.pull_request.html_url }}"'",
                 "fields": [
                   { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true }
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true },
+                  { "name": "Image Tag", "value": "'"${{ env.IMAGE_TAG }}"'", "inline": true }
                 ],
                 "color": 3066993
               }
@@ -81,4 +83,3 @@ jobs:
               }
             ]
           }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
-      
