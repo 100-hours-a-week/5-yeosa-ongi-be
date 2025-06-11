@@ -43,15 +43,11 @@ jobs:
       - name: Trigger Cloud Build Deploy
         run: |
           TEMPLATE_NAME="ongi-dev-template-${{ env.IMAGE_TAG }}"
-          # --no-stream 추가: ID만 순수하게 받아오기
-          BUILD_ID=$(gcloud builds submit . \
+
+          # 동기식 실행 (완료까지 기다림)
+          gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME" \
-            --no-stream \
-            --format="value(id)")
-          
-          echo "Cloud Build started with ID: $BUILD_ID"
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+            --substitutions=_IMAGE_TAG=${{ env.IMAGE_TAG }},_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}",_TEMPLATE_NAME="$TEMPLATE_NAME"
 
       - name: Notify Discord on Success
         if: success()
