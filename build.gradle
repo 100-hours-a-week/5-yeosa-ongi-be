@@ -126,6 +126,7 @@ jacocoTestReport {
                         'ongi/ongibe/global/**/s3/**',
                         'ongi/ongibe/global/**/security/**',
                         'ongi/ongibe/global/**/config/**',
+                        'ongi/ongibe/swagger/**'
 
                 ])
             })
