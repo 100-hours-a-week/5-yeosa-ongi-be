@@ -448,4 +448,22 @@ class AlbumServiceTest {
                 .isInstanceOf(AlbumException.class)
                 .hasMessageContaining("삭제할 수 없는 사진이 포함되어 있습니다.");
     }
+
+    @Test
+    void deleteAlbum_정상동작() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+
+        //when
+        albumService.deleteAlbum(albumId);
+
+        //then
+        Album deletedAlbum = albumRepository.findById(albumId).orElseThrow();
+        assertThat(deletedAlbum.getDeletedAt()).isNotNull();
+    }
 }
