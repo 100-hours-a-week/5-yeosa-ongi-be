@@ -42,8 +42,8 @@ jobs:
       - name: Trigger Cloud Build Deploy
         run: |
           TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
-          gcloud builds submit .gcp/dev-deploy \
-            --config=cloudbuild-dev.yaml \
+          gcloud builds submit . \
+            --config=.gcp/cloudbuild-dev.yaml \
             --substitutions=_IMAGE_TAG=$TAG,_SSH_KEYS="${{ secrets.DEV_BACKEND_SSH_KEYS }}"
 
       - name: Notify Discord on Success
