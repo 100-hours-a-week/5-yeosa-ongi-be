@@ -104,6 +104,22 @@ jacocoTestReport {
         xml.required.set(true)
         html.required.set(true)
     }
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        // 패키지 기준
+                        'ongi/ongibe/domain/**/dto/**',
+                        'ongi/ongibe/common/**',
+                        'ongi/ongibe/domain/**/dto/**',
+                        'ongi/ongibe/domain/**/exception/**',
+                        'ongi/ongibe/global/**/config/**',
+
+                        // Querydsl 자동 생성 파일
+                        '**/Q*.class'
+                ])
+            })
+    )
 }
 
 //jacocoTestCoverageVerification {
