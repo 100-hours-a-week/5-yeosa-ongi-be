@@ -15,6 +15,8 @@ steps:
         echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
 
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
+          --network=dev-ongi-vpc \
+          --subnet=dev-ongi-server-subnet \
           --machine-type=e2-medium \
           --region=asia-northeast3 \
           --boot-disk-size=20GB \
@@ -32,4 +34,4 @@ steps:
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
           --version template="${_TEMPLATE_NAME}" \
-          --type proactive
+          --type=proactive
