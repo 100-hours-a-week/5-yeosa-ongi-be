@@ -56,7 +56,7 @@ public class Album {
     @Column(length = 12)
     private String name;
 
-    @CreationTimestamp
+    //@CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

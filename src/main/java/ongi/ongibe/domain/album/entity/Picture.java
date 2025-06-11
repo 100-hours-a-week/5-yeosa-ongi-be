@@ -69,11 +69,9 @@ public class Picture {
     private Double latitude;
     private Double longitude;
 
-    @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
     @Column(name = "created_date", updatable = false) // index용
     private LocalDate createdDate;
 

@@ -8,11 +8,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.exception.AlbumException;
@@ -27,6 +30,7 @@ import ongi.ongibe.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -63,6 +67,7 @@ class AlbumInviteServiceTest {
 
     private Album testAlbum;
     private User testUser;
+    private User inviteTestUser;
     private UserAlbum testUserAlbum;
 
     @BeforeEach
@@ -72,27 +77,58 @@ class AlbumInviteServiceTest {
                 .name("여행 앨범")
                 .pictures(new ArrayList<>())
                 .userAlbums(new ArrayList<>())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         testUser = User.builder()
                 .id(123L)
-                .nickname("test-user")
-                .providerId("abc123")
+                .nickname("owner-user")
+                .providerId("own123")
                 .provider(OAuthProvider.KAKAO)
                 .userStatus(UserStatus.ACTIVE)
-                .profileImage("image.png")
+                .profileImage("owner.png")
                 .userAlbums(new ArrayList<>())
                 .build();
 
-        testUserAlbum = UserAlbum.builder()
-                .id(123L)
-                .album(testAlbum)
-                .user(testUser)
-                .role(UserAlbumRole.OWNER)
+        testUserAlbum = UserAlbum.of(testUser, testAlbum, UserAlbumRole.OWNER);
+
+        inviteTestUser = User.builder()
+                .id(124L)
+                .nickname("invite-user")
+                .providerId("inv124")
+                .provider(OAuthProvider.KAKAO)
+                .userStatus(UserStatus.ACTIVE)
+                .profileImage("invite.png")
+                .userAlbums(new ArrayList<>())
                 .build();
 
-        testAlbum.getUserAlbums().add(testUserAlbum);
+        User member1 = User.builder()
+                .id(125L)
+                .nickname("member1")
+                .providerId("mem125")
+                .provider(OAuthProvider.KAKAO)
+                .userStatus(UserStatus.ACTIVE)
+                .profileImage("m1.png")
+                .userAlbums(new ArrayList<>())
+                .build();
+
+        User member2 = User.builder()
+                .id(126L)
+                .nickname("member2")
+                .providerId("mem126")
+                .provider(OAuthProvider.KAKAO)
+                .userStatus(UserStatus.ACTIVE)
+                .profileImage("m2.png")
+                .userAlbums(new ArrayList<>())
+                .build();
+
+        UserAlbum member1UA = UserAlbum.of(member1, testAlbum, UserAlbumRole.NORMAL);
+        UserAlbum member2UA = UserAlbum.of(member2, testAlbum, UserAlbumRole.NORMAL);
+
+        testAlbum.getUserAlbums().addAll(List.of(testUserAlbum, member1UA, member2UA));
         testUser.getUserAlbums().add(testUserAlbum);
+        member1.getUserAlbums().add(member1UA);
+        member2.getUserAlbums().add(member2UA);
     }
 
     @Test
@@ -117,7 +153,7 @@ class AlbumInviteServiceTest {
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
         when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
-        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(securityUtil.getCurrentUser()).thenReturn(inviteTestUser);
 
         // when
         BaseApiResponse<AlbumInviteResponseDTO> result = albumService.acceptInvite(token);
@@ -126,6 +162,14 @@ class AlbumInviteServiceTest {
         assertThat(result.getData().albumId()).isEqualTo(albumId);
         assertThat(result.getData().albumName()).isEqualTo("여행 앨범");
         verify(userAlbumRepository).save(any(UserAlbum.class));
+
+        ArgumentCaptor<UserAlbum> captor = ArgumentCaptor.forClass(UserAlbum.class);
+        verify(userAlbumRepository).save(captor.capture());
+        UserAlbum saved = captor.getValue();
+
+        assertThat(saved.getUser()).isEqualTo(inviteTestUser);
+        assertThat(saved.getAlbum()).isEqualTo(testAlbum);
+        assertThat(saved.getRole()).isEqualTo(UserAlbumRole.NORMAL);
         verify(redisInviteTokenRepository).remove(token);
     }
 
@@ -155,5 +199,45 @@ class AlbumInviteServiceTest {
         assertThatThrownBy(() -> albumService.acceptInvite(token))
                 .isInstanceOf(AlbumException.class)
                 .hasMessageContaining("이미 초대된");
+    }
+
+    @Test
+    void getAlbumMember_정상조회() {
+        // given
+        when(securityUtil.getCurrentUser()).thenReturn(testUser); // OWNER
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(userAlbumRepository.findAllByAlbum(testAlbum))
+                .thenReturn(testAlbum.getUserAlbums());
+
+        // when
+        BaseApiResponse<AlbumMemberResponseDTO> result = albumService.getAlbumMembers(albumId);
+
+        // then
+        assertThat(result.getCode()).isEqualTo("ALBUM_MEMBER_LIST_SUCCESS");
+        assertThat(result.getMessage()).isEqualTo("공동작업자 목록 조회 성공");
+        assertThat(result.getData().userInfo().size()).isEqualTo(3);
+
+        boolean containsOwner = result.getData().userInfo().stream()
+                .anyMatch(userInfo ->
+                        userInfo.userId().equals(testUser.getId())
+                                && userInfo.role() == UserAlbumRole.OWNER
+                                && userInfo.nickname().equals("owner-user")
+                );
+
+        boolean containsNormal1 = result.getData().userInfo().stream()
+                .anyMatch(userInfo ->
+                        userInfo.nickname().equals("member1")
+                                && userInfo.role() == UserAlbumRole.NORMAL
+                );
+
+        boolean containsNormal2 = result.getData().userInfo().stream()
+                .anyMatch(userInfo ->
+                        userInfo.nickname().equals("member2")
+                                && userInfo.role() == UserAlbumRole.NORMAL
+                );
+
+        assertThat(containsOwner).isTrue();
+        assertThat(containsNormal1).isTrue();
+        assertThat(containsNormal2).isTrue();
     }
 }
