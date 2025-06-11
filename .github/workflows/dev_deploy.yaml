@@ -49,8 +49,8 @@ jobs:
       - name: Build & Push Docker Image
         run: |
           TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
-          docker build -t asia-northeast3-docker.pkg.dev/YOUR_PROJECT/dev-repo/backend:$TAG .
-          docker push asia-northeast3-docker.pkg.dev/YOUR_PROJECT/dev-repo/backend:$TAG
+          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
       - name: Trigger Cloud Build Deploy
 
