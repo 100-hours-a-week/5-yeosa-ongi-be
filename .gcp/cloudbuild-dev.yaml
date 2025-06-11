@@ -1,7 +1,7 @@
 substitutions:
   _IMAGE_TAG: dev-latest
   _SSH_KEYS: ""
-  _TEMPLATE_NAME: ongi-dev-template-${_IMAGE_TAG}
+  _TEMPLATE_NAME: ongi-dev-template-dev-latest
 
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
