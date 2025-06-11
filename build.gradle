@@ -108,7 +108,6 @@ jacocoTestReport {
     classDirectories.setFrom(
             files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
-                        // 패키지 기준
                         'ongi/ongibe/domain/**/dto/**',
                         'ongi/ongibe/domain/**/event/**',
                         'ongi/ongibe/domain/**/entity/**',
@@ -117,15 +116,16 @@ jacocoTestReport {
                         'ongi/ongibe/domain/**/schedule/**',
                         'ongi/ongibe/domain/loadtest/**',
                         'ongi/ongibe/domain/ai/**',
-                        'ongi/ongibe/domain/album/AlbumProcessState.java',
-                        'ongi/ongibe/domain/album/UserAlbumRole.java',
-                        'ongi/ongibe/domain/notification/NotificationType.java',
+                        'ongi/ongibe/domain/album/AlbumProcessState.class',
+                        'ongi/ongibe/domain/album/UserAlbumRole.class',
+                        'ongi/ongibe/domain/notification/NotificationType.class',
                         'ongi/ongibe/common/**',
                         'ongi/ongibe/global/**/config/**',
+                        'ongi/ongibe/global/exception/**',
+                        'ongi/ongibe/global/sentry/**',
                         'ongi/ongibe/global/**/eventlistener/**',
                         'ongi/ongibe/global/**/s3/**',
                         'ongi/ongibe/global/**/security/**',
-                        'ongi/ongibe/global/**/config/**',
                         'ongi/ongibe/swagger/**'
 
                 ])
