@@ -17,6 +17,7 @@ import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.exception.AlbumException;
@@ -308,6 +309,46 @@ class AlbumInviteServiceTest {
         assertThatThrownBy(() -> albumService.transferAlbumOwner(albumId, member1.getId()))
                 .isInstanceOf(AlbumException.class)
                 .hasMessageContaining("이양할 유저 정보를 찾을 수 없습니다.");
+    }
+
+    @Test
+    void getAlbumRole_정상조회_OWNER() {
+        //given
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(userAlbumRepository.findByUserAndAlbum(testUser, testAlbum)).thenReturn(Optional.of(testUserAlbum));
+
+        //when
+        BaseApiResponse<AlbumRoleResponseDTO> result = albumService.getAlbumRole(albumId);
+
+        //then
+        assertThat(result.getData().role()).isEqualTo(UserAlbumRole.OWNER);
+    }
+
+    @Test
+    void getAlbumRole_정상조회_NORMAL() {
+        //given
+        when(securityUtil.getCurrentUser()).thenReturn(member1);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(userAlbumRepository.findByUserAndAlbum(member1, testAlbum)).thenReturn(Optional.of(member1UA));
+
+        //when
+        BaseApiResponse<AlbumRoleResponseDTO> result = albumService.getAlbumRole(albumId);
+
+        //then
+        assertThat(result.getData().role()).isEqualTo(UserAlbumRole.NORMAL);
+    }
+
+    @Test
+    void getAlbumRole_접근권한없음() {
+        //givne
+        when(securityUtil.getCurrentUser()).thenReturn(inviteTestUser);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+
+        //when then
+        assertThatThrownBy(() -> albumService.getAlbumRole(albumId))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("앨범 접근 권한이 없습니다.");
     }
 
 }
