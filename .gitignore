@@ -9,9 +9,6 @@ build/
 .idea/
 *.iml
 out/
-*.yml
-*.yaml
-*.properties
 
 # VSCode
 .vscode/

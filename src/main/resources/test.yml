@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: ongiBE
+
+  threads:
+    virtual:
+      enabled: true
+
+  data:
+    redis:
+      host: 10.0.20.7
+      port: 6379
+
+  kakao:
+    auth:
+      client: ${KAKAO_CLIENT_ID}
+      redirect: https://dev.ongi.today/auth/callback/kakao
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      leak-detection-threshold: 30000
+      maximum-pool-size: 30
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: false
+        type: trace
+
+  sql:
+    init:
+      mode: never
+
+  flyway:
+    url: ${FLYWAY_URL}
+    user: ${FLYWAY_USER}
+    password: ${FLYWAY_PASSWORD}
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    stack:
+      auto: false
+
+server:
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  default-produces-media-type: application/json
+
+openapi:
+  info:
+    title: Ongi API
+    version: 1.0.0
+    description: 온기 서비스의 OpenAPI 명세입니다.
+
+logging:
+  level:
+    root: INFO
+    ongi.ongibe: DEBUG
+    org.springframework.security.web.FilterChainProxy: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.security.web.access: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.apache.http: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+
+jwt:
+  secret: ${JWT_SECRET}
+
+ai:
+  server:
+    base-url: ${AI_SERVER_URL}
+
+custom:
+  isProd: false
