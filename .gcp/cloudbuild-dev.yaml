@@ -12,12 +12,11 @@ steps:
       - |
         set -e
 
-        INSTANCE_TEMPLATE="${_TEMPLATE_NAME}"
         IMAGE="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}"
 
-        echo "▶ Creating instance template: $INSTANCE_TEMPLATE"
+        echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
 
-        gcloud compute instance-templates create-with-container "$INSTANCE_TEMPLATE" \
+        gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --machine-type=e2-medium \
           --region=asia-northeast3 \
           --boot-disk-size=20GB \
@@ -34,5 +33,5 @@ steps:
 
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
-          --version template="$INSTANCE_TEMPLATE" \
+          --version template="${_TEMPLATE_NAME}" \
           --type proactive
