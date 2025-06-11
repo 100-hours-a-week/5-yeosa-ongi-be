@@ -451,7 +451,7 @@ public class AlbumService {
     public BaseApiResponse<AlbumMemberResponseDTO> getAlbumMembers(Long albumId) {
         User user = securityUtil.getCurrentUser();
         Album album = getAlbumIfMember(albumId);
-        List<UserAlbum> members = userAlbumRepository.findAllByAlbumAndUser(album, user);
+        List<UserAlbum> members = userAlbumRepository.findAllByAlbum(album);
 
         List<AlbumMemberResponseDTO.UserInfo> userInfos = members.stream()
                 .map(ua -> {
