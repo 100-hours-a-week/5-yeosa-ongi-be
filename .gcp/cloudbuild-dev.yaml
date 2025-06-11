@@ -1,6 +1,7 @@
 substitutions:
   _IMAGE_TAG: dev-latest
   _SSH_KEYS: ""
+  _TEMPLATE_NAME: ongi-dev-template-${_IMAGE_TAG}
 
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -11,7 +12,7 @@ steps:
       - |
         set -e
 
-        TEMPLATE_NAME="ongi-dev-template-${_IMAGE_TAG}"
+        TEMPLATE_NAME="${_TEMPLATE_NAME}"
         IMAGE="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}"
 
         echo "▶ Creating instance template: $TEMPLATE_NAME"
@@ -29,14 +30,6 @@ steps:
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
 
-        echo "▶ Rolling update for managed instance group: ongi-backend-mig"
-
-        gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
-          --region=asia-northeast3 \
-          --version template="$TEMPLATE_NAME" \
-          --type proactive
-        
-        
         echo "▶ Rolling update for managed instance group: ongi-backend-mig"
 
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
