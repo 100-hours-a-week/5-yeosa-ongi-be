@@ -27,19 +27,6 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-      - name: Load Flyway Secrets
-        run: |
-          echo "FLYWAY_DB_URL=$(gcloud secrets versions access latest --secret=flyway-url-dev)" >> $GITHUB_ENV
-          echo "FLYWAY_DB_USER=$(gcloud secrets versions access latest --secret=flyway-user-dev)" >> $GITHUB_ENV
-          echo "FLYWAY_DB_PASSWORD=$(gcloud secrets versions access latest --secret=flyway-password-dev)" >> $GITHUB_ENV
-
-      - name: Flyway Migrate (DEV)
-        run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=${{ env.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ env.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ env.FLYWAY_DB_PASSWORD }}
-
       - name: Build Application
         run: ./gradlew clean build -x test
 
@@ -53,7 +40,6 @@ jobs:
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
       - name: Trigger Cloud Build Deploy
-
         run: |
           TAG=dev-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
           gcloud builds submit .gcp/dev-deploy \
