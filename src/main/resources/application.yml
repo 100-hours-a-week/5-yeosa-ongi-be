@@ -36,3 +36,5 @@ logging:
     org.springframework.security.web.access: DEBUG
     org.springframework.web.client.RestTemplate: DEBUG
     org.apache.http: DEBUG
+    org.springframework.cloud.gcp.secretmanager: DEBUG
+    com.google.cloud: DEBUG
