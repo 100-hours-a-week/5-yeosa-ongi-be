@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.UserAlbumRole;
+import ongi.ongibe.domain.album.UserAlbumRole;
 import ongi.ongibe.cache.album.AlbumCacheService;
 import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
@@ -22,7 +22,6 @@ import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumRoleResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
-import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO.AlbumInfo;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.FaceCluster;
@@ -476,8 +475,8 @@ public class AlbumService {
     @Transactional(readOnly = true)
     public BaseApiResponse<AlbumRoleResponseDTO> getAlbumRole(Long albumId) {
         User user = securityUtil.getCurrentUser();
-        Album album = getAlbumIfMember(albumId);
         try{
+            Album album = getAlbumIfMember(albumId);
             UserAlbumRole role = getUserAlbum(user, album).getRole();
             AlbumRoleResponseDTO responseDTO = new AlbumRoleResponseDTO(role);
             return BaseApiResponse.success(

@@ -13,6 +13,15 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id "org.asciidoctor.jvm.convert" version "4.0.2"
     id 'org.flywaydb.flyway' version '10.20.1'
+    id "io.sentry.jvm.gradle" version "5.6.0"
+    id "jacoco"
+}
+
+sentry {
+    includeSourceContext = true
+    org = "ongi" // Sentry 조직명
+    projectName = "dev-ongi" // Sentry 프로젝트명
+    authToken = System.getenv("SENTRY_AUTH_TOKEN") // 환경변수로 설정
 }
 
 flyway {
@@ -88,3 +97,62 @@ tasks.named('asciidoctor') {
     inputs.dir snippetsDir
     dependsOn test
 }
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        'ongi/ongibe/domain/**/dto/**',
+                        'ongi/ongibe/domain/**/event/**',
+                        'ongi/ongibe/domain/**/entity/**',
+                        'ongi/ongibe/domain/**/exception/**',
+                        'ongi/ongibe/domain/**/repository/**',
+                        'ongi/ongibe/domain/**/schedule/**',
+                        'ongi/ongibe/domain/loadtest/**',
+                        'ongi/ongibe/domain/ai/**',
+                        'ongi/ongibe/domain/album/AlbumProcessState.class',
+                        'ongi/ongibe/domain/album/UserAlbumRole.class',
+                        'ongi/ongibe/domain/notification/NotificationType.class',
+                        'ongi/ongibe/common/**',
+                        'ongi/ongibe/global/**/config/**',
+                        'ongi/ongibe/global/exception/**',
+                        'ongi/ongibe/global/sentry/**',
+                        'ongi/ongibe/global/**/eventlistener/**',
+                        'ongi/ongibe/global/**/s3/**',
+                        'ongi/ongibe/global/**/security/**',
+                        'ongi/ongibe/swagger/**'
+
+                ])
+            })
+    )
+}
+
+//jacocoTestCoverageVerification {
+//    violationRules {
+//        rule {
+//            element = 'CLASS'
+//
+//            // 라인 커버리지 제한
+//            limit {
+//                counter = 'LINE'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.80
+//            }
+//
+//            // 브랜치 커버리지 제한
+//            limit {
+//                counter = 'BRANCH'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.50
+//            }
+//        }
+//    }
+//}
+
+

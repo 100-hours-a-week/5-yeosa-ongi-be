@@ -43,9 +43,11 @@ public class Album {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAlbum> userAlbums = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Picture> pictures = new ArrayList<>();
 
