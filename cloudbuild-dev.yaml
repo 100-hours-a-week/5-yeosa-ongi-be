@@ -1,15 +1,31 @@
-substitutions:
-  _IMAGE_TAG: dev-latest
-  _SSH_KEYS: ""
-
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'load-secrets'
     entrypoint: bash
     args:
       - -c
       - |
-        TEMPLATE_NAME=ongi-dev-template-$_IMAGE_TAG
-        IMAGE=asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$_IMAGE_TAG
+        DB_URL=$(gcloud secrets versions access latest --secret=db-url-dev)
+        DB_USER=$(gcloud secrets versions access latest --secret=db-user-dev)
+        DB_PASSWORD=$(gcloud secrets versions access latest --secret=db-password-dev)
+        FLYWAY_URL=$(gcloud secrets versions access latest --secret=flyway-url-dev)
+        FLYWAY_USER=$(gcloud secrets versions access latest --secret=flyway-user-dev)
+        FLYWAY_PASSWORD=$(gcloud secrets versions access latest --secret=flyway-password-dev)
+        REDIS_SERVER_URL=$(gcloud secrets versions access latest --secret=redis_server_url)
+        KAKAO_CLIENT_ID=$(gcloud secrets versions access latest --secret=kakao-client-id)
+        AWS_ACCESS_KEY_ID=$(gcloud secrets versions access latest --secret=aws-access-key-id)
+        AWS_SECRET_ACCESS_KEY=$(gcloud secrets versions access latest --secret=aws-secret-access-dev)
+        AWS_REGION=$(gcloud secrets versions access latest --secret=aws-region)
+        S3_BUCKET_NAME=$(gcloud secrets versions access latest --secret=s3-bucket-name-dev)
+        JWT_SECRET=$(gcloud secrets versions access latest --secret=jwt-secret)
+        AI_SERVER_URL=$(gcloud secrets versions access latest --secret=ai-server-url-dev)
+
+        export DB_URL DB_USER DB_PASSWORD FLYWAY_URL FLYWAY_USER FLYWAY_PASSWORD \
+               REDIS_SERVER_URL KAKAO_CLIENT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
+               AWS_REGION S3_BUCKET_NAME JWT_SECRET AI_SERVER_URL
+
+        TEMPLATE_NAME=ongi-dev-template-${_IMAGE_TAG}
+        IMAGE=asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}
 
         gcloud compute instance-templates create-with-container $TEMPLATE_NAME \
           --machine-type=e2-medium \
@@ -18,7 +34,7 @@ steps:
           --image-family=cos-stable \
           --image-project=cos-cloud \
           --container-image=$IMAGE \
-          --container-env=SPRING_PROFILES_ACTIVE=dev \
+          --container-env=SPRING_PROFILES_ACTIVE=dev,DB_URL=$DB_URL,DB_USER=$DB_USER,DB_PASSWORD=$DB_PASSWORD,FLYWAY_URL=$FLYWAY_URL,FLYWAY_USER=$FLYWAY_USER,FLYWAY_PASSWORD=$FLYWAY_PASSWORD,REDIS_SERVER_URL=$REDIS_SERVER_URL,KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID,AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY,AWS_REGION=$AWS_REGION,S3_BUCKET_NAME=$S3_BUCKET_NAME,JWT_SECRET=$JWT_SECRET,AI_SERVER_URL=$AI_SERVER_URL \
           --metadata=ssh-keys="${_SSH_KEYS}" \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
