@@ -1,6 +1,7 @@
 package ongi.ongibe.domain.album.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -14,12 +15,21 @@ import java.util.List;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestDTO;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO;
+import ongi.ongibe.domain.album.dto.AlbumCreateRequestGeoFrontDTO.PictureRequestDTO;
+import ongi.ongibe.domain.album.dto.AlbumDetailResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
+import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
+import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
+import ongi.ongibe.domain.album.repository.FaceClusterRepository;
+import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
@@ -37,6 +47,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @SpringBootTest
@@ -50,6 +61,8 @@ class AlbumServiceTest {
     @Autowired private UserAlbumRepository userAlbumRepository;
     @Autowired private PictureRepository pictureRepository;
     @Autowired private PlaceRepository placeRepository;
+    @Autowired private FaceClusterRepository faceClusterRepository;
+    @Autowired private PictureFaceClusterRepository pictureFaceClusterRepository;
 
     @MockitoBean
     private ApplicationEventPublisher eventPublisher;
@@ -112,7 +125,6 @@ class AlbumServiceTest {
                     .toList();
 
             List<Picture> pictures = new ArrayList<>();
-            List<String> tagList = new ArrayList<>(tags);
             for (int j = 1; j <= 10; j++) {
                 Place place = albumPlaces.get(j % 3); // 순환적으로 3개 중 하나씩 부여
                 Picture picture = Picture.builder()
@@ -143,6 +155,23 @@ class AlbumServiceTest {
 
             album = albumRepository.saveAndFlush(album);
             pictureRepository.saveAll(pictures);
+
+            // 3개의 사진 클러스터 구성
+            Picture representative = pictures.getFirst(); // 대표 사진
+            FaceCluster faceCluster = FaceCluster.builder()
+                    .representativePicture(representative)
+                    .clusterName("사람-" + i) // 예: 사람-1, 사람-2 ...
+                    .bboxX1(100).bboxY1(100).bboxX2(300).bboxY2(300)
+                    .build();
+            faceCluster = faceClusterRepository.save(faceCluster);
+
+            // 클러스터에 속한 사진 지정 (앞 3장)
+            List<PictureFaceCluster> clusterLinks = List.of(
+                    PictureFaceCluster.builder().picture(pictures.get(0)).faceCluster(faceCluster).build(),
+                    PictureFaceCluster.builder().picture(pictures.get(1)).faceCluster(faceCluster).build(),
+                    PictureFaceCluster.builder().picture(pictures.get(2)).faceCluster(faceCluster).build()
+            );
+            pictureFaceClusterRepository.saveAll(clusterLinks);
 
             UserAlbum userAlbum = UserAlbum.of(testUser, album, UserAlbumRole.OWNER);
             album.setUserAlbums(List.of(userAlbum));
@@ -197,5 +226,56 @@ class AlbumServiceTest {
 
         //then
         assertThat(response.getData().size()).isEqualTo(3);
+    }
+
+    @Test
+    void getAlbumDetail_정상조회() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+
+        //when
+        BaseApiResponse<AlbumDetailResponseDTO> response = albumService.getAlbumDetail(albumId);
+
+        //then
+        AlbumDetailResponseDTO detail = response.getData();
+        assertThat(detail).isNotNull();
+        assertThat(detail.title()).isEqualTo("앨범 1");
+        assertThat(detail.cluster().size()).isEqualTo(1);
+        assertThat(detail.picture().size()).isEqualTo(10);
+    }
+
+    @Test
+    void getAlbumDetail_앨범멤버아님() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(invalidTestUser.getId());
+        when(securityUtil.getCurrentUser()).thenReturn(invalidTestUser);
+
+        //when then
+        assertThatThrownBy(() -> albumService.getAlbumDetail(albumId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("앨범 멤버가 아닙니다.");
+    }
+
+    @Test
+    void createAlbum_정상작동() {
+        String newAlbumName = "newAlbumName";
+        List<? extends PictureUrlCoordinateDTO> pictureDTOs = List.of(
+                new PictureRequestDTO("link1.jpeg", 37.5665, 126.9780),
+                new PictureRequestDTO("link2.jpeg", 35.5665, 126.9780)
+        );
+
+        albumService.createAlbum(newAlbumName, pictureDTOs);
+
+        assertThat(albumRepository.findByName("newAlbumName")).isNotNull();
+        assertThat(albumRepository.findByName("newAlbumName").orElseThrow().getPictures().size()).isEqualTo(2);
     }
 }
