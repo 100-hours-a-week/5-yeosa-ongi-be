@@ -27,7 +27,6 @@ Thumbs.db
 .env
 
 # Spring Boot 설정파일
-/src/main/resources/application.yml
 /src/main/resources/application.properties
 
 # 테스트 결과
