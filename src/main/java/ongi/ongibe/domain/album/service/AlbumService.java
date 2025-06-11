@@ -476,8 +476,8 @@ public class AlbumService {
     @Transactional(readOnly = true)
     public BaseApiResponse<AlbumRoleResponseDTO> getAlbumRole(Long albumId) {
         User user = securityUtil.getCurrentUser();
-        Album album = getAlbumIfMember(albumId);
         try{
+            Album album = getAlbumIfMember(albumId);
             UserAlbumRole role = getUserAlbum(user, album).getRole();
             AlbumRoleResponseDTO responseDTO = new AlbumRoleResponseDTO(role);
             return BaseApiResponse.success(
