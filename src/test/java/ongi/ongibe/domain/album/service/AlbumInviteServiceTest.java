@@ -16,6 +16,7 @@ import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.AlbumInviteResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumMemberResponseDTO;
+import ongi.ongibe.domain.album.dto.AlbumOwnerTransferResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.UserAlbum;
 import ongi.ongibe.domain.album.exception.AlbumException;
@@ -25,6 +26,7 @@ import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.user.UserStatus;
 import ongi.ongibe.domain.user.entity.User;
+import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +62,9 @@ class AlbumInviteServiceTest {
     private SecurityUtil securityUtil;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     private final Long albumId = 1L;
@@ -67,8 +72,12 @@ class AlbumInviteServiceTest {
 
     private Album testAlbum;
     private User testUser;
+    private User member1;
+    private User member2;
     private User inviteTestUser;
     private UserAlbum testUserAlbum;
+    private UserAlbum member1UA;
+    private UserAlbum member2UA;
 
     @BeforeEach
     void setUp() {
@@ -102,7 +111,7 @@ class AlbumInviteServiceTest {
                 .userAlbums(new ArrayList<>())
                 .build();
 
-        User member1 = User.builder()
+        member1 = User.builder()
                 .id(125L)
                 .nickname("member1")
                 .providerId("mem125")
@@ -112,7 +121,7 @@ class AlbumInviteServiceTest {
                 .userAlbums(new ArrayList<>())
                 .build();
 
-        User member2 = User.builder()
+        member2 = User.builder()
                 .id(126L)
                 .nickname("member2")
                 .providerId("mem126")
@@ -122,8 +131,8 @@ class AlbumInviteServiceTest {
                 .userAlbums(new ArrayList<>())
                 .build();
 
-        UserAlbum member1UA = UserAlbum.of(member1, testAlbum, UserAlbumRole.NORMAL);
-        UserAlbum member2UA = UserAlbum.of(member2, testAlbum, UserAlbumRole.NORMAL);
+        member1UA = UserAlbum.of(member1, testAlbum, UserAlbumRole.NORMAL);
+        member2UA = UserAlbum.of(member2, testAlbum, UserAlbumRole.NORMAL);
 
         testAlbum.getUserAlbums().addAll(List.of(testUserAlbum, member1UA, member2UA));
         testUser.getUserAlbums().add(testUserAlbum);
@@ -145,6 +154,19 @@ class AlbumInviteServiceTest {
         // then
         assertThat(result.getData()).isEqualTo("https://dev.ongi.today/invite?token=" + token);
         verify(redisInviteTokenRepository).save(token, albumId);
+    }
+
+    @Test
+    void createInviteToken_앨범소유자아님() {
+        // given
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUser()).thenReturn(member1);
+        when(userAlbumRepository.findByUserAndAlbum(member1, testAlbum)).thenReturn(Optional.of(member1UA));
+
+        //when then
+        assertThatThrownBy(() -> albumService.createInviteToken(albumId))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("소유자가 아닙니다.");
     }
 
     @Test
@@ -240,4 +262,52 @@ class AlbumInviteServiceTest {
         assertThat(containsNormal1).isTrue();
         assertThat(containsNormal2).isTrue();
     }
+
+    @Test
+    void transferAlbumOwner_정상이양() {
+        //given
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(userRepository.findById(member1.getId())).thenReturn(Optional.of(member1));
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(userAlbumRepository.findByUserAndAlbum(testUser, testAlbum)).thenReturn(Optional.of(testUserAlbum));
+        when(userAlbumRepository.findByUserAndAlbum(member1, testAlbum)).thenReturn(Optional.of(member1UA));
+
+        //when
+        BaseApiResponse<AlbumOwnerTransferResponseDTO> result = albumService.transferAlbumOwner(albumId, member1.getId());
+
+        //then
+        assertThat(result.getData().oldOwnerId()).isEqualTo(testUser.getId());
+        assertThat(result.getData().newOwnerId()).isEqualTo(member1.getId());
+
+        assertThat(testUserAlbum.getRole()).isEqualTo(UserAlbumRole.NORMAL);
+        assertThat(member1UA.getRole()).isEqualTo(UserAlbumRole.OWNER);
+    }
+
+    @Test
+    void transferAlbumOwner_OWNER아님 () {
+        //given
+        when(securityUtil.getCurrentUser()).thenReturn(member1);
+        when(userRepository.findById(member2.getId())).thenReturn(Optional.of(member2));
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(userAlbumRepository.findByUserAndAlbum(member1, testAlbum)).thenReturn(Optional.of(member1UA));
+        when(userAlbumRepository.findByUserAndAlbum(member2, testAlbum)).thenReturn(Optional.of(member2UA));
+
+        //when then
+        assertThatThrownBy(() -> albumService.transferAlbumOwner(albumId, member2.getId()))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("현재 OWNER만 소유권을 위임할 수 있습니다.");
+    }
+
+    @Test
+    void tranferAlbumOwner_이양유저없음() {
+        //givne
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+        when(userRepository.findById(member1.getId())).thenReturn(Optional.empty());
+
+        //when then
+        assertThatThrownBy(() -> albumService.transferAlbumOwner(albumId, member1.getId()))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("이양할 유저 정보를 찾을 수 없습니다.");
+    }
+
 }
