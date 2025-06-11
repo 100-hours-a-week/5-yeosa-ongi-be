@@ -36,4 +36,4 @@ test-output/
 # 기타
 *.swp
 .rdb
-.sql
+.sql/build/reports/jacoco/

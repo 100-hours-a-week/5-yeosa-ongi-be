@@ -14,6 +14,7 @@ plugins {
     id "org.asciidoctor.jvm.convert" version "4.0.2"
     id 'org.flywaydb.flyway' version '10.20.1'
     id "io.sentry.jvm.gradle" version "5.6.0"
+    id "jacoco"
 }
 
 sentry {
@@ -96,3 +97,35 @@ tasks.named('asciidoctor') {
     inputs.dir snippetsDir
     dependsOn test
 }
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+//jacocoTestCoverageVerification {
+//    violationRules {
+//        rule {
+//            element = 'CLASS'
+//
+//            // 라인 커버리지 제한
+//            limit {
+//                counter = 'LINE'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.80
+//            }
+//
+//            // 브랜치 커버리지 제한
+//            limit {
+//                counter = 'BRANCH'
+//                value = 'COVEREDRATIO'
+//                minimum = 0.50
+//            }
+//        }
+//    }
+//}
+
+
