@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import ongi.ongibe.UserAlbumRole;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.AlbumProcessState;
@@ -27,6 +30,7 @@ import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.entity.UserAlbum;
+import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
@@ -105,80 +109,71 @@ class AlbumServiceTest {
     void setUp() {
         userRepository.save(invalidTestUser);
         testUser = userRepository.save(testUser);
-        System.out.println("Mocked currentUserId = " + testUser.getId());
-
         when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
         when(securityUtil.getCurrentUser()).thenReturn(testUser);
         doNothing().when(eventPublisher).publishEvent(any());
 
         for (int i = 1; i <= 5; i++) {
-            // 1. 앨범마다 사용할 3개 지역 랜덤 추출
+
+            /* 1. 앨범마다 3개 지역 랜덤 지정 */
             List<String[]> shuffledLocations = new ArrayList<>(SAMPLE_LOCATIONS);
             Collections.shuffle(shuffledLocations);
-            List<Place> albumPlaces = SAMPLE_LOCATIONS.subList(0, 3).stream()
+            List<Place> albumPlaces = shuffledLocations.subList(0, 3).stream()    // ✅ 여기!
                     .map(loc -> Place.builder()
-                            .city(loc[0])
-                            .district(loc[1])
-                            .town(loc[2])
-                            .build())
+                            .city(loc[0]).district(loc[1]).town(loc[2]).build())
                     .map(placeRepository::save)
                     .toList();
 
+            /* 2. Picture 10장 */
             List<Picture> pictures = new ArrayList<>();
             for (int j = 1; j <= 10; j++) {
-                Place place = albumPlaces.get(j % 3); // 순환적으로 3개 중 하나씩 부여
-                Picture picture = Picture.builder()
+                Place place = albumPlaces.get(j % 3);
+                pictures.add(Picture.builder()
                         .user(testUser)
                         .pictureURL("https://cdn.ongi.today/pic-" + i + "-" + j + ".jpg")
                         .place(place)
-                        .tag(tags.get((j - 1) % tags.size()))       // 개, 고양이, 사람, 술 순환
-                        .isDuplicated(j % 2 == 0)                   // true/false 번갈아
-                        .isShaky(j % 2 != 0)                        // true/false 번갈아
-                        .qualityScore((float) (50 + Math.random() * 50)) // 50~100 사이 랜덤 float
+                        .tag(tags.get((j - 1) % tags.size()))
+                        .isDuplicated(j % 2 == 0)
+                        .isShaky(j % 2 != 0)
+                        .qualityScore((float) (50 + Math.random() * 50))
                         .createdAt(LocalDateTime.of(2025, 7 - i, 1, 0, 0))
                         .createdDate(LocalDate.of(2025, 7 - i, 1))
-                        .build();
-                pictures.add(picture);
+                        .build());
             }
 
+            /* 3. Album 생성 */
             Picture thumbnail = pictures.getFirst();
             Album album = Album.builder()
                     .name("앨범 " + i)
                     .processState(AlbumProcessState.NOT_STARTED)
                     .thumbnailPicture(thumbnail)
-                    .pictures(pictures)
+                    .pictures(pictures)               // 이미 mutable ArrayList
                     .build();
             album.setCreatedAt(LocalDateTime.of(2025, 7 - i, 1, 0, 0));
-            for (Picture picture : pictures) {
-                picture.setAlbum(album);
-            }
+            pictures.forEach(p -> p.setAlbum(album)); // 역방향 연관
 
-            album = albumRepository.saveAndFlush(album);
-            pictureRepository.saveAll(pictures);
+            /* 4. UserAlbum(OWNER) 추가 – 리스트 '교체' 아니라 '추가' */
+            UserAlbum ownerUA = UserAlbum.of(testUser, album, UserAlbumRole.OWNER);
+            album.getUserAlbums().add(ownerUA);        // ✅ add 로 유지
+            testUser.getUserAlbums().add(ownerUA);     // (양방향)
 
-            // 3개의 사진 클러스터 구성
-            Picture representative = pictures.getFirst(); // 대표 사진
-            FaceCluster faceCluster = FaceCluster.builder()
-                    .representativePicture(representative)
-                    .clusterName("사람-" + i) // 예: 사람-1, 사람-2 ...
+            /* 5. 저장 – cascade 로 userAlbums, pictures 모두 저장 */
+            albumRepository.saveAndFlush(album);
+
+            /* 6. 얼굴 클러스터 예시 */
+            FaceCluster faceCluster = faceClusterRepository.save(FaceCluster.builder()
+                    .representativePicture(pictures.getFirst())
+                    .clusterName("사람-" + i)
                     .bboxX1(100).bboxY1(100).bboxX2(300).bboxY2(300)
-                    .build();
-            faceCluster = faceClusterRepository.save(faceCluster);
+                    .build());
 
-            // 클러스터에 속한 사진 지정 (앞 3장)
-            List<PictureFaceCluster> clusterLinks = List.of(
+            pictureFaceClusterRepository.saveAll(List.of(
                     PictureFaceCluster.builder().picture(pictures.get(0)).faceCluster(faceCluster).build(),
                     PictureFaceCluster.builder().picture(pictures.get(1)).faceCluster(faceCluster).build(),
                     PictureFaceCluster.builder().picture(pictures.get(2)).faceCluster(faceCluster).build()
-            );
-            pictureFaceClusterRepository.saveAll(clusterLinks);
-
-            UserAlbum userAlbum = UserAlbum.of(testUser, album, UserAlbumRole.OWNER);
-            album.setUserAlbums(List.of(userAlbum));
-            userAlbumRepository.save(userAlbum);
+            ));
         }
     }
-
 
     @Test
     void getMonthlyAlbum_정상조회_마지막월있음() {
@@ -277,5 +272,180 @@ class AlbumServiceTest {
 
         assertThat(albumRepository.findByName("newAlbumName")).isNotNull();
         assertThat(albumRepository.findByName("newAlbumName").orElseThrow().getPictures().size()).isEqualTo(2);
+    }
+
+    @Test
+    void createAlbum_한도초과() {
+        String newAlbumName = "newAlbumName";
+        List<? extends PictureUrlCoordinateDTO> pictureDTOs = IntStream.range(1, 36)
+                .mapToObj(i -> new PictureRequestDTO(
+                        "link" + i + ".jpeg",
+                        37.0 + (i * 0.01),  // 위도: 37.01 ~ 37.35
+                        126.0 + (i * 0.01)  // 경도: 126.01 ~ 126.35
+                ))
+                .toList();
+
+        assertThatThrownBy(() -> albumService.createAlbum(newAlbumName, pictureDTOs))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("장을 초과하여 추가할 수 없습니다");
+    }
+
+    @Test
+    void addPicture_정상추가() {
+        //givne
+        List<? extends PictureUrlCoordinateDTO> pictureDTOs = IntStream.range(1, 11)
+                .mapToObj(i -> new PictureRequestDTO(
+                        "link" + i + ".jpeg",
+                        37.0 + (i * 0.01),
+                        126.0 + (i * 0.01)
+                ))
+                .collect(Collectors.toCollection(ArrayList::new));
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+
+        //when
+        albumService.addPictures(albumId, pictureDTOs);
+
+        //then
+        Album updatedAlbum = albumRepository.findById(albumId).orElseThrow();
+        List<Picture> pictures = pictureRepository.findAllByAlbum(updatedAlbum);
+        assertThat(pictures).hasSize(20);
+    }
+
+    @Test
+    void addPicture_사진개수초과(){
+        //givne
+        List<? extends PictureUrlCoordinateDTO> pictureDTOs = IntStream.range(1, 31)
+                .mapToObj(i -> new PictureRequestDTO(
+                        "link" + i + ".jpeg",
+                        37.0 + (i * 0.01),
+                        126.0 + (i * 0.01)
+                ))
+                .collect(Collectors.toCollection(ArrayList::new));
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+
+        //when then
+        assertThatThrownBy(() -> albumService.addPictures(albumId, pictureDTOs))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("장을 초과하여 추가할 수 없습니다. 추가 가능한 사진 수: ");
+    }
+
+    @Test
+    void updateAlbumName_정상동작() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUser()).thenReturn(testUser);
+
+        //when
+        albumService.updateAlbumName(albumId, "앨범 111");
+
+        //then
+        assertThat(albumRepository.findById(albumId).orElseThrow().getName()).isEqualTo("앨범 111");
+    }
+
+    @Test
+    void updatePicture_정상동작() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+        List<Long> pictureIds = pictureRepository.findAllByAlbumId(albumId).stream()
+                .filter(Picture::isDuplicated)
+                .map(Picture::getId)
+                .toList();
+
+        //when
+        albumService.updatePicture(albumId, pictureIds);
+
+        //then
+        assertThat(pictureRepository.findAllByAlbumId(albumId).stream()
+                .filter(Picture::isDuplicated)
+                .toList()).hasSize(0);
+    }
+
+    @Test
+    void deletePicture_정상동작_썸네일삭제(){
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+        List<Long> pictureIds = pictureRepository.findAllByAlbumId(albumId).stream()
+                .map(Picture::getId)
+                .limit(1)
+                .toList();
+
+        //when
+        albumService.deletePictures(albumId, pictureIds);
+
+        //then
+        assertThat(pictureRepository.findAllByAlbumId(albumId).stream()
+                .toList()).hasSize(9);
+        assertThat(albumRepository.findById(albumId).orElseThrow().getThumbnailPicture()).isNotNull();
+    }
+
+    @Test
+    void deletePicture_정상동작_일반사진삭제(){
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+        List<Long> pictureIdnotSort = pictureRepository.findAllByAlbumId(albumId).stream()
+                .map(Picture::getId)
+                .toList();
+        List<Long> pictureIds = pictureIdnotSort.subList(3, 5);
+
+        //when
+        albumService.deletePictures(albumId, pictureIds);
+
+        //then
+        assertThat(pictureRepository.findAllByAlbumId(albumId).stream()
+                .toList()).hasSize(8);
+    }
+
+    @Test
+    void deletePicture_삭제할수없는사진(){
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+
+        Long album2Id = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 2"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+        List<Long> pictureIds = pictureRepository.findAllByAlbumId(album2Id).stream()
+                .map(Picture::getId)
+                .toList();
+
+        //when then
+        assertThatThrownBy(() -> albumService.deletePictures(albumId, pictureIds))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("삭제할 수 없는 사진이 포함되어 있습니다.");
     }
 }
