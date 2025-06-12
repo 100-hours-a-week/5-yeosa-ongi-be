@@ -6,7 +6,6 @@ options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: 'ALLOW_LOOSE'
 
-
 availableSecrets:
   secretManager:
     - versionName: "projects/dev-ongi-3-tier/secrets/ssh_keys_dev/versions/latest"
