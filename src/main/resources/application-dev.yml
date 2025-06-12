@@ -5,6 +5,7 @@ spring:
   threads:
     virtual:
       enabled: true
+
   cloud:
     gcp:
       project-id: dev-ongi-3-tier
@@ -48,3 +49,4 @@ ai:
     base-url: ${ai_server_url_dev}
 custom:
   isProd: true
+
