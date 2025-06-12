@@ -22,6 +22,7 @@ import ongi.ongibe.domain.album.repository.PlaceRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
+import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO.TagCountDTO;
 import ongi.ongibe.domain.user.dto.UserTagStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO;
 import ongi.ongibe.domain.user.dto.UserTotalStateResponseDTO.PictureCoordinate;
@@ -176,25 +177,25 @@ public class UserCacheService {
         String district = topPlace.getFirst()[1].toString();
         String town = topPlace.getFirst()[2].toString();
 
-        List<String> tags = getTopTags(user, city, district, town, startDate, endDate);
+        List<UserPlaceStatResponseDTO.TagCountDTO> tags = getTopTags(user, city, district, town, startDate, endDate);
         return new UserPlaceStatResponseDTO(city, district, town, tags);
     }
 
-    private List<String> getTopTags(User user, String city, String district, String town,
+    private List<UserPlaceStatResponseDTO.TagCountDTO> getTopTags(User user, String city, String district, String town,
             LocalDateTime startDate, LocalDateTime endDate) {
         List<Picture> pictures = pictureRepository.findByUserAndPlaceAndCreatedAtBetween(
                 user, city, district, town, startDate, endDate);
         Map<String, Integer> tagMap = new HashMap<>();
         for (Picture picture : pictures){
             String tag = picture.getTag();
-            if (tag != null && !tag.isBlank() && !tag.equals("기타")){
+            if (tag != null && !tag.isBlank()){
                 tagMap.put(tag, tagMap.getOrDefault(tag, 0) + 1);
             }
         }
         return tagMap.entrySet().stream()
                 .sorted(Entry.<String, Integer>comparingByValue().reversed())
-                .limit(6)
-                .map(Entry::getKey)
+                .limit(10)
+                .map(entry -> new TagCountDTO(entry.getKey(), entry.getValue()))
                 .toList();
     }
 
