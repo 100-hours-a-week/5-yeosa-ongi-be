@@ -50,25 +50,12 @@ steps:
       - AWS_SECRET_ACCESS_KEY
       - AWS_REGION
       - AI_SERVER_URL_DEV
-    env:
-      - DB_URL=$$DB_URL
-      - DB_USER=$$DB_USER
-      - DB_PASS=$$DB_PASS
-      - REDIS_URL=$$REDIS_URL
-      - KAKAO_CLIENT_ID=$$KAKAO_CLIENT_ID
-      - JWT_SECRET=$$JWT_SECRET
-      - S3_BUCKET_NAME_DEV=$$S3_BUCKET_NAME_DEV
-      - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
-      - AWS_REGION=$$AWS_REGION
-      - AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV
-      - SSH_KEYS=$$SSH_KEYS
     args:
-      - -c
+      - '-c'
       - |
         set -e
         echo ▶ 템플릿 생성: ${_TEMPLATE_NAME}
-        gcloud compute instance-templates create-with-container ${_TEMPLATE_NAME} \
+        gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
           --subnet=dev-ongi-server-subnet \
           --no-address \
@@ -77,26 +64,26 @@ steps:
           --boot-disk-size=20GB \
           --image-family=cos-stable \
           --image-project=cos-cloud \
-          --container-image=asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG} \
+          --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
           --container-env=SPRING_PROFILES_ACTIVE=dev \
-          --container-env=SPRING_DATASOURCE_URL=$DB_URL \
-          --container-env=SPRING_DATASOURCE_USERNAME=$DB_USER \
-          --container-env=SPRING_DATASOURCE_PASSWORD=$DB_PASS \
-          --container-env=SPRING_DATA_REDIS_HOST=$REDIS_URL \
-          --container-env=KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID \
-          --container-env=JWT_SECRET=$JWT_SECRET \
-          --container-env=S3_BUCKET_NAME_DEV=$S3_BUCKET_NAME_DEV \
-          --container-env=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-          --container-env=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-          --container-env=AWS_REGION=$AWS_REGION \
-          --container-env=AI_SERVER_URL_DEV=$AI_SERVER_URL_DEV \
-          --metadata="ssh‑keys=$SSH_KEYS" \
-          --service-account=github‑cd‑builder@dev‑ongi‑3‑tier.iam.gserviceaccount.com \
+          --container-env=SPRING_DATASOURCE_URL=$$DB_URL \
+          --container-env=SPRING_DATASOURCE_USERNAME=$$DB_USER \
+          --container-env=SPRING_DATASOURCE_PASSWORD=$$DB_PASS \
+          --container-env=SPRING_DATA_REDIS_HOST=$$REDIS_URL \
+          --container-env=KAKAO_CLIENT_ID=$$KAKAO_CLIENT_ID \
+          --container-env=JWT_SECRET=$$JWT_SECRET \
+          --container-env=S3_BUCKET_NAME_DEV=$$S3_BUCKET_NAME_DEV \
+          --container-env=AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID \
+          --container-env=AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY \
+          --container-env=AWS_REGION=$$AWS_REGION \
+          --container-env=AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV \
+          --metadata="ssh-keys=$$SSH_KEYS" \
+          --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
-          --tags=dev‑backend
+          --tags=dev-backend
 
         echo ▶ MIG 롤링 업데이트
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
-          --version template=${_TEMPLATE_NAME} \
+          --version template="${_TEMPLATE_NAME}" \
           --type=proactive
