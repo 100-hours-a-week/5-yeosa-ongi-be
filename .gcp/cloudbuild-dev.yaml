@@ -4,51 +4,28 @@ substitutions:
   _SSH_KEYS: ""
   _TEMPLATE_NAME: ""
 
-availableSecrets:
-  secretManager:
-    - versionName: "projects/dev-ongi-3-tier/secrets/db_url_dev/versions/latest"
-      env: DB_URL
-    - versionName: "projects/dev-ongi-3-tier/secrets/db_user_dev/versions/latest"
-      env: DB_USER
-    - versionName: "projects/dev-ongi-3-tier/secrets/db_password_dev/versions/latest"
-      env: DB_PASS
-    - versionName: "projects/dev-ongi-3-tier/secrets/redis_server_url/versions/latest"
-      env: REDIS_URL
-    - versionName: "projects/dev-ongi-3-tier/secrets/kakao_client_id/versions/latest"
-      env: KAKAO_CLIENT_ID
-    - versionName: "projects/dev-ongi-3-tier/secrets/jwt_secret/versions/latest"
-      env: JWT_SECRET
-    - versionName: "projects/dev-ongi-3-tier/secrets/s3_bucket_name_dev/versions/latest"
-      env: S3_BUCKET_NAME_DEV
-    - versionName: "projects/dev-ongi-3-tier/secrets/aws_access_key_id/versions/latest"
-      env: AWS_ACCESS_KEY_ID
-    - versionName: "projects/dev-ongi-3-tier/secrets/aws_secret_access_key/versions/latest"
-      env: AWS_SECRET_ACCESS_KEY
-    - versionName: "projects/dev-ongi-3-tier/secrets/aws_region/versions/latest"
-      env: AWS_REGION
-    - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_dev/versions/latest"
-      env: AI_SERVER_URL_DEV
-
 steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: deploy-backend
     entrypoint: bash
-    env:
-      - DB_URL
-      - DB_USER
-      - DB_PASS
-      - REDIS_URL
-      - KAKAO_CLIENT_ID
-      - JWT_SECRET
-      - S3_BUCKET_NAME_DEV
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_REGION
-      - AI_SERVER_URL_DEV
     args:
       - "-c"
       - |
         set -e
+        
+        # ── Secret Manager에서 시크릿 직접 조회 ──
+        DB_URL=$(gcloud secrets versions access latest --secret=db_url_dev)
+        DB_USER=$(gcloud secrets versions access latest --secret=db_user_dev)
+        DB_PASS=$(gcloud secrets versions access latest --secret=db_password_dev)
+        REDIS_URL=$(gcloud secrets versions access latest --secret=redis_server_url)
+        KAKAO_CLIENT_ID=$(gcloud secrets versions access latest --secret=kakao_client_id)
+        JWT_SECRET=$(gcloud secrets versions access latest --secret=jwt_secret)
+        S3_BUCKET_NAME_DEV=$(gcloud secrets versions access latest --secret=s3_bucket_name_dev)
+        AWS_ACCESS_KEY_ID=$(gcloud secrets versions access latest --secret=aws_access_key_id)
+        AWS_SECRET_ACCESS_KEY=$(gcloud secrets versions access latest --secret=aws_secret_access_key)
+        AWS_REGION=$(gcloud secrets versions access latest --secret=aws_region)
+        AI_SERVER_URL_DEV=$(gcloud secrets versions access latest --secret=ai_server_url_dev)
+        
         echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
@@ -60,12 +37,17 @@ steps:
           --image-family=cos-stable \
           --image-project=cos-cloud \
           --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
-          --container-env="SPRING_PROFILES_ACTIVE=dev,GOOGLE_CLOUD_PROJECT=dev-ongi-3-tier,SPRING_DATASOURCE_URL=${DB_URL},SPRING_DATASOURCE_USERNAME=${DB_USER},SPRING_DATASOURCE_PASSWORD=${DB_PASS},SPRING_DATA_REDIS_HOST=${REDIS_URL},KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID},JWT_SECRET=${JWT_SECRET},S3_BUCKET_NAME_DEV=${S3_BUCKET_NAME_DEV},AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID},AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY},AWS_REGION=${AWS_REGION},AI_SERVER_URL_DEV=${AI_SERVER_URL_DEV}" \
+          --container-env="SPRING_PROFILES_ACTIVE=dev,GOOGLE_CLOUD_PROJECT=dev-ongi-3-tier, \
+        SPRING_DATASOURCE_URL=${DB_URL},SPRING_DATASOURCE_USERNAME=${DB_USER},SPRING_DATASOURCE_PASSWORD=${DB_PASS}, \
+        SPRING_DATA_REDIS_HOST=${REDIS_URL},KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID},JWT_SECRET=${JWT_SECRET}, \
+        S3_BUCKET_NAME_DEV=${S3_BUCKET_NAME_DEV},AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID},AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}, \
+        AWS_REGION=${AWS_REGION},AI_SERVER_URL_DEV=${AI_SERVER_URL_DEV}" \
           --metadata=ssh-keys="${_SSH_KEYS}" \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
-
+        
+        # Managed Instance Group 생성/업데이트
         if ! gcloud compute instance-groups managed describe ongi-backend-mig --region=asia-northeast3 &> /dev/null; then
           echo "▶ MIG not found. Creating ongi-backend-mig"
           gcloud compute instance-groups managed create ongi-backend-mig \
@@ -74,7 +56,7 @@ steps:
             --size=1 \
             --region=asia-northeast3
         fi
-
+        
         echo "▶ Rolling update for ongi-backend-mig"
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
