@@ -194,7 +194,7 @@ public class UserCacheService {
         }
         return tagMap.entrySet().stream()
                 .sorted(Entry.<String, Integer>comparingByValue().reversed())
-                .limit(6)
+                .limit(10)
                 .map(entry -> new TagCountDTO(entry.getKey(), entry.getValue()))
                 .toList();
     }
