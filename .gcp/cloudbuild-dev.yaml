@@ -1,4 +1,3 @@
-# .gcp/cloudbuild-dev.yaml
 substitutions:
   _IMAGE_TAG: ""
   _SSH_KEYS: ""
@@ -31,7 +30,7 @@ availableSecrets:
 
 steps:
   - id: deploy-backend
-    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash
     secretEnv:
       - DB_URL
@@ -49,7 +48,6 @@ steps:
       - "-c"
       - |
         set -e
-
         echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
