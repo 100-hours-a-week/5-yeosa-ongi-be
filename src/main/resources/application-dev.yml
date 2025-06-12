@@ -8,6 +8,20 @@ spring:
       project-id: dev-ongi-3-tier
       secretmanager:
         enabled: true
+        secret-names:
+          - flyway-url-dev:spring.flyway.url
+          - flyway-user-dev:spring.flyway.user
+          - flyway-password-dev:spring.flyway.password
+          - kakao-client-id:spring.kakao.auth.client
+          - db-url-dev:spring.datasource.url
+          - db-user-dev:spring.datasource.username
+          - db-password-dev:spring.datasource.password
+          - aws-access-key-id:cloud.aws.credentials.access-key
+          - aws-secret-access-key:cloud.aws.credentials.secret-key
+          - aws-region:cloud.aws.region.static
+          - s3-bucket-name-dev:cloud.aws.s3.bucket
+          - jwt-secret:jwt.secret
+          - ai-server-url-dev:ai.server.base-url
 
   data:
     redis:
@@ -16,13 +30,13 @@ spring:
 
   kakao:
     auth:
-      client: ${kakao-client-id}
+      client: placeholder-will-be-replaced-by-secret
       redirect: https://dev.ongi.today/auth/callback/kakao
 
   datasource:
-    url: ${db-url-dev}
-    username: ${db-user-dev}
-    password: ${db-password-dev}
+    url: placeholder-will-be-replaced-by-secret
+    username: placeholder-will-be-replaced-by-secret
+    password: placeholder-will-be-replaced-by-secret
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       leak-detection-threshold: 30000
@@ -43,9 +57,9 @@ spring:
       mode: never
 
   flyway:
-    url: ${flyway-url-dev}
-    user: ${flyway-user-dev}
-    password: ${flyway-password-dev}
+    url: placeholder-will-be-replaced-by-secret
+    user: placeholder-will-be-replaced-by-secret
+    password: placeholder-will-be-replaced-by-secret
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
@@ -53,21 +67,21 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${aws-access-key-id}
-      secret-key: ${aws-secret-access-key}
+      access-key: placeholder-will-be-replaced-by-secret
+      secret-key: placeholder-will-be-replaced-by-secret
     region:
-      static: ${aws-region}
+      static: placeholder-will-be-replaced-by-secret
     s3:
-      bucket: ${s3-bucket-name-dev}
+      bucket: placeholder-will-be-replaced-by-secret
     stack:
       auto: false
 
 jwt:
-  secret: ${jwt-secret}
+  secret: placeholder-will-be-replaced-by-secret
 
 ai:
   server:
-    base-url: ${ai-server-url-dev}
+    base-url: placeholder-will-be-replaced-by-secret
 
 custom:
   isProd: false
