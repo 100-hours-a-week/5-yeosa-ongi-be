@@ -1,5 +1,5 @@
 spring:
-  # secretmanager import 삭제 — CI/CD에서 env로 주입하므로 불필요
+  profiles: dev
   threads:
     virtual:
       enabled: true
