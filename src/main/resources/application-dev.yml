@@ -16,7 +16,7 @@ spring:
           - db-url-dev:spring.datasource.url
           - db-user-dev:spring.datasource.username
           - db-password-dev:spring.datasource.password
-          - redis-server-url:spring.data.redis.host
+          - redis-server-url:redis.host.url  # 다른 프로퍼티 이름으로 매핑
           - aws-access-key-id:cloud.aws.credentials.access-key
           - aws-secret-access-key:cloud.aws.credentials.secret-key
           - aws-region:cloud.aws.region.static
@@ -26,7 +26,7 @@ spring:
 
   data:
     redis:
-      host: ${spring.data.redis.host}
+      host: ${redis.host.url}  # 매핑된 프로퍼티 참조
       port: 6379
 
   kakao:
