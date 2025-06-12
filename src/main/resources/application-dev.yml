@@ -1,7 +1,7 @@
 spring:
   config:
     import:
-      - optional:secretmanager:/       # 루트에 있는 시크릿 모두 로드
+      - secretmanager:/
   threads:
     virtual:
       enabled: true

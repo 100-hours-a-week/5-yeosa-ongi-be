@@ -47,7 +47,7 @@ ext {
 dependencyManagement {
     imports {
         // Spring Boot 3.4.4와 호환되는 Spring Cloud GCP 버전
-        mavenBom 'com.google.cloud:spring-cloud-gcp-dependencies:5.10.0'
+        mavenBom "com.google.cloud:spring-cloud-gcp-dependencies:6.2.1"
     }
 }
 
