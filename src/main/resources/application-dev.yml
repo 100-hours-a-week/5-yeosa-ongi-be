@@ -1,20 +1,22 @@
 spring:
+  config:
+    import: "optional:secretmanager:/"
+
   threads:
     virtual:
       enabled: true
+
   cloud:
     gcp:
       project-id: dev-ongi-3-tier
       secretmanager:
         enabled: true
+
   data:
     redis:
       host: ${redis_server_url}
       port: 6379
-  kakao:
-    auth:
-      client: ${kakao_client_id}
-      redirect: https://dev.ongi.today/auth/callback/kakao
+
   datasource:
     url: ${db_url_dev}
     username: ${db_user_dev}
@@ -23,18 +25,7 @@ spring:
     hikari:
       leak-detection-threshold: 30000
       maximum-pool-size: 30
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    database-platform: org.hibernate.dialect.MySQLDialect
-    properties:
-      hibernate:
-        format_sql: false
-        type: trace
-  sql:
-    init:
-      mode: never
+
   flyway:
     url: ${db_url_dev}
     user: ${db_user_dev}
@@ -42,6 +33,21 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+  kakao:
+    auth:
+      client: ${kakao_client_id}
+      redirect: https://dev.ongi.today/auth/callback/kakao
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  sql:
+    init:
+      mode: never
+
 cloud:
   aws:
     credentials:
@@ -53,10 +59,13 @@ cloud:
       bucket: ${s3_bucket_name_dev}
     stack:
       auto: false
+
 jwt:
   secret: ${jwt_secret}
+
 ai:
   server:
     base-url: ${ai_server_url_dev}
+
 custom:
   isProd: false
