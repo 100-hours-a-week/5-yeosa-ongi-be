@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import ongi.ongibe.cache.album.AlbumCacheService;
+import ongi.ongibe.cache.event.UserProfileUpdateCacheEvent;
 import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
@@ -32,6 +34,7 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -47,6 +50,7 @@ public class UserService {
     private final PresignedUrlService presignedUrlService;
     private final SecurityUtil securityUtil;
     private final UserCacheService userCacheService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<UserTotalStateResponseDTO> getUserTotalState(){
@@ -108,6 +112,7 @@ public class UserService {
         String key = presignedUrlService.extractS3Key(request.profileImageURL());
         user.setS3Key(key);
         userRepository.save(user);
+        eventPublisher.publishEvent(new UserProfileUpdateCacheEvent(userId));
         UserInfoResponseDTO response = new UserInfoResponseDTO(user.getId(), user.getNickname(), user.getProfileImage(), 300);
         return BaseApiResponse.success("USER_UPDATE_SUCCESS", "유저 정보 수정 완료했습니다.", response);
     }
