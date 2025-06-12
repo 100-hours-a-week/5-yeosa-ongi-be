@@ -38,27 +38,12 @@ jobs:
           docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
-      - name: Deploy to Cloud Run
-        env:
-          TAG: dev-${{ github.sha }}
+      - name: Trigger Cloud Build
         run: |
-          gcloud run deploy ongi-backend \
-            --image asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${TAG} \
-            --region asia-northeast3 \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-env-vars SPRING_PROFILES_ACTIVE=dev \
-            --update-secrets=SPRING_DATASOURCE_URL=db_url_dev:latest \
-            --update-secrets=SPRING_DATASOURCE_USERNAME=db_user_dev:latest \
-            --update-secrets=SPRING_DATASOURCE_PASSWORD=db_password_dev:latest \
-            --update-secrets=SPRING_DATA_REDIS_HOST=redis_server_url:latest \
-            --update-secrets=JWT_SECRET=jwt_secret:latest \
-            --update-secrets=AWS_ACCESS_KEY_ID=aws_access_key_id:latest \
-            --update-secrets=AWS_SECRET_ACCESS_KEY=aws_secret_access_key:latest \
-            --update-secrets=AWS_REGION=aws_region:latest \
-            --update-secrets=S3_BUCKET_NAME_DEV=s3_bucket_name_dev:latest \
-            --update-secrets=AI_SERVER_URL_DEV=ai_server_url_dev:latest \
-            --update-secrets=KAKAO_CLIENT_ID=kakao_client_id:latest
+          gcloud builds submit . \
+            --config=.gcp/cloudbuild-dev.yaml \
+            --substitutions=_IMAGE_TAG=dev-${{ github.sha }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
+            --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
       - name: Notify Discord on Success
         if: success()

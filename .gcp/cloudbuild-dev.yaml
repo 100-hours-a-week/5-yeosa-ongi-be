@@ -1,10 +1,11 @@
 substitutions:
   _IMAGE_TAG: ""
-  _SSH_KEYS: ""
   _TEMPLATE_NAME: ""
 
 availableSecrets:
   secretManager:
+    - versionName: "projects/dev-ongi-3-tier/secrets/ssh_keys_dev/versions/latest"
+      env: SSH_KEYS
     - versionName: "projects/dev-ongi-3-tier/secrets/db_url_dev/versions/latest"
       env: DB_URL
     - versionName: "projects/dev-ongi-3-tier/secrets/db_user_dev/versions/latest"
@@ -33,6 +34,7 @@ steps:
     name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: bash
     secretEnv:
+      - SSH_KEYS
       - DB_URL
       - DB_USER
       - DB_PASS
@@ -49,7 +51,7 @@ steps:
       - |
         set -e
 
-        echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
+        echo "▶ 인스턴스 템플릿 생성: ${_TEMPLATE_NAME}"
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
           --subnet=dev-ongi-server-subnet \
@@ -61,7 +63,6 @@ steps:
           --image-project=cos-cloud \
           --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
           --container-env=SPRING_PROFILES_ACTIVE=dev \
-          --container-env=GOOGLE_CLOUD_PROJECT=dev-ongi-3-tier \
           --container-env=SPRING_DATASOURCE_URL=${DB_URL} \
           --container-env=SPRING_DATASOURCE_USERNAME=${DB_USER} \
           --container-env=SPRING_DATASOURCE_PASSWORD=${DB_PASS} \
@@ -73,22 +74,12 @@ steps:
           --container-env=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
           --container-env=AWS_REGION=${AWS_REGION} \
           --container-env=AI_SERVER_URL_DEV=${AI_SERVER_URL_DEV} \
-          --metadata="ssh-keys=${_SSH_KEYS}" \
+          --metadata="ssh-keys=${SSH_KEYS}" \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
 
-        # Managed Instance Group 생성/업데이트
-        if ! gcloud compute instance-groups managed describe ongi-backend-mig --region=asia-northeast3 &> /dev/null; then
-          echo "▶ MIG not found. Creating ongi-backend-mig"
-          gcloud compute instance-groups managed create ongi-backend-mig \
-            --base-instance-name=ongi-backend \
-            --template="${_TEMPLATE_NAME}" \
-            --size=1 \
-            --region=asia-northeast3
-        fi
-
-        echo "▶ Rolling update for ongi-backend-mig"
+        echo "▶ MIG 롤링 업데이트"
         gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
           --region=asia-northeast3 \
           --version template="${_TEMPLATE_NAME}" \

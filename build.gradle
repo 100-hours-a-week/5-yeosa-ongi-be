@@ -44,13 +44,6 @@ ext {
     JJWT_VERSION = "0.12.3"
 }
 
-dependencyManagement {
-    imports {
-        // Spring Boot 3.4.4와 호환되는 Spring Cloud GCP 버전
-        mavenBom "com.google.cloud:spring-cloud-gcp-dependencies:6.2.1"
-    }
-}
-
 dependencies {
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-gson:${JJWT_VERSION}"
@@ -84,8 +77,6 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'io.micrometer:micrometer-registry-prometheus'
-    implementation 'com.google.cloud:spring-cloud-gcp-starter'
-    implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager'
 }
 
 tasks.named('test') {
