@@ -38,3 +38,4 @@ logging:
     org.apache.http: DEBUG
     org.springframework.cloud.gcp.secretmanager: DEBUG
     com.google.cloud: DEBUG
+    org.springframework.core.env: TRACE
