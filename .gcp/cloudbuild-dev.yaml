@@ -78,7 +78,7 @@ steps:
           --container-env=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
           --container-env=AWS_REGION=$AWS_REGION \
           --container-env=AI_SERVER_URL_DEV=$AI_SERVER_URL_DEV \
-          --metadata="ssh-keys=$SSH_KEYS"
+          --metadata="ssh-keys=$SSH_KEYS" \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
