@@ -23,6 +23,11 @@ spring:
       client: ${KAKAO_CLIENT_ID}
       redirect: http://localhost:8080/auth/login/kakao
 
+  cloud:
+    gcp:
+      secretmanager:
+        enabled: false
+
 cloud:
   aws:
     credentials:
