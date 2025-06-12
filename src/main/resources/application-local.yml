@@ -1,0 +1,49 @@
+spring:
+  config:
+    activate:
+      on-profile: local   # 이름은 파일명과 일치해야 함
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/ongi}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+
+  flyway:
+    url: ${FLYWAY_URL:jdbc:mysql://localhost:3306/ongi}
+    user: ${FLYWAY_USER:root}
+    password: ${FLYWAY_PASSWORD:root}
+
+  kakao:
+    auth:
+      client: ${KAKAO_CLIENT_ID}
+      redirect: http://localhost:8080/auth/login/kakao
+
+  cloud:
+    gcp:
+      secretmanager:
+        enabled: false
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${S3_BUCKET_NAME:s3-dev-ongi}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+ai:
+  server:
+    base-url: ${AI_SERVER_URL:http://localhost:8081}
+
+custom:
+  isProd: false
