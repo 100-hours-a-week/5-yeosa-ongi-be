@@ -44,7 +44,6 @@ jobs:
             --config=.gcp/cloudbuild-dev.yaml \
             --substitutions=_IMAGE_TAG=dev-${{ github.sha }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
-      
 
       - name: Notify Discord on Success
         if: success()
