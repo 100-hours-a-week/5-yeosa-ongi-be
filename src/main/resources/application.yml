@@ -1,8 +1,6 @@
 spring:
   application:
     name: ongiBE
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
 
 server:
   port: 8080
@@ -36,9 +34,3 @@ logging:
     org.springframework.security.web.access: DEBUG
     org.springframework.web.client.RestTemplate: DEBUG
     org.apache.http: DEBUG
-    com.google.cloud: DEBUG
-    com.google.cloud.secretmanager: DEBUG
-    org.springframework.cloud.gcp.secretmanager: DEBUG
-    org.springframework.boot.context.config: DEBUG
-    org.springframework.cloud.bootstrap: DEBUG
-    com.google.cloud.spring.secretmanager: DEBUG

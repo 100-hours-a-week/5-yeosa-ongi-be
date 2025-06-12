@@ -1,27 +1,26 @@
 spring:
-  profiles: dev
+  config:
+    activate:
+      on-profile: dev
+
   threads:
     virtual:
       enabled: true
 
-  cloud:
-    gcp:
-      project-id: dev-ongi-3-tier
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  flyway:
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   data:
     redis:
-      host: ${REDIS_URL}
-      port: 6379
-
-  datasource:
-    url:      ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
-
-  flyway:
-    url:      ${DB_URL}
-    user:     ${DB_USER}
-    password: ${DB_PASS}
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
   kakao:
     auth:
@@ -45,4 +44,4 @@ ai:
     base-url: ${AI_SERVER_URL_DEV}
 
 custom:
-  isProd: true
+  isProd: false
