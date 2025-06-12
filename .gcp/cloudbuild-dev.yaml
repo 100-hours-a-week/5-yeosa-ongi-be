@@ -4,7 +4,7 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  substitutionOption: ALLOW_LOOSE
+  substitutionOption: 'ALLOW_LOOSE'
 
 
 availableSecrets:
