@@ -48,6 +48,7 @@ steps:
       - "-c"
       - |
         set -e
+
         echo "▶ Creating instance template: ${_TEMPLATE_NAME}"
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \

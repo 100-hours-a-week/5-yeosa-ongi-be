@@ -47,7 +47,7 @@ jobs:
           gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
             --substitutions="_IMAGE_TAG=$TAG,_SSH_KEYS='${{ secrets.DEV_BACKEND_SSH_KEYS }}',_TEMPLATE_NAME=$TEMPLATE_NAME"
-      
+
 
       - name: Notify Discord on Success
         if: success()
