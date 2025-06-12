@@ -31,4 +31,13 @@ public interface UserAlbumRepository extends JpaRepository<UserAlbum, Long> {
     List<UserAlbum> findAllByAlbum(Album album);
 
     List<UserAlbum> findAllByAlbumAndUser(Album album, User user);
+
+    @Query("""
+    select distinct function('DATE_FORMAT', a.createdAt, '%Y-%m') 
+    from UserAlbum ua
+    join ua.album a
+    where ua.user.id = :userId and ua.deletedAt is null and a.deletedAt is null
+    """)
+    List<String> findAllYearMonthsByUserId(@Param("userId") Long userId);
+
 }
