@@ -2,6 +2,9 @@ spring:
   config:
     import:
       - optional:secretmanager:/       # 루트에 있는 시크릿 모두 로드
+  threads:
+    virtual:
+      enabled: true
   cloud:
     gcp:
       project-id: dev-ongi-3-tier
@@ -43,3 +46,5 @@ jwt:
 ai:
   server:
     base-url: ${ai_server_url_dev}
+custom:
+  isProd: true

@@ -39,3 +39,6 @@ logging:
     com.google.cloud: DEBUG
     com.google.cloud.secretmanager: DEBUG
     org.springframework.cloud.gcp.secretmanager: DEBUG
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.cloud.bootstrap: DEBUG
+    com.google.cloud.spring.secretmanager: DEBUG
