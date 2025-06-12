@@ -78,6 +78,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:6.2.1'
+    implementation 'org.springframework.cloud:spring-cloud-gcp-starter-secretmanager-config:6.2.1'
 }
 
 tasks.named('test') {
