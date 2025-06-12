@@ -2,6 +2,10 @@ substitutions:
   _IMAGE_TAG: ""
   _TEMPLATE_NAME: ""
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
 availableSecrets:
   secretManager:
     - versionName: "projects/dev-ongi-3-tier/secrets/ssh_keys_dev/versions/latest"
