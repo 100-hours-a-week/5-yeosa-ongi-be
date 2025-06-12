@@ -1,7 +1,5 @@
 spring:
-  config:
-    import:
-      - secretmanager:/
+  # secretmanager import 삭제 — CI/CD에서 env로 주입하므로 불필요
   threads:
     virtual:
       enabled: true
@@ -9,43 +7,42 @@ spring:
   cloud:
     gcp:
       project-id: dev-ongi-3-tier
-      secretmanager:
-        enabled: true
 
   data:
     redis:
-      host: ${sm://redis_server_url}    # Secret Manager의 시크릿 ID가 "redis_server_url" 이어야 함
+      host: ${REDIS_URL}
       port: 6379
 
   datasource:
-    url:      ${sm://db_url_dev}
-    username: ${sm://db_user_dev}
-    password: ${sm://db_password_dev}
+    url:      ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
 
   flyway:
-    url:      ${sm://db_url_dev}
-    user:     ${sm://db_user_dev}
-    password: ${sm://db_password_dev}
+    url:      ${DB_URL}
+    user:     ${DB_USER}
+    password: ${DB_PASS}
 
   kakao:
     auth:
-      client: ${sm://kakao_client_id}
+      client: ${KAKAO_CLIENT_ID}
 
 cloud:
   aws:
     credentials:
-      access-key: ${sm://aws_access_key_id}
-      secret-key: ${sm://aws_secret_access_key}
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
     region:
-      static: ${sm://aws_region}
+      static: ${AWS_REGION}
     s3:
-      bucket: ${sm://s3_bucket_name_dev}
+      bucket: ${S3_BUCKET_NAME_DEV}
 
 jwt:
-  secret: ${sm://jwt_secret}
+  secret: ${JWT_SECRET}
 
 ai:
   server:
-    base-url: ${sm://ai_server_url_dev}
+    base-url: ${AI_SERVER_URL_DEV}
+
 custom:
   isProd: true
