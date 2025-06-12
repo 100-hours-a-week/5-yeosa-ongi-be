@@ -2,6 +2,7 @@ substitutions:
   _IMAGE_TAG: ""
   _TEMPLATE_NAME: ""
 
+serviceAccount: projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 options:
   logging: CLOUD_LOGGING_ONLY
   substitution_option: 'ALLOW_LOOSE'
