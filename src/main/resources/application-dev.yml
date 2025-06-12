@@ -5,23 +5,24 @@ spring:
 
   cloud:
     gcp:
+      project-id: dev-ongi-3-tier
       secretmanager:
         enabled: true
 
   data:
     redis:
-      host: ${redis_server_url}  # sm:// 제거
+      host: ${redis_server_url}
       port: 6379
 
   kakao:
     auth:
-      client: ${kakao-client-id}  # sm:// 제거
+      client: ${kakao-client-id}
       redirect: https://dev.ongi.today/auth/callback/kakao
 
   datasource:
-    url: ${db-url-dev}           # sm:// 제거
-    username: ${db-user-dev}     # sm:// 제거
-    password: ${db-password-dev} # sm:// 제거
+    url: ${db-url-dev}
+    username: ${db-user-dev}
+    password: ${db-password-dev}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       leak-detection-threshold: 30000
@@ -42,9 +43,9 @@ spring:
       mode: never
 
   flyway:
-    url: ${flyway-url-dev}         # sm:// 제거
-    user: ${flyway-user-dev}       # sm:// 제거
-    password: ${flyway-password-dev} # sm:// 제거
+    url: ${flyway-url-dev}
+    user: ${flyway-user-dev}
+    password: ${flyway-password-dev}
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
@@ -52,21 +53,21 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${aws-access-key-id}     # sm:// 제거
-      secret-key: ${aws-secret-access-key} # sm:// 제거
+      access-key: ${aws-access-key-id}
+      secret-key: ${aws-secret-access-key}
     region:
-      static: ${aws-region}                # sm:// 제거
+      static: ${aws-region}
     s3:
-      bucket: ${s3-bucket-name-dev}        # sm:// 제거
+      bucket: ${s3-bucket-name-dev}
     stack:
       auto: false
 
 jwt:
-  secret: ${jwt-secret}  # sm:// 제거
+  secret: ${jwt-secret}
 
 ai:
   server:
-    base-url: ${ai-server-url-dev}  # sm:// 제거
+    base-url: ${ai-server-url-dev}
 
 custom:
   isProd: false
