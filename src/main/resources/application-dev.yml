@@ -2,47 +2,27 @@ spring:
   threads:
     virtual:
       enabled: true
-
   cloud:
     gcp:
       project-id: dev-ongi-3-tier
       secretmanager:
         enabled: true
-        secret-names:
-          - flyway-url-dev:spring.flyway.url
-          - flyway-user-dev:spring.flyway.user
-          - flyway-password-dev:spring.flyway.password
-          - kakao-client-id:spring.kakao.auth.client
-          - db-url-dev:spring.datasource.url
-          - db-user-dev:spring.datasource.username
-          - db-password-dev:spring.datasource.password
-          - redis-server-url:redis.host.url  # 다른 프로퍼티 이름으로 매핑
-          - aws-access-key-id:cloud.aws.credentials.access-key
-          - aws-secret-access-key:cloud.aws.credentials.secret-key
-          - aws-region:cloud.aws.region.static
-          - s3-bucket-name-dev:cloud.aws.s3.bucket
-          - jwt-secret:jwt.secret
-          - ai-server-url-dev:ai.server.base-url
-
   data:
     redis:
-      host: ${redis.host.url}  # 매핑된 프로퍼티 참조
+      host: ${redis_server_url}
       port: 6379
-
   kakao:
     auth:
-      client: ${spring.kakao.auth.client}
+      client: ${kakao_client_id}
       redirect: https://dev.ongi.today/auth/callback/kakao
-
   datasource:
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    url: ${db_url_dev}
+    username: ${db_user_dev}
+    password: ${db_password_dev}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       leak-detection-threshold: 30000
       maximum-pool-size: 30
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -52,37 +32,31 @@ spring:
       hibernate:
         format_sql: false
         type: trace
-
   sql:
     init:
       mode: never
-
   flyway:
-    url: ${spring.flyway.url}
-    user: ${spring.flyway.user}
-    password: ${spring.flyway.password}
+    url: ${db_url_dev}
+    user: ${db_user_dev}
+    password: ${db_password_dev}
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-
 cloud:
   aws:
     credentials:
-      access-key: ${cloud.aws.credentials.access-key}
-      secret-key: ${cloud.aws.credentials.secret-key}
+      access-key: ${aws_access_key_id}
+      secret-key: ${aws_secret_access_key}
     region:
-      static: ${cloud.aws.region.static}
+      static: ${aws_region}
     s3:
-      bucket: ${cloud.aws.s3.bucket}
+      bucket: ${s3_bucket_name_dev}
     stack:
       auto: false
-
 jwt:
-  secret: ${jwt.secret}
-
+  secret: ${jwt_secret}
 ai:
   server:
-    base-url: ${ai.server.base-url}
-
+    base-url: ${ai_server_url_dev}
 custom:
   isProd: false
