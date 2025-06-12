@@ -66,6 +66,13 @@ public class AlbumCacheService {
 
     }
 
+    public void refreshAllMonthlyAlbumCache(Long userId) {
+        List<String> yearMonths = userAlbumRepository.findAllYearMonthsByUserId(userId);
+        for (String yearMonth : yearMonths) {
+            refreshMonthlyAlbum(userId, yearMonth);
+        }
+    }
+
     private MonthlyAlbumResponseDTO buildMonthlyAlbumResponse(User user, String yearMonth) {
         List<UserAlbum> userAlbumList = userAlbumRepository.findAllByUser(user);
         List<AlbumInfo> albumInfos = getAlbumInfos(userAlbumList, yearMonth);
@@ -75,4 +82,5 @@ public class AlbumCacheService {
 
         return new MonthlyAlbumResponseDTO(albumInfos, nextYearMonth, hasNext);
     }
+
 }
