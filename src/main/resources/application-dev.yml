@@ -14,39 +14,38 @@ spring:
 
   data:
     redis:
-      host: ${redis_server_url}         # Secret Manager의 시크릿 ID가 "redis_server_url" 이어야 함
+      host: ${sm://redis_server_url}    # Secret Manager의 시크릿 ID가 "redis_server_url" 이어야 함
       port: 6379
 
   datasource:
-    url:      ${db_url_dev}
-    username: ${db_user_dev}
-    password: ${db_password_dev}
+    url:      ${sm://db_url_dev}
+    username: ${sm://db_user_dev}
+    password: ${sm://db_password_dev}
 
   flyway:
-    url:      ${db_url_dev}
-    user:     ${db_user_dev}
-    password: ${db_password_dev}
+    url:      ${sm://db_url_dev}
+    user:     ${sm://db_user_dev}
+    password: ${sm://db_password_dev}
 
   kakao:
     auth:
-      client: ${kakao_client_id}
+      client: ${sm://kakao_client_id}
 
 cloud:
   aws:
     credentials:
-      access-key: ${aws_access_key_id}
-      secret-key: ${aws_secret_access_key}
+      access-key: ${sm://aws_access_key_id}
+      secret-key: ${sm://aws_secret_access_key}
     region:
-      static: ${aws_region}
+      static: ${sm://aws_region}
     s3:
-      bucket: ${s3_bucket_name_dev}
+      bucket: ${sm://s3_bucket_name_dev}
 
 jwt:
-  secret: ${jwt_secret}
+  secret: ${sm://jwt_secret}
 
 ai:
   server:
-    base-url: ${ai_server_url_dev}
+    base-url: ${sm://ai_server_url_dev}
 custom:
   isProd: true
-
