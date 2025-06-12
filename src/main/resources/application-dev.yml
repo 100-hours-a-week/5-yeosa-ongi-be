@@ -16,6 +16,7 @@ spring:
           - db-url-dev:spring.datasource.url
           - db-user-dev:spring.datasource.username
           - db-password-dev:spring.datasource.password
+          - redis-server-url:spring.data.redis.host
           - aws-access-key-id:cloud.aws.credentials.access-key
           - aws-secret-access-key:cloud.aws.credentials.secret-key
           - aws-region:cloud.aws.region.static
@@ -25,18 +26,18 @@ spring:
 
   data:
     redis:
-      host: ${redis_server_url}
+      host: ${spring.data.redis.host}
       port: 6379
 
   kakao:
     auth:
-      client: placeholder-will-be-replaced-by-secret
+      client: ${spring.kakao.auth.client}
       redirect: https://dev.ongi.today/auth/callback/kakao
 
   datasource:
-    url: placeholder-will-be-replaced-by-secret
-    username: placeholder-will-be-replaced-by-secret
-    password: placeholder-will-be-replaced-by-secret
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       leak-detection-threshold: 30000
@@ -57,9 +58,9 @@ spring:
       mode: never
 
   flyway:
-    url: placeholder-will-be-replaced-by-secret
-    user: placeholder-will-be-replaced-by-secret
-    password: placeholder-will-be-replaced-by-secret
+    url: ${spring.flyway.url}
+    user: ${spring.flyway.user}
+    password: ${spring.flyway.password}
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
@@ -67,21 +68,21 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: placeholder-will-be-replaced-by-secret
-      secret-key: placeholder-will-be-replaced-by-secret
+      access-key: ${cloud.aws.credentials.access-key}
+      secret-key: ${cloud.aws.credentials.secret-key}
     region:
-      static: placeholder-will-be-replaced-by-secret
+      static: ${cloud.aws.region.static}
     s3:
-      bucket: placeholder-will-be-replaced-by-secret
+      bucket: ${cloud.aws.s3.bucket}
     stack:
       auto: false
 
 jwt:
-  secret: placeholder-will-be-replaced-by-secret
+  secret: ${jwt.secret}
 
 ai:
   server:
-    base-url: placeholder-will-be-replaced-by-secret
+    base-url: ${ai.server.base-url}
 
 custom:
   isProd: false
