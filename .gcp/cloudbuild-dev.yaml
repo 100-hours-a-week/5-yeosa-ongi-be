@@ -15,6 +15,7 @@ steps:
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
           --subnet=dev-ongi-server-subnet \
+          --no-address \
           --machine-type=e2-medium \
           --region=asia-northeast3 \
           --boot-disk-size=20GB \
