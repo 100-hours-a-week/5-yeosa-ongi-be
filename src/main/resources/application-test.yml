@@ -21,7 +21,7 @@ spring:
     url: ${FLYWAY_URL:jdbc:mysql://localhost:3306/ongi_test}
     user: ${FLYWAY_USER:root}
     password: ${FLYWAY_PASSWORD:root}
-    baseline-version: 15
+    baseline-version: 14
     baseline-on-migrate: true
 
   kakao:
