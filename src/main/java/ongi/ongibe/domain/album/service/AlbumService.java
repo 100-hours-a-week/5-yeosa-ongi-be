@@ -394,6 +394,16 @@ public class AlbumService {
     }
 
     @Transactional
+    public void updateClusterName(Long albumId, Long clusterId, String newClusterName) {
+        Album album = getAlbumIfMember(albumId);
+        FaceCluster faceCluster = faceClusterRepository.findById(clusterId).orElseThrow(
+                () -> new AlbumException(HttpStatus.NOT_FOUND, "해당 클러스터를 찾을 수 없습니다.")
+        );
+        faceCluster.setClusterName(newClusterName);
+        faceClusterRepository.save(faceCluster);
+    }
+
+    @Transactional
     public BaseApiResponse<String> createInviteToken(Long albumId){
         Album album = getAlbumIfMember(albumId);
         validAlbumOwner(album);
