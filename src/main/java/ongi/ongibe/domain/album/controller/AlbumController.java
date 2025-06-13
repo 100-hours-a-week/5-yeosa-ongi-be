@@ -84,6 +84,14 @@ public class AlbumController {
         return ResponseEntity.ok(BaseApiResponse.success("ALBUM_NAME_UPDATE_SUCCESS", "앨범 이름을 수정했습니다.", null));
     }
 
+    @Operation(summary = "앨범 내 인물 클러스터 이름 수정", description = "앨범 내 분류된 인물 클러스터 이름을 수정합니다.")
+    @ApiResponse(responseCode = "200", description = "클러스터 이름 수정 성공")
+    @PatchMapping("/{albumId}/cluster/{clusterId}")
+    public ResponseEntity<BaseApiResponse<Void>> updateAlbumCluster(@PathVariable Long albumId, @PathVariable Long clusterId, @RequestBody ClusterRenameRequest request1) {
+        albumService.updateClusterName(albumId, clusterId, request1.clusterName());
+        return ResponseEntity.ok(BaseApiResponse.success("CLUSTER_RENAME_SUCCESS", "클러스터 이름이 변경되었습니다.", null));
+    }
+
     @Operation(summary = "앨범 사진 복원", description = "삭제된 사진을 복원 처리합니다.")
     @ApiResponse(responseCode = "200", description = "사진 복원 성공")
     @PutMapping("/{albumId}/picture")
