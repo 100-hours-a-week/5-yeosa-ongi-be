@@ -300,13 +300,21 @@ public class AlbumService {
             throw new AlbumException(HttpStatus.BAD_REQUEST, "삭제할 수 없는 사진이 포함되어 있습니다.");
         }
 
-        for (Picture p : pictures) {
-            p.setDeletedAt(LocalDateTime.now());
+        List<Long> representativeIds = faceClusterRepository.findAllRepresentativePictureIds();
+        if (pictureIds.stream().anyMatch(representativeIds::contains)) {
+            throw new AlbumException(HttpStatus.BAD_REQUEST, "대표 사진은 삭제할 수 없습니다.");
         }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Picture p : pictures) {
+            p.setDeletedAt(now);
+        }
+
         if (pictureIds.contains(album.getThumbnailPicture().getId())){
             Optional<Picture> newThumbnailPicture = pictureRepository.findTopByAlbumAndDeletedAtIsNullOrderByQualityScoreDesc(album);
             newThumbnailPicture.ifPresent(album::setThumbnailPicture);
         }
+        pictureFaceClusterRepository.deleteAllByPictureIds(now, pictureIds);
 
         refreshAllMemberTotalStateCache(album);
         refreshAllMemberMonthlyAlbumCache(album);
