@@ -141,7 +141,7 @@ class AlbumServiceTest {
             }
 
             /* 3. Album 생성 */
-            Picture thumbnail = pictures.getFirst();
+            Picture thumbnail = pictures.get(2);
             Album album = Album.builder()
                     .name("앨범 " + i)
                     .processState(AlbumProcessState.NOT_STARTED)
@@ -153,7 +153,7 @@ class AlbumServiceTest {
 
             /* 4. UserAlbum(OWNER) 추가 – 리스트 '교체' 아니라 '추가' */
             UserAlbum ownerUA = UserAlbum.of(testUser, album, UserAlbumRole.OWNER);
-            album.getUserAlbums().add(ownerUA);        // ✅ add 로 유지
+            album.getUserAlbums().add(ownerUA);        // add 로 유지
             testUser.getUserAlbums().add(ownerUA);     // (양방향)
 
             /* 5. 저장 – cascade 로 userAlbums, pictures 모두 저장 */
@@ -167,9 +167,9 @@ class AlbumServiceTest {
                     .build());
 
             pictureFaceClusterRepository.saveAll(List.of(
-                    PictureFaceCluster.builder().picture(pictures.get(0)).faceCluster(faceCluster).build(),
-                    PictureFaceCluster.builder().picture(pictures.get(1)).faceCluster(faceCluster).build(),
-                    PictureFaceCluster.builder().picture(pictures.get(2)).faceCluster(faceCluster).build()
+                    PictureFaceCluster.builder().picture(pictures.get(0)).faceCluster(faceCluster).deletedAt(null).build(),
+                    PictureFaceCluster.builder().picture(pictures.get(1)).faceCluster(faceCluster).deletedAt(null).build(),
+                    PictureFaceCluster.builder().picture(pictures.get(2)).faceCluster(faceCluster).deletedAt(null).build()
             ));
         }
     }
@@ -389,6 +389,7 @@ class AlbumServiceTest {
         when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
         List<Long> pictureIds = pictureRepository.findAllByAlbumId(albumId).stream()
                 .map(Picture::getId)
+                .skip(1)
                 .limit(1)
                 .toList();
 

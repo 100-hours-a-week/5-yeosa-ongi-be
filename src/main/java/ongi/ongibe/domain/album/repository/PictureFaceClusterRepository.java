@@ -5,6 +5,7 @@ import java.util.List;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,6 +13,7 @@ public interface PictureFaceClusterRepository extends JpaRepository<PictureFaceC
 
     List<PictureFaceCluster> findAllByFaceCluster(FaceCluster faceCluster);
 
+    @Modifying
     @Query("""
     update PictureFaceCluster pfc set pfc.deletedAt = :now where pfc.picture.id in :pictureIds
     """)
