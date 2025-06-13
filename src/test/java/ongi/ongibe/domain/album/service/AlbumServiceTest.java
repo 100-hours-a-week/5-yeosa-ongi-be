@@ -450,6 +450,27 @@ class AlbumServiceTest {
     }
 
     @Test
+    void deletePicture_representativePicture_삭제시도() {
+        //givne
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+        List<Long> pictureIds = pictureRepository.findAllByAlbumId(albumId).stream()
+                .map(Picture::getId)
+                .limit(1)
+                .toList();
+
+        //when then
+        assertThatThrownBy(()->albumService.deletePictures(albumId, pictureIds))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("대표 사진은 삭제할 수 없습니다.");
+    }
+
+    @Test
     void deleteAlbum_정상동작() {
         //given
         Long albumId = albumRepository.findAll().stream()
