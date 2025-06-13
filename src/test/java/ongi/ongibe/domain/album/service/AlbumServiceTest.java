@@ -465,4 +465,51 @@ class AlbumServiceTest {
         Album deletedAlbum = albumRepository.findById(albumId).orElseThrow();
         assertThat(deletedAlbum.getDeletedAt()).isNotNull();
     }
+
+    @Test
+    void updateCluster_정상동작() {
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+
+        Long clusterId = faceClusterRepository.findAll().stream()
+                .filter(faceCluster -> faceCluster.getRepresentativePicture().getAlbum().getId().equals(albumId))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        String newName = "변경된이름";
+
+        // when
+        albumService.updateClusterName(albumId, clusterId, newName);
+
+        //then
+        FaceCluster cluster = faceClusterRepository.findById(clusterId).orElseThrow();
+        assertThat(cluster.getClusterName()).isEqualTo(newName);
+    }
+
+    @Test
+    void updateCluster_clusterId_못찾음(){
+        //given
+        Long albumId = albumRepository.findAll().stream()
+                .filter(album -> album.getName().equals("앨범 1"))
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        when(securityUtil.getCurrentUserId()).thenReturn(testUser.getId());
+
+        Long invalidClusterId = faceClusterRepository.findAll().stream()
+                .mapToLong(FaceCluster::getId)
+                .max()
+                .orElse(0L) + 1;
+
+        // when then
+        assertThatThrownBy(() -> albumService.updateClusterName(albumId, invalidClusterId, "new"))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("해당 클러스터를 찾을 수 없습니다");
+
+    }
 }
