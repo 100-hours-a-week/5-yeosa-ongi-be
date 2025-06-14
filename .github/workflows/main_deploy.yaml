@@ -44,8 +44,6 @@ jobs:
 
       - name: Read and Bump Version
         id: bump
-        env:
-          VERSION_TYPE: ${{ steps.version_type.outputs.type }}
         run: |
           set -e
 
@@ -63,7 +61,7 @@ jobs:
 
           IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
 
-          case "$VERSION_TYPE" in
+          case "${{ steps.version_type.outputs.type }}" in
             major)
               ((MAJOR++)); FEATURE=0; FIX=0 ;;
             feature)
@@ -71,8 +69,7 @@ jobs:
             fix)
               ((FIX++)) ;;
             *)
-              echo "Invalid version type: $VERSION_TYPE"
-              exit 1 ;;
+              echo "Invalid version type"; exit 1 ;;
           esac
 
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
