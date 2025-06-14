@@ -1,48 +1,31 @@
 spring:
+  config:
+    activate:
+      on-profile: prod
+
   threads:
     virtual:
       enabled: true
 
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  flyway:
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
   data:
     redis:
-      host: ${REDIS_SERVER_URL}
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
   kakao:
     auth:
       client: ${KAKAO_CLIENT_ID}
       redirect: https://ongi.today/auth/callback/kakao
-
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      leak-detection-threshold: 30000
-      maximum-pool-size: 50
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    database-platform: org.hibernate.dialect.MySQLDialect
-    properties:
-      hibernate:
-        format_sql: false
-        type: trace
-
-  sql:
-    init:
-      mode: never
-
-  flyway:
-    url: ${FLYWAY_URL}
-    user: ${FLYWAY_USER}
-    password: ${FLYWAY_PASSWORD}
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
 
 cloud:
   aws:
@@ -52,16 +35,14 @@ cloud:
     region:
       static: ${AWS_REGION}
     s3:
-      bucket: ${S3_BUCKET_NAME}
-    stack:
-      auto: false
+      bucket: ${S3_BUCKET_NAME_DEV}
 
 jwt:
   secret: ${JWT_SECRET}
 
 ai:
   server:
-    base-url: ${AI_SERVER_URL}
+    base-url: ${AI_SERVER_URL_DEV}
 
 custom:
   isProd: true

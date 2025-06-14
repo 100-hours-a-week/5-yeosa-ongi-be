@@ -20,5 +20,4 @@ COPY --from=builder /home/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# --debug 모드로 로그 상세화
-CMD ["java", "-jar", "app.jar", "--debug"]
+CMD ["java", "-jar", "app.jar"]
