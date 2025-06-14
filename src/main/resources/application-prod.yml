@@ -35,14 +35,14 @@ cloud:
     region:
       static: ${AWS_REGION}
     s3:
-      bucket: ${S3_BUCKET_NAME_DEV}
+      bucket: ${S3_BUCKET_NAME_PROD}
 
 jwt:
   secret: ${JWT_SECRET}
 
 ai:
   server:
-    base-url: ${AI_SERVER_URL_DEV}
+    base-url: ${AI_SERVER_URL_PROD}
 
 custom:
   isProd: true
