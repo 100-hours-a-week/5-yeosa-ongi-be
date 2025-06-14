@@ -76,9 +76,9 @@ jobs:
           esac
 
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "$NEW_VERSION" > version.txt ㅇ
-      
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "$NEW_VERSION" > version.txt
+
       - name: Commit and Push version.txt and Git Tag
         run: |
           git add version.txt
