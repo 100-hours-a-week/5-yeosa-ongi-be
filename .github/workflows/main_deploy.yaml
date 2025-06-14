@@ -88,7 +88,7 @@ jobs:
       - name: Commit and Push version.txt and Git Tag
         run: |
           git add version.txt
-          git commit -m "🔖 Bump version to ${{ steps.bump.outputs.new_version }}"
+          git commit -m "🎖️ Bump version to ${{ steps.bump.outputs.new_version }}"
           git tag "v${{ steps.bump.outputs.new_version }}"
           git push origin main --tags
 
@@ -131,12 +131,12 @@ jobs:
             "content": "**✅ PROD 백엔드 배포 완료!**",
             "embeds": [
               {
-                "title": "'"$TITLE"'",
-                "url": "'"$URL"'",
+                "title": "'$TITLE'",
+                "url": "'$URL'",
                 "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Actor", "value": "'"${{ github.actor }}"'", "inline": true },
-                  { "name": "Image Tag", "value": "'"$VERSION"'", "inline": true }
+                  { "name": "Repository", "value": "'${{ github.repository }}'", "inline": true },
+                  { "name": "Actor", "value": "'${{ github.actor }}'", "inline": true },
+                  { "name": "Image Tag", "value": "'$VERSION'", "inline": true }
                 ],
                 "color": 3066993
               }
@@ -152,11 +152,11 @@ jobs:
             "content": "**❌ PROD 백엔드 배포 실패!**",
             "embeds": [
               {
-                "title": "'"$TITLE"'",
-                "url": "'"$URL"'",
+                "title": "'$TITLE'",
+                "url": "'$URL'",
                 "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Actor", "value": "'"${{ github.actor }}"'", "inline": true }
+                  { "name": "Repository", "value": "'${{ github.repository }}'", "inline": true },
+                  { "name": "Actor", "value": "'${{ github.actor }}'", "inline": true }
                 ],
                 "color": 15158332
               }
