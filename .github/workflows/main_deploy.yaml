@@ -44,6 +44,8 @@ jobs:
 
       - name: Read and Bump Version
         id: bump
+        env:
+          VERSION_TYPE: ${{ steps.version_type.outputs.type }}
         run: |
           if [ ! -f version.txt ]; then
             echo "version.txt not found, initializing to 1.0.0"
@@ -59,7 +61,7 @@ jobs:
 
           IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
 
-          case "${{ steps.version_type.outputs.type }}" in
+          case "$VERSION_TYPE" in
             major)
               ((MAJOR++)); FEATURE=0; FIX=0 ;;
             feature)
@@ -72,8 +74,8 @@ jobs:
 
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "$NEW_VERSION" > version.txt
-
+          echo "$NEW_VERSION" > version.txt ㅇ
+      
       - name: Commit and Push version.txt and Git Tag
         run: |
           git add version.txt
