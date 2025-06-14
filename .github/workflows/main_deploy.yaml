@@ -1,80 +1,26 @@
-name: Deploy PROD Backend (Manual Only)
+name: Deploy PROD Backend on PR Merge
 
 on:
-  workflow_dispatch:
-    inputs:
-      version_type:
-        description: '버전 증가 유형 (major, feature, fix)'
-        required: true
-        type: choice
-        options:
-          - major
-          - feature
-          - fix
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 
 jobs:
   deploy:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Git Identity
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-
-      - name: Read and Bump Version
-        id: bump
-        env:
-          VERSION_TYPE: ${{ github.event.inputs.version_type }}
-        run: |
-          set -e
-          echo "🔎 현재 브랜치 버전 관리 시작"
-
-          # 모든 공백(스페이스·탭·개행·CR) 제거
-          VERSION=$(tr -d '\r\n\t ' < version.txt)
-          echo "현재 버전: [${VERSION}]"
-
-          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Invalid version format: $VERSION"
-            exit 1
-          fi
-
-          IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
-
-          case "$VERSION_TYPE" in
-            major)
-              ((MAJOR++)); FEATURE=0; FIX=0 ;;
-            feature)
-              ((FEATURE++)); FIX=0 ;;
-            fix)
-              ((FIX++)) ;;
-            *)
-              echo "::error::Invalid version type: $VERSION_TYPE"
-              exit 1 ;;
-          esac
-
-          NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
-          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "$NEW_VERSION" > version.txt
-          echo "✅ 새 버전: $NEW_VERSION"
-
-      - name: Commit and Push version.txt and Git Tag
-        run: |
-          git add version.txt
-          git commit -m "🔖 Bump version to ${{ steps.bump.outputs.new_version }}"
-          git tag "v${{ steps.bump.outputs.new_version }}"
-          git push origin main --tags
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: temurin
+          distribution: 'temurin'
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -86,36 +32,41 @@ jobs:
         with:
           project_id: dev-ongi-3-tier
 
-      - name: Configure Docker Auth
-        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
+      - name: Configure Docker auth
+        run: |
+          gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
 
       - name: Build & Push Docker Image
+        env:
+          TAG: prod-${{ github.sha }}
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.new_version }} .
-          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.new_version }}
+          docker build \
+            -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:$TAG .
+          docker push \
+            asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:$TAG
 
       - name: Trigger Cloud Build (PROD)
         run: |
           gcloud builds submit . \
             --config=.gcp/cloudbuild-prod.yaml \
-            --substitutions=_IMAGE_TAG=${{ steps.bump.outputs.new_version }},_TEMPLATE_NAME=ongi-prod-${{ steps.bump.outputs.new_version }} \
+            --substitutions=_IMAGE_TAG=prod-${{ github.sha }},_TEMPLATE_NAME=ongi-prod-${{ github.run_number }} \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
       - name: Notify Discord on Success
         if: success()
         env:
-          VERSION: ${{ steps.bump.outputs.new_version }}
+          TAG: prod-${{ github.sha }}
         run: |
           echo '{
             "content": "**✅ PROD 백엔드 배포 완료!**",
             "embeds": [
               {
-                "title": "📦 수동 배포",
-                "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
                 "fields": [
-                  { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
-                  { "name": "Actor", "value": "${{ github.actor }}", "inline": true },
-                  { "name": "Image Tag", "value": "${{ env.VERSION }}", "inline": true }
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Actor",      "value": "'"${{ github.actor }}"'",     "inline": true },
+                  { "name": "Image Tag",   "value": "'"${{ env.TAG }}"'",          "inline": true }
                 ],
                 "color": 3066993
               }
@@ -129,11 +80,11 @@ jobs:
             "content": "**❌ PROD 백엔드 배포 실패!**",
             "embeds": [
               {
-                "title": "📦 수동 배포",
-                "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
                 "fields": [
-                  { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
-                  { "name": "Actor", "value": "${{ github.actor }}", "inline": true }
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Actor",      "value": "'"${{ github.actor }}"'",     "inline": true }
                 ],
                 "color": 15158332
               }
