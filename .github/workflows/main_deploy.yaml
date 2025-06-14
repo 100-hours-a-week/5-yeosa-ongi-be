@@ -19,8 +19,11 @@ on:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
 
     steps:
       - name: Checkout Code
