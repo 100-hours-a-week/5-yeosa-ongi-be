@@ -6,52 +6,171 @@ on:
       - main
     types:
       - closed
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: '버전 증가 유형 (major, feature, fix)'
+        required: true
+        type: choice
+        options:
+          - major
+          - feature
+          - fix
 
 jobs:
-  deploy-prod-backend:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-22.04
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS_PROD }}'
-
-      - name: Load Flyway Secrets
+      - name: Set up Git Identity
         run: |
-          echo "FLYWAY_DB_URL=$(gcloud secrets versions access latest --secret=flyway-url-prod)" >> $GITHUB_ENV
-          echo "FLYWAY_DB_USER=$(gcloud secrets versions access latest --secret=flyway-user-prod)" >> $GITHUB_ENV
-          echo "FLYWAY_DB_PASSWORD=$(gcloud secrets versions access latest --secret=flyway-password-prod)" >> $GITHUB_ENV
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
 
-      - name: Flyway Migrate (PROD)
+      - name: Determine Version Type
+        id: version_type
         run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=${{ env.FLYWAY_DB_URL }} \
-            -Dflyway.user=${{ env.FLYWAY_DB_USER }} \
-            -Dflyway.password=${{ env.FLYWAY_DB_PASSWORD }}
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
+          else
+            echo "type=fix" >> $GITHUB_OUTPUT  # default to fix on PR merge
+          fi
 
-      - name: Build Application
-        run: ./gradlew clean build -x test
+      - name: Read and Bump Version
+        id: bump
+        run: |
+          # version.txt 없으면 초기화
+          if [ ! -f version.txt ]; then
+            echo "version.txt not found, initializing to 1.0.0"
+            echo "1.0.0" > version.txt
+          fi
+          
+          VERSION=$(cat version.txt)
+          
+          # 정규식으로 버전 형식 확인
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+          
+          IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
+          
+          case "${{ steps.version_type.outputs.type }}" in
+            major)
+              ((MAJOR++)); FEATURE=0; FIX=0 ;;
+            feature)
+              ((FEATURE++)); FIX=0 ;;
+            fix)
+              ((FIX++)) ;;
+            *)
+              echo "Invalid version type"; exit 1 ;;
+          esac
+          
+          NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "$NEW_VERSION" > version.txt
+
+      - name: Commit and Push version.txt and Git Tag
+        run: |
+          git add version.txt
+          git commit -m "🔖 Bump version to ${{ steps.bump.outputs.NEW_VERSION }}"
+          git tag "v${{ steps.bump.outputs.NEW_VERSION }}"
+          git push origin main --tags
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: dev-ongi-3-tier
 
       - name: Configure Docker Auth
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
 
       - name: Build & Push Docker Image
         run: |
-          TAG=prod-$(date +%Y%m%d)-pr${{ github.event.pull_request.number }}
-          docker build -t asia-northeast3-docker.pkg.dev/YOUR_PROJECT/prod-repo/backend:$TAG .
-          docker push asia-northeast3-docker.pkg.dev/YOUR_PROJECT/prod-repo/backend:$TAG
+          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }} .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }}
 
-      - name: Trigger Cloud Build Deploy
+      - name: Trigger Cloud Build (PROD)
         run: |
-          gcloud builds submit .gcp/prod-deploy --substitutions=_IMAGE_TAG=$TAG
+          gcloud builds submit . \
+            --config=.gcp/cloudbuild-prod.yaml \
+            --substitutions=_IMAGE_TAG=${{ steps.bump.outputs.NEW_VERSION }},_TEMPLATE_NAME=ongi-prod-${{ steps.bump.outputs.NEW_VERSION }} \
+            --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
+
+      - name: Notify Discord on Success
+        if: success()
+        env:
+          TAG: dev-${{ github.sha }}
+        run: |
+          echo '{
+            "content": "**✅ DEV 백엔드 배포 완료!**",
+            "embeds": [
+              {
+                "title": "'"${{ github.event.pull_request.title }}"'",
+                "url": "'"${{ github.event.pull_request.html_url }}"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true },
+                  { "name": "Image Tag", "value": "'"${{ env.TAG }}"'", "inline": true }
+                ],
+                "color": 3066993
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on Success
+        if: success()
+        env:
+          VERSION: ${{ steps.bump.outputs.NEW_VERSION }}
+        run: |
+          TITLE="${{ github.event_name == 'workflow_dispatch' && '📦 수동 배포' || '🔁 PR 병합 자동 배포' }}"
+          URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          echo '{
+            "content": "**✅ PROD 백엔드 배포 완료!**",
+            "embeds": [
+              {
+                "title": "'"$TITLE"'",
+                "url": "'"$URL"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Actor", "value": "'"${{ github.actor }}"'", "inline": true },
+                  { "name": "Image Tag", "value": "'"$VERSION"'", "inline": true }
+                ],
+                "color": 3066993
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          TITLE="${{ github.event_name == 'workflow_dispatch' && '📦 수동 배포' || '🔁 PR 병합 자동 배포' }}"
+          URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          echo '{
+            "content": "**❌ PROD 백엔드 배포 실패!**",
+            "embeds": [
+              {
+                "title": "'"$TITLE"'",
+                "url": "'"$URL"'",
+                "fields": [
+                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
+                  { "name": "Actor", "value": "'"${{ github.actor }}"'", "inline": true }
+                ],
+                "color": 15158332
+              }
+            ]
+          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
