@@ -39,28 +39,26 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
           else
-            echo "type=fix" >> $GITHUB_OUTPUT  # default to fix on PR merge
+            echo "type=fix" >> $GITHUB_OUTPUT
           fi
 
       - name: Read and Bump Version
         id: bump
         run: |
-          # version.txt 없으면 초기화
           if [ ! -f version.txt ]; then
             echo "version.txt not found, initializing to 1.0.0"
             echo "1.0.0" > version.txt
           fi
-          
+
           VERSION=$(cat version.txt)
-          
-          # 정규식으로 버전 형식 확인
+
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid version format: $VERSION"
             exit 1
           fi
-          
+
           IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
-          
+
           case "${{ steps.version_type.outputs.type }}" in
             major)
               ((MAJOR++)); FEATURE=0; FIX=0 ;;
@@ -71,16 +69,16 @@ jobs:
             *)
               echo "Invalid version type"; exit 1 ;;
           esac
-          
+
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "$NEW_VERSION" > version.txt
 
       - name: Commit and Push version.txt and Git Tag
         run: |
           git add version.txt
-          git commit -m "🔖 Bump version to ${{ steps.bump.outputs.NEW_VERSION }}"
-          git tag "v${{ steps.bump.outputs.NEW_VERSION }}"
+          git commit -m "🔖 Bump version to ${{ steps.bump.outputs.new_version }}"
+          git tag "v${{ steps.bump.outputs.new_version }}"
           git push origin main --tags
 
       - uses: actions/setup-java@v4
@@ -101,20 +99,20 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }} .
-          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }}
+          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.new_version }} .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.new_version }}
 
       - name: Trigger Cloud Build (PROD)
         run: |
           gcloud builds submit . \
             --config=.gcp/cloudbuild-prod.yaml \
-            --substitutions=_IMAGE_TAG=${{ steps.bump.outputs.NEW_VERSION }},_TEMPLATE_NAME=ongi-prod-${{ steps.bump.outputs.NEW_VERSION }} \
+            --substitutions=_IMAGE_TAG=${{ steps.bump.outputs.new_version }},_TEMPLATE_NAME=ongi-prod-${{ steps.bump.outputs.new_version }} \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
       - name: Notify Discord on Success
         if: success()
         env:
-          VERSION: ${{ steps.bump.outputs.NEW_VERSION }}
+          VERSION: ${{ steps.bump.outputs.new_version }}
         run: |
           TITLE="${{ github.event_name == 'workflow_dispatch' && '📦 수동 배포' || '🔁 PR 병합 자동 배포' }}"
           URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
