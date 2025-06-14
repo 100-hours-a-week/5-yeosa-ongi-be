@@ -35,9 +35,8 @@ jobs:
           set -e
           echo "🔎 현재 브랜치 버전 관리 시작"
 
-          # CRLF 제거 및 공백 문자 제거
-          VERSION=$(tr -d '\r' < version.txt)
-          VERSION="${VERSION//[$'\t\n ']/}"
+          # 모든 공백(스페이스·탭·개행·CR) 제거
+          VERSION=$(tr -d '\r\n\t ' < version.txt)
           echo "현재 버전: [${VERSION}]"
 
           if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
