@@ -13,13 +13,13 @@ public interface PictureFaceClusterRepository extends JpaRepository<PictureFaceC
 
     List<PictureFaceCluster> findAllByFaceCluster(FaceCluster faceCluster);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
     update PictureFaceCluster pfc set pfc.deletedAt = :now where pfc.picture.id in :pictureIds
     """)
     void deleteAllByPictureIds(@Param("now")LocalDateTime now, @Param("pictureIds") List<Long> pictureIds);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
     update PictureFaceCluster pfc set pfc.deletedAt = :now where pfc.faceCluster.id in :faceClusterIds
     """)
