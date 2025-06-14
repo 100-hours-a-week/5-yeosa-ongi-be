@@ -15,10 +15,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    outputs:
-      new_version: ${{ steps.bump.outputs.new_version }}
-
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
 
     steps:
       - name: Checkout Code
@@ -39,13 +35,10 @@ jobs:
           set -e
           echo "🔎 현재 브랜치 버전 관리 시작"
 
-          if [ ! -f version.txt ]; then
-            echo "version.txt not found, initializing to 1.0.0"
-            echo "1.0.0" > version.txt
-          fi
-
-          VERSION=$(cat version.txt)
-          echo "현재 버전: $VERSION"
+          # CRLF 제거 및 공백 문자 제거
+          VERSION=$(tr -d '\r' < version.txt)
+          VERSION="${VERSION//[$'\t\n ']/}"
+          echo "현재 버전: [${VERSION}]"
 
           if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::Invalid version format: $VERSION"
@@ -78,16 +71,19 @@ jobs:
           git tag "v${{ steps.bump.outputs.new_version }}"
           git push origin main --tags
 
-      - uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: temurin
 
-      - uses: google-github-actions/auth@v2
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      - uses: google-github-actions/setup-gcloud@v2
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: dev-ongi-3-tier
 
