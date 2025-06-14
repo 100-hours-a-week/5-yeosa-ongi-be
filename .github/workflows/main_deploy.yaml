@@ -47,6 +47,8 @@ jobs:
         env:
           VERSION_TYPE: ${{ steps.version_type.outputs.type }}
         run: |
+          set -e
+
           if [ ! -f version.txt ]; then
             echo "version.txt not found, initializing to 1.0.0"
             echo "1.0.0" > version.txt
@@ -54,7 +56,7 @@ jobs:
 
           VERSION=$(cat version.txt)
 
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid version format: $VERSION"
             exit 1
           fi
@@ -69,13 +71,14 @@ jobs:
             fix)
               ((FIX++)) ;;
             *)
-              echo "Invalid version type"; exit 1 ;;
+              echo "Invalid version type: $VERSION_TYPE"
+              exit 1 ;;
           esac
 
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "$NEW_VERSION" > version.txt ㅇ
-      
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "$NEW_VERSION" > version.txt
+
       - name: Commit and Push version.txt and Git Tag
         run: |
           git add version.txt
