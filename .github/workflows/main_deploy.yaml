@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Git Identity
         run: |
@@ -99,8 +101,8 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }} .
-          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }}
+          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }} .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/prod-ongi-spring-repo/backend:${{ steps.bump.outputs.NEW_VERSION }}
 
       - name: Trigger Cloud Build (PROD)
         run: |
@@ -108,27 +110,6 @@ jobs:
             --config=.gcp/cloudbuild-prod.yaml \
             --substitutions=_IMAGE_TAG=${{ steps.bump.outputs.NEW_VERSION }},_TEMPLATE_NAME=ongi-prod-${{ steps.bump.outputs.NEW_VERSION }} \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
-
-      - name: Notify Discord on Success
-        if: success()
-        env:
-          TAG: dev-${{ github.sha }}
-        run: |
-          echo '{
-            "content": "**✅ DEV 백엔드 배포 완료!**",
-            "embeds": [
-              {
-                "title": "'"${{ github.event.pull_request.title }}"'",
-                "url": "'"${{ github.event.pull_request.html_url }}"'",
-                "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Author", "value": "'"${{ github.actor }}"'", "inline": true },
-                  { "name": "Image Tag", "value": "'"${{ env.TAG }}"'", "inline": true }
-                ],
-                "color": 3066993
-              }
-            ]
-          }' | curl -H "Content-Type: application/json" -X POST -d @- ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Notify Discord on Success
         if: success()
