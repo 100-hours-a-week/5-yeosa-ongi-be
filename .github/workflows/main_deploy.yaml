@@ -19,11 +19,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    outputs:
-      new_version: ${{ steps.bump.outputs.new_version }}
-
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
@@ -47,9 +44,14 @@ jobs:
 
       - name: Read and Bump Version
         id: bump
+        env:
+          VERSION_TYPE: ${{ steps.version_type.outputs.type }}
         run: |
           set -e
 
+          echo "🔎 현재 브랜치 버전 관리 시작"
+
+          # 파일 없으면 초기화
           if [ ! -f version.txt ]; then
             echo "version.txt not found, initializing to 1.0.0"
             echo "1.0.0" > version.txt
@@ -57,14 +59,15 @@ jobs:
 
           VERSION=$(cat version.txt)
 
+          # 형식 확인
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid version format: $VERSION"
+            echo "::error::Invalid version format: $VERSION"
             exit 1
           fi
 
           IFS='.' read -r MAJOR FEATURE FIX <<< "$VERSION"
 
-          case "${{ steps.version_type.outputs.type }}" in
+          case "$VERSION_TYPE" in
             major)
               ((MAJOR++)); FEATURE=0; FIX=0 ;;
             feature)
@@ -72,12 +75,13 @@ jobs:
             fix)
               ((FIX++)) ;;
             *)
-              echo "Invalid version type"; exit 1 ;;
+              echo "::error::Invalid version type: $VERSION_TYPE"
+              exit 1 ;;
           esac
 
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
-          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "${NEW_VERSION}" > version.txt
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "$NEW_VERSION" > version.txt
 
       - name: Commit and Push version.txt and Git Tag
         run: |
