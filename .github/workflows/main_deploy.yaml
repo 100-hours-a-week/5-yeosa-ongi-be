@@ -48,19 +48,17 @@ jobs:
           VERSION_TYPE: ${{ steps.version_type.outputs.type }}
         run: |
           set -e
-
           echo "🔎 현재 브랜치 버전 관리 시작"
 
-          # 파일 없으면 초기화
           if [ ! -f version.txt ]; then
             echo "version.txt not found, initializing to 1.0.0"
             echo "1.0.0" > version.txt
           fi
 
           VERSION=$(cat version.txt)
+          echo "현재 버전: $VERSION"
 
-          # 형식 확인
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::Invalid version format: $VERSION"
             exit 1
           fi
@@ -82,6 +80,7 @@ jobs:
           NEW_VERSION="${MAJOR}.${FEATURE}.${FIX}"
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "$NEW_VERSION" > version.txt
+          echo "✅ 새 버전: $NEW_VERSION"
 
       - name: Commit and Push version.txt and Git Tag
         run: |
@@ -125,7 +124,6 @@ jobs:
         run: |
           TITLE="${{ github.event_name == 'workflow_dispatch' && '📦 수동 배포' || '🔁 PR 병합 자동 배포' }}"
           URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
           echo '{
             "content": "**✅ PROD 백엔드 배포 완료!**",
             "embeds": [
@@ -147,7 +145,6 @@ jobs:
         run: |
           TITLE="${{ github.event_name == 'workflow_dispatch' && '📦 수동 배포' || '🔁 PR 병합 자동 배포' }}"
           URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
           echo '{
             "content": "**❌ PROD 백엔드 배포 실패!**",
             "embeds": [
