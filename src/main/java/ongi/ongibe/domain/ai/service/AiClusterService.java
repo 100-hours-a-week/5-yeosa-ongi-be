@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.ai.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,16 @@ public class AiClusterService {
     public void requestCluster(Album album) {
         log.info("[AI] 클러스터 시작");
         Long albumId = album.getId();
+
+        List<Long> faceClusterIds = faceClusterRepository.findAllByAlbumId(albumId).stream()
+                .map(FaceCluster::getId)
+                .toList();
+        if (!faceClusterIds.isEmpty()) {
+            pictureFaceClusterRepository.deleteAllByFaceClusterIds(LocalDateTime.now(), faceClusterIds);
+            faceClusterRepository.deleteAllByIdInBatch(faceClusterIds);
+            log.info("[AI] 기존 클러스터 및 매핑 삭제 완료 (총 {}개)", faceClusterIds.size());
+        }
+
         List<ClusterData> clusters =
                 aiClient.getClusters(albumId, pictureRepository.findAllByAlbumId(albumId).stream()
                         .map(Picture::getS3Key).toList());

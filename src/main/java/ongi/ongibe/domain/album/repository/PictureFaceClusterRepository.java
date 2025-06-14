@@ -18,4 +18,10 @@ public interface PictureFaceClusterRepository extends JpaRepository<PictureFaceC
     update PictureFaceCluster pfc set pfc.deletedAt = :now where pfc.picture.id in :pictureIds
     """)
     void deleteAllByPictureIds(@Param("now")LocalDateTime now, @Param("pictureIds") List<Long> pictureIds);
+
+    @Modifying
+    @Query("""
+    update PictureFaceCluster pfc set pfc.deletedAt = :now where pfc.faceCluster.id in :faceClusterIds
+    """)
+    void deleteAllByFaceClusterIds(@Param("now")LocalDateTime now, @Param("faceClusterIds") List<Long> faceClusterIds);
 }
