@@ -1,0 +1,90 @@
+substitutions:
+  _IMAGE_TAG: ""
+  _TEMPLATE_NAME: ""
+
+serviceAccount: projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+
+availableSecrets:
+  secretManager:
+    - versionName: "projects/dev-ongi-3-tier/secrets/ssh_keys_dev/versions/latest"
+      env: SSH_KEYS
+    - versionName: "projects/dev-ongi-3-tier/secrets/db_url_prod/versions/latest"
+      env: DB_URL
+    - versionName: "projects/dev-ongi-3-tier/secrets/db_user_prod/versions/latest"
+      env: DB_USER
+    - versionName: "projects/dev-ongi-3-tier/secrets/db_password_prod/versions/latest"
+      env: DB_PASS
+    - versionName: "projects/dev-ongi-3-tier/secrets/prod_redis_server_url/versions/latest"
+      env: REDIS_URL
+    - versionName: "projects/dev-ongi-3-tier/secrets/kakao_client_id/versions/latest"
+      env: KAKAO_CLIENT_ID
+    - versionName: "projects/dev-ongi-3-tier/secrets/jwt_secret/versions/latest"
+      env: JWT_SECRET
+    - versionName: "projects/dev-ongi-3-tier/secrets/s3_bucket_name_prod/versions/latest"
+      env: S3_BUCKET_NAME_PROD
+    - versionName: "projects/dev-ongi-3-tier/secrets/aws_access_key_id/versions/latest"
+      env: AWS_ACCESS_KEY_ID
+    - versionName: "projects/dev-ongi-3-tier/secrets/aws_secret_access_key/versions/latest"
+      env: AWS_SECRET_ACCESS_KEY
+    - versionName: "projects/dev-ongi-3-tier/secrets/aws_region/versions/latest"
+      env: AWS_REGION
+    - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_prod/versions/latest"
+      env: AI_SERVER_URL_PROD
+
+steps:
+  - id: deploy-backend
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    secretEnv:
+      - SSH_KEYS
+      - DB_URL
+      - DB_USER
+      - DB_PASS
+      - REDIS_URL
+      - KAKAO_CLIENT_ID
+      - JWT_SECRET
+      - S3_BUCKET_NAME_PROD
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
+      - AI_SERVER_URL_PROD
+    args:
+      - '-c'
+      - |
+        set -e
+        echo ▶ 템플릿 생성: ${_TEMPLATE_NAME}
+        gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
+          --network=prod-ongi-vpc \
+          --subnet=prod-ongi-server-subnet \
+          --no-address \
+          --machine-type=e2-standard-2 \
+          --region=asia-northeast3 \
+          --boot-disk-size=20GB \
+          --image-family=cos-stable \
+          --image-project=cos-cloud \
+          --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
+          --container-env=SPRING_PROFILES_ACTIVE=prod \
+          --container-env=SPRING_DATASOURCE_URL=$$DB_URL \
+          --container-env=SPRING_DATASOURCE_USERNAME=$$DB_USER \
+          --container-env=SPRING_DATASOURCE_PASSWORD=$$DB_PASS \
+          --container-env=SPRING_DATA_REDIS_HOST=$$REDIS_URL \
+          --container-env=KAKAO_CLIENT_ID=$$KAKAO_CLIENT_ID \
+          --container-env=JWT_SECRET=$$JWT_SECRET \
+          --container-env=S3_BUCKET_NAME_DEV=$$S3_BUCKET_NAME_DEV \
+          --container-env=AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID \
+          --container-env=AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY \
+          --container-env=AWS_REGION=$$AWS_REGION \
+          --container-env=AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV \
+          --metadata="ssh-keys=$$SSH_KEYS" \
+          --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
+          --scopes=https://www.googleapis.com/auth/cloud-platform \
+          --tags=prod-backend
+
+        echo ▶ MIG 롤링 업데이트
+        gcloud compute instance-groups managed rolling-action start-update prod-ongi-backend-mig \
+          --region=asia-northeast3 \
+          --version template="${_TEMPLATE_NAME}" \
+          --type=proactive
