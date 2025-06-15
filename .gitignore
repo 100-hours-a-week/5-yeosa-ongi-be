@@ -21,7 +21,7 @@ Thumbs.db
 *.log
 
 # 환경 파일 (보안 중요)
-.env
+src/main/resources/.env
 
 # Spring Boot 설정파일
 /src/main/resources/application.properties
