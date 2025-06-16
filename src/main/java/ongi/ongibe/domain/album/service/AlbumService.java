@@ -41,6 +41,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.executor.TransactionAfterCommitExecutor;
 import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.DateUtil;
@@ -70,6 +71,7 @@ public class AlbumService {
     private final PresignedUrlService presignedUrlService;
     private final AlbumCacheService albumCacheService;
     private final UserCacheService userCacheService;
+    private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -189,11 +191,13 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
 
-        albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
-        userCacheService.refreshUserTotalState(user);
-        userCacheService.refreshUserTagState(user, yearMonth);
-        userCacheService.refreshUserPictureStat(user, yearMonth);
-        userCacheService.refreshUserPlaceStat(user, yearMonth);
+        transactionAfterCommitExecutor.execute(() ->{
+            albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
+            userCacheService.refreshUserTotalState(user);
+            userCacheService.refreshUserTagState(user, yearMonth);
+            userCacheService.refreshUserPictureStat(user, yearMonth);
+            userCacheService.refreshUserPlaceStat(user, yearMonth);
+        });
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
         eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
@@ -238,9 +242,11 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
-        refreshAllMemberMonthlyAlbumCache(album);
-        refreshAllMemberTotalStateCache(album);
+        transactionAfterCommitExecutor.execute(() ->{
+            refreshAllMemberMonthlyAlbumCache(album);
+            refreshAllMemberTotalStateCache(album);
 
+        });
         eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
     }
 
@@ -316,8 +322,10 @@ public class AlbumService {
         }
         pictureFaceClusterRepository.deleteAllByPictureIds(now, pictureIds);
 
-        refreshAllMemberTotalStateCache(album);
-        refreshAllMemberMonthlyAlbumCache(album);
+        transactionAfterCommitExecutor.execute(() ->{
+            refreshAllMemberTotalStateCache(album);
+            refreshAllMemberMonthlyAlbumCache(album);
+        });
     }
 
     @Transactional
@@ -336,8 +344,10 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
-        refreshAllMemberTotalStateCache(album);
-        refreshAllMemberMonthlyAlbumCache(album);
+        transactionAfterCommitExecutor.execute(() ->{
+            refreshAllMemberTotalStateCache(album);
+            refreshAllMemberMonthlyAlbumCache(album);
+        });
     }
 
     private UserAlbum getUserAlbum(User user, Album album) {
@@ -437,8 +447,11 @@ public class AlbumService {
             redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
-            refreshAllMemberTotalStateCache(album);
-            refreshAllMemberMonthlyAlbumCache(album);
+
+            transactionAfterCommitExecutor.execute(()->{
+                refreshAllMemberTotalStateCache(album);
+                refreshAllMemberMonthlyAlbumCache(album);
+            });
             eventPublisher.publishEvent(new InviteMemberNotificationEvent(album.getId(), user.getId()));
             return BaseApiResponse.success("ALBUM_INVITE_SUCCESS", "앨범에 초대되었습니다.", response);
         }
