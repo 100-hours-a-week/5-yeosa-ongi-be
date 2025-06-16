@@ -45,6 +45,7 @@ public class Notification {
 
     private Long refId;
 
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 

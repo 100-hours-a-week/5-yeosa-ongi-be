@@ -61,8 +61,13 @@ public class Picture {
     @Builder.Default
     @Column(length = 20)
     private String tag = "AI 분석 전";
+
+    @Builder.Default
     private boolean isDuplicated = false;
+
+    @Builder.Default
     private boolean isShaky = false;
+
     private float qualityScore;
 
     private LocalDateTime takeAt;

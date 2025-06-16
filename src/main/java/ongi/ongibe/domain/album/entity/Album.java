@@ -64,6 +64,7 @@ public class Album {
 
     private LocalDateTime deletedAt;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AlbumProcessState processState = AlbumProcessState.NOT_STARTED;
