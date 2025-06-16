@@ -33,7 +33,7 @@ public class PresignedUrlService {
     private String region;
 
     private final String prodCdnDomain = "https://cdn.ongi.today/";
-    private final String devCdnDomain = "https://cdn.ongi.today/"; // todo : 나중에 이거 바꾸기
+    private final String devCdnDomain = "https://cdn-dev.ongi.today/";
 
     public BaseApiResponse<PresignedUrlResponseDTO> generatePresignedUrls(PresignedUrlRequestDTO request) {
         List<PresignedFile> result = request.pictures().stream()
