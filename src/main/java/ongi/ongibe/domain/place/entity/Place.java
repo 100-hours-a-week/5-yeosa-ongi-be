@@ -28,6 +28,7 @@ public class Place {
     private Long id;
 
     @OneToMany(mappedBy = "place")
+    @Builder.Default
     private List<Picture> pictures = new ArrayList<>();
 
     @Column(length = 15)

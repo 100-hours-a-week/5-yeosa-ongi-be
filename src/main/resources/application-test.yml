@@ -26,7 +26,7 @@ spring:
 
   kakao:
     auth:
-      client: ${KAKAO_CLIENT_ID}
+      client: ${KAKAO_CLIENT_ID:test}
       redirect: http://localhost:8080/auth/login/kakao
 
   cloud:
@@ -37,19 +37,23 @@ spring:
 cloud:
   aws:
     credentials:
-      access-key: ${AWS_ACCESS_KEY_ID}
-      secret-key: ${AWS_SECRET_ACCESS_KEY}
+      access-key: ${AWS_ACCESS_KEY_ID:test}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:test}
     region:
       static: ap-northeast-2
     s3:
       bucket: ${S3_BUCKET_NAME:s3-dev-ongi}
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:test_key_it_is_test_not_for_prod_or_dev_you_got-it_?}
 
 ai:
   server:
     base-url: ${AI_SERVER_URL:http://localhost:8081}
+
+logging:
+  level:
+    org.springframework.boot.context.config: DEBUG
 
 custom:
   isProd: false
