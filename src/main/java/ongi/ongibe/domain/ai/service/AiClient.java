@@ -59,6 +59,7 @@ public class AiClient {
                     .bodyToMono(String.class)
                     .block(Duration.ofSeconds(1)); // 타임아웃 설정
 
+            log.info("current AI server : {}", baseUrl + HEALTH_INFO_PATH);
             return response != null && response.contains("ok");
         } catch (Exception e) {
             log.warn("AI 서버 헬스체크 실패", e);
