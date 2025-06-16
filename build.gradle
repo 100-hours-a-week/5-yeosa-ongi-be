@@ -107,10 +107,13 @@ jacocoTestReport {
                         'ongi/ongibe/domain/**/repository/**',
                         'ongi/ongibe/domain/**/schedule/**',
                         'ongi/ongibe/domain/loadtest/**',
-                        'ongi/ongibe/domain/ai/**',
-                        'ongi/ongibe/domain/album/AlbumProcessState.class',
-                        'ongi/ongibe/domain/album/UserAlbumRole.class',
-                        'ongi/ongibe/domain/notification/NotificationType.class',
+                        '**/AiClient.class',
+                        '**/AiEmbeddingService.class',
+                        'ongi/ongibe/domain/ai/event/**',
+                        'ongi/ongibe/domain/ai/dto/**',
+                        '**/AlbumProcessState.class',
+                        '**/UserAlbumRole.class',
+                        '**/notification/NotificationType.class',
                         'ongi/ongibe/common/**',
                         'ongi/ongibe/global/**/config/**',
                         'ongi/ongibe/global/exception/**',
@@ -123,6 +126,11 @@ jacocoTestReport {
                 ])
             })
     )
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty "spring.profiles.active", "test"
 }
 
 //jacocoTestCoverageVerification {

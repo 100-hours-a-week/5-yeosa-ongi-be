@@ -107,7 +107,7 @@ public class UserCacheService {
 
     private static String getMaxTag(List<Picture> pictures) {
         Map<String, Long> tagCount = pictures.stream()
-                .filter(p->p.getTag() != null && !p.getTag().isBlank() && !p.getTag().equals("기타"))
+                .filter(p->p.getTag() != null && !p.getTag().isBlank() && !p.getTag().equals("기타") && !p.getTag().equals("AI 분석 전"))
                 .collect(Collectors.groupingBy(Picture::getTag, Collectors.counting()));
         return tagCount.entrySet().stream()
                 .max(Entry.comparingByValue())
