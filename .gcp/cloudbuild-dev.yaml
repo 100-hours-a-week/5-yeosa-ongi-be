@@ -58,7 +58,7 @@ steps:
         echo ▶ 템플릿 생성: ${_TEMPLATE_NAME}
         gcloud compute instance-templates create-with-container "${_TEMPLATE_NAME}" \
           --network=dev-ongi-vpc \
-          --subnet=dev-ongi-server-subnet \
+          --subnet=dev-ongi-private-subnet \
           --no-address \
           --machine-type=e2-medium \
           --region=asia-northeast3 \
