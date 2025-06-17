@@ -33,6 +33,8 @@ availableSecrets:
       env: AWS_REGION
     - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_dev/versions/latest"
       env: AI_SERVER_URL_DEV
+    - versionName: "projects/dev-ongi-3-tier/secrets/signoz_ingestion_key/versions/latest"
+      env: SIG_NOZ_KEY
 
 steps:
   - id: deploy-backend
@@ -51,6 +53,7 @@ steps:
       - AWS_SECRET_ACCESS_KEY
       - AWS_REGION
       - AI_SERVER_URL_DEV
+      - SIG_NOZ_KEY
     args:
       - '-c'
       - |
@@ -71,6 +74,10 @@ steps:
           --container-env=SPRING_DATASOURCE_USERNAME=$$DB_USER \
           --container-env=SPRING_DATASOURCE_PASSWORD=$$DB_PASS \
           --container-env=SPRING_DATA_REDIS_HOST=$$REDIS_URL \
+          --container-env=OTEL_TRACES_EXPORTER=otlp \
+          --container-env=OTEL_EXPORTER_OTLP_ENDPOINT=https://ingest.us.signoz.cloud:443 \
+          --container-env=OTEL_EXPORTER_OTLP_HEADERS="signoz-ingestion-key=$$SIG_NOZ_KEY" \
+          --container-env=OTEL_RESOURCE_ATTRIBUTES=service.name=ongi-backend,service.version=${_IMAGE_TAG} \
           --container-env=KAKAO_CLIENT_ID=$$KAKAO_CLIENT_ID \
           --container-env=JWT_SECRET=$$JWT_SECRET \
           --container-env=S3_BUCKET_NAME_DEV=$$S3_BUCKET_NAME_DEV \
