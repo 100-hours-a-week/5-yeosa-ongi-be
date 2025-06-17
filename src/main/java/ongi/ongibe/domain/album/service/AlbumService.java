@@ -1,6 +1,7 @@
 package ongi.ongibe.domain.album.service;
 
 
+import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class AlbumService {
     private final AlbumCacheService albumCacheService;
     private final UserCacheService userCacheService;
     private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
+    private final EntityManager entityManager;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -344,6 +346,9 @@ public class AlbumService {
         pictureRepository.saveAll(album.getPictures());
         albumRepository.save(album);
 
+        entityManager.flush();
+
+        albumCacheService.evictMonthlyAlbum(user.getId(), DateUtil.getYearMonth(album.getCreatedAt()));
         transactionAfterCommitExecutor.execute(() ->{
             refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
