@@ -84,7 +84,7 @@ steps:
           --tags=dev-backend
 
         echo ▶ MIG 롤링 업데이트
-        gcloud compute instance-groups managed rolling-action start-update ongi-backend-mig \
+        gcloud compute instance-groups managed rolling-action start-update dev-ongi-backend-mig \
           --region=asia-northeast3 \
           --version template="${_TEMPLATE_NAME}" \
           --type=proactive
