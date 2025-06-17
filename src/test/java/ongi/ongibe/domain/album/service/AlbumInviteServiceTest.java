@@ -27,6 +27,7 @@ import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.user.UserStatus;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
+import ongi.ongibe.global.executor.TransactionAfterCommitExecutor;
 import ongi.ongibe.global.security.util.SecurityUtil;
 import ongi.ongibe.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +65,9 @@ class AlbumInviteServiceTest {
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private TransactionAfterCommitExecutor transactionAfterCommitExecutor;
 
     private final Long albumId = 1L;
     private final String token = "mocked.jwt.token";
