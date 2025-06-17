@@ -20,6 +20,7 @@ public interface UserAlbumRepository extends JpaRepository<UserAlbum, Long> {
     JOIN FETCH a.userAlbums aua
     JOIN FETCH aua.user u
     WHERE ua.user = :user AND ua.deletedAt IS NULL
+        AND ua.deletedAt IS NULL AND a.deletedAt IS NULL
     """)
     List<UserAlbum> findAllByUser(@Param("user") User user);
     boolean existsByUserAndAlbum_CreatedAtBefore(User user, LocalDateTime dateTime);
