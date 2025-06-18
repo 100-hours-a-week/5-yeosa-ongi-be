@@ -8,8 +8,78 @@ on:
       - closed
 
 jobs:
+  flyway-migration:
+    name: "Flyway: Validate & Migrate PROD DB"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: dev-ongi-3-tier
+
+      - name: Fetch Flyway DB secrets
+        run: |
+          echo "DB_URL=$(gcloud secrets versions access latest --secret=db_url_prod)" >> $GITHUB_ENV
+          echo "DB_USER=$(gcloud secrets versions access latest --secret=db_user_prod)" >> $GITHUB_ENV
+          echo "DB_PASS=$(gcloud secrets versions access latest --secret=db_password_prod)" >> $GITHUB_ENV
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Initial Flyway Validate
+        id: initial-validate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayValidate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Try Flyway Migrate
+        id: migrate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Run Flyway Repair if Migrate Fails
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          ./gradlew flywayRepair \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Retry Flyway Migrate after Repair
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Final Flyway Validate
+        run: |
+          ./gradlew flywayValidate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
   build-image:
     name: Build & Push Docker Image
+    needs: flyway-migration
     runs-on: ubuntu-latest
     env:
       TAG: prod-${{ github.sha }}
@@ -42,8 +112,8 @@ jobs:
 
   deploy-backend:
     name: Trigger Cloud Build (PROD)
-    runs-on: ubuntu-latest
     needs: build-image
+    runs-on: ubuntu-latest
     env:
       TAG: prod-${{ github.sha }}
     steps:
@@ -66,9 +136,9 @@ jobs:
 
   notify-discord:
     name: Notify Discord (Success/Failure)
-    runs-on: ubuntu-latest
     needs: deploy-backend
     if: ${{ always() }}
+    runs-on: ubuntu-latest
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       TAG: prod-${{ github.sha }}

@@ -8,6 +8,79 @@ on:
       - closed
 
 jobs:
+  flyway-migration:
+    name: "Flyway: Validate & Migrate DB"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1) GCP 인증
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: dev-ongi-3-tier
+
+      # 2) Secret Manager 에서 DB 시크릿 꺼내서 환경변수로 등록
+      - name: Fetch Flyway DB Secrets
+        id: fetch-secrets
+        run: |
+          echo "DB_URL=$(gcloud secrets versions access latest --secret=db_url_dev)" >> $GITHUB_ENV
+          echo "DB_USER=$(gcloud secrets versions access latest --secret=db_user_dev)" >> $GITHUB_ENV
+          echo "DB_PASS=$(gcloud secrets versions access latest --secret=db_password_dev)" >> $GITHUB_ENV
+
+      # 3) Java 셋업
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 4) Flyway 단계
+      - name: Initial Flyway Validate
+        id: initial-validate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayValidate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Try Flyway Migrate
+        id: migrate
+        continue-on-error: true
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Run Flyway Repair if Migrate Fails
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          ./gradlew flywayRepair \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Retry Flyway Migrate after Repair
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          ./gradlew flywayMigrate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
+      - name: Final Flyway Validate
+        run: |
+          ./gradlew flywayValidate \
+            -Dflyway.url=$DB_URL \
+            -Dflyway.user=$DB_USER \
+            -Dflyway.password=$DB_PASS
+
   build-image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
