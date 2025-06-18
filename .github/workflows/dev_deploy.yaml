@@ -12,7 +12,6 @@ jobs:
     name: "Flyway: Validate & Migrate DB"
     runs-on: ubuntu-latest
     env:
-      # 로컬 프록시로 접속할 URL
       FLYWAY_URL: jdbc:mysql://127.0.0.1:3306/ongi
     steps:
       - uses: actions/checkout@v4
@@ -28,15 +27,15 @@ jobs:
         with:
           project_id: dev-ongi-3-tier
 
-      # 2) Cloud SQL Proxy 실행 (127.0.0.1:3306 → 실제 인스턴스)
+      # 2) Cloud SQL Proxy 실행
       - name: Start Cloud SQL Proxy
-        uses: google-github-actions/cloud-sql-proxy@v1
+        uses: mattes/gce-cloudsql-proxy-action@v1
         with:
-          instance_connection_name: dev-ongi-3-tier:asia-northeast3:ongi-sql-dev
-          port: 3306
-          credential_file: ${{ secrets.GCP_CREDENTIALS }}
+          creds:     ${{ secrets.GCP_CREDENTIALS }}
+          instance:  dev-ongi-3-tier:asia-northeast3:ongi-sql-dev
+          port:      3306
 
-      # 3) Secret Manager 에서 DB 사용자·비밀번호만 가져오기
+      # 3) Secret Manager에서 DB 사용자·비밀번호 가져오기
       - name: Fetch Flyway DB Credentials
         id: fetch-secrets
         run: |
@@ -49,7 +48,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # 5) Flyway Validate & Migrate 단계
+      # 5) Flyway Validate & Migrate
       - name: Initial Flyway Validate
         id: initial-validate
         continue-on-error: true
