@@ -37,28 +37,51 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Flyway & Proxy 한 번에 실행
+      - name: Install debug tools
         run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client net-tools
+
+      - name: Flyway & Proxy 한 번에 실행 (디버깅 강화)
+        env:
+          INSTANCE_CONN: dev-ongi-3-tier:asia-northeast3:dev-ongi-cloudsql
+        run: |
+          set -e
+
+          echo "▶ [DEBUG] DB_USER = $DB_USER"
+          echo "▶ [DEBUG] FLYWAY_URL = $FLYWAY_URL"
+
           # 1) v1 바이너리 다운로드
           curl -sSLo cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
           chmod +x cloud_sql_proxy
 
-          # 2) 백그라운드로 실행 (verbose 로그)
+          # 2) 백그라운드 실행 (verbose)
           nohup ./cloud_sql_proxy \
             --instances=${INSTANCE_CONN}=tcp:3306 \
             --verbose &> proxy.log &
 
-          sleep 5
+          # 충분히 대기
+          sleep 10
 
-          # 디버그: 포트 리스닝 확인
-          netstat -tnl | grep ':3306' || { echo "❌ Proxy 리스닝 실패"; exit 1; }
+          # 3) Proxy 리스닝 확인
+          if ! netstat -tnl | grep -q ':3306'; then
+            echo "❌ Proxy가 포트 3306을 리스닝하지 않습니다!"
+            tail -n 30 proxy.log
+            exit 1
+          fi
           echo "✅ Proxy 리스닝 확인"
-          echo "==== Cloud SQL Proxy Logs (최근 30줄) ===="
-          tail -n 30 proxy.log
 
-          # 3) Flyway Validate → Migrate → Repair → Retry → Final Validate
-          set -e
+          # 4) mysql 클라이언트로 연결 테스트
+          if ! mysql --host=127.0.0.1 --port=3306 \
+              --user="$DB_USER" --password="$DB_PASS" \
+              -e "SELECT 1" 2>/dev/null; then
+            echo "❌ mysql 클라이언트 연결 실패!"
+            tail -n 50 proxy.log
+            exit 1
+          fi
+          echo "✅ mysql 클라이언트 연결 성공"
 
+          # 5) Flyway Validate → Migrate → Repair → Retry → Final Validate
           echo "▶ Flyway Validate"
           ./gradlew flywayValidate \
             -Dflyway.url=$FLYWAY_URL \
@@ -148,7 +171,7 @@ jobs:
         run: |
           gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=${{ needs.build-image.env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
+            --substitutions=_IMAGE_TAG=${{ env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
   notify-discord:
