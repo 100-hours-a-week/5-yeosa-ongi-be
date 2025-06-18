@@ -9,7 +9,7 @@ on:
 
 jobs:
   flyway-migration:
-    name: Flyway: Validate · Migrate · Repair
+    name: "Flyway: Validate · Migrate · Repair"
     runs-on: ubuntu-latest
 
     # Job 전체에서 사용할 환경변수
