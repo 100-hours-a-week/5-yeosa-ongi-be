@@ -12,10 +12,6 @@ jobs:
     name: "Flyway: Validate · Migrate · Repair via Proxy VM"
     runs-on: ubuntu-latest
 
-    env:
-      # sql-proxy-host VM 내부 IP
-      FLYWAY_URL: "jdbc:mysql://10.1.30.2:3306/ongi"
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,11 +21,12 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      - name: Fetch Flyway DB Credentials
+      - name: Fetch Flyway Secrets from Secret Manager
         id: fetch-secrets
         run: |
           echo "DB_USER=$(gcloud secrets versions access latest --secret=db_user_dev)" >> $GITHUB_ENV
           echo "DB_PASS=$(gcloud secrets versions access latest --secret=db_password_dev)" >> $GITHUB_ENV
+          echo "FLYWAY_URL=$(gcloud secrets versions access latest --secret=dev_flyway_url)" >> $GITHUB_ENV
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -55,9 +52,9 @@ jobs:
                -Dflyway.user=$DB_USER \
                -Dflyway.password=$DB_PASS \
                --info; then
-            echo "Migrate succeeded"
+            echo "✅ Migrate succeeded"
           else
-            echo "Migrate failed → Repair then retry"
+            echo "⚠️ Migrate failed → Repair then retry"
             ./gradlew flywayRepair \
               -Dflyway.url=$FLYWAY_URL \
               -Dflyway.user=$DB_USER \
