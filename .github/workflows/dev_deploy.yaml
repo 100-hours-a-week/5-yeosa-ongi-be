@@ -32,7 +32,7 @@ jobs:
         uses: mattes/gce-cloudsql-proxy-action@v1
         with:
           creds:     ${{ secrets.GCP_CREDENTIALS }}
-          instance:  dev-ongi-3-tier:asia-northeast3:ongi-sql-dev
+          instance:  dev-ongi-3-tier:asia-northeast3:dev-ongi-cloudsql
           port:      3306
 
       # 3) Secret Manager에서 DB 사용자·비밀번호 가져오기
