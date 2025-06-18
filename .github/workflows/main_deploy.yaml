@@ -79,7 +79,6 @@ jobs:
 
   build-image:
     name: Build & Push Docker Image
-    needs: flyway-migration
     runs-on: ubuntu-latest
     env:
       TAG: prod-${{ github.sha }}
