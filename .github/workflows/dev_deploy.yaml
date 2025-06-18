@@ -14,6 +14,7 @@ jobs:
 
     env:
       FLYWAY_URL: "jdbc:mysql://127.0.0.1:3306/ongi"
+      INSTANCE_CONN: dev-ongi-3-tier:asia-northeast3:dev-ongi-cloudsql
 
     steps:
       - name: Checkout code
@@ -37,20 +38,23 @@ jobs:
           distribution: 'temurin'
 
       - name: Flyway & Proxy 한 번에 실행
-        env:
-          INSTANCE_CONN: dev-ongi-3-tier:asia-northeast3:dev-ongi-cloudsql
         run: |
-          # 1) Proxy 다운로드 (v2 바이너리)
-          curl -sSLo cloud-sql-proxy \
-            https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.17.1/cloud-sql-proxy.linux.amd64
-          chmod +x cloud-sql-proxy
+          # 1) v1 바이너리 다운로드
+          curl -sSLo cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
+          chmod +x cloud_sql_proxy
 
-          # 2) 백그라운드로 실행
-          nohup ./cloud-sql-proxy \
-            --instances=${INSTANCE_CONN}=tcp:3306 &
+          # 2) 백그라운드로 실행 (verbose 로그)
+          nohup ./cloud_sql_proxy \
+            --instances=${INSTANCE_CONN}=tcp:3306 \
+            --verbose &> proxy.log &
 
-          # 프록시 기동 대기
           sleep 5
+
+          # 디버그: 포트 리스닝 확인
+          netstat -tnl | grep ':3306' || { echo "❌ Proxy 리스닝 실패"; exit 1; }
+          echo "✅ Proxy 리스닝 확인"
+          echo "==== Cloud SQL Proxy Logs (최근 30줄) ===="
+          tail -n 30 proxy.log
 
           # 3) Flyway Validate → Migrate → Repair → Retry → Final Validate
           set -e
@@ -64,10 +68,10 @@ jobs:
 
           echo "▶ Flyway Migrate"
           if ./gradlew flywayMigrate \
-            -Dflyway.url=$FLYWAY_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS \
-            --info; then
+               -Dflyway.url=$FLYWAY_URL \
+               -Dflyway.user=$DB_USER \
+               -Dflyway.password=$DB_PASS \
+               --info; then
             echo "✅ Migrate 성공"
           else
             echo "⚠️ Migrate 실패 → Repair 후 재시도"
