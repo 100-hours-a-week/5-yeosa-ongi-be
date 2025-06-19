@@ -8,12 +8,14 @@ import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+@Primary
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiAlbumService {
+public class AiAPIAlbumService implements AiAlbumServiceInterface {
 
     private final AiClient aiClient;
     private final AlbumRepository albumRepository;
@@ -28,6 +30,7 @@ public class AiAlbumService {
         return aiClient.isAiServerAvailable();
     }
 
+    @Override
     public void process(Album album, List<String> s3keys) {
         Long albumId = album.getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
