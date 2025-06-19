@@ -27,6 +27,21 @@ spring:
       client: ${KAKAO_CLIENT_ID}
       redirect: https://ongi.today/auth/callback/kakao
 
+  kafka:
+    bootstrap-servers: ${KAFKA_URL}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+    consumer:
+      group-id: be-group
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
 cloud:
   aws:
     credentials:
