@@ -203,7 +203,7 @@ public class AlbumService {
         });
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-        eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
+        eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys));
     }
 
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
@@ -250,7 +250,7 @@ public class AlbumService {
             refreshAllMemberTotalStateCache(album);
 
         });
-        eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
+        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys));
     }
 
     @Transactional

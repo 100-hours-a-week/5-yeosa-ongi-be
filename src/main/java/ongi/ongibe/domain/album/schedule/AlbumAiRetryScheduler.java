@@ -43,8 +43,9 @@ public class AlbumAiRetryScheduler {
                         .toList();
 
                 album.setProcessState(AlbumProcessState.IN_PROGRESS);
+                Long userId = album.getUserAlbums().getFirst().getUser().getId();
                 log.info("[AI 재시도] 앨범 ID: {}, 사진 수: {}", album.getId(), pictureKeys.size());
-                eventPublisher.publishEvent(new AlbumRetryEvent(album.getId(), pictureKeys));
+                eventPublisher.publishEvent(new AlbumRetryEvent(album.getId(), userId, pictureKeys));
             } catch (Exception e) {
                 log.error("[AI 재시도 실패] 앨범 ID: {}, message: {}", album.getId(), e.getMessage(), e);
                 album.setProcessState(AlbumProcessState.FAILED);
