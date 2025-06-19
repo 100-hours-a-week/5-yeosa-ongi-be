@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiEmbeddingService implements AiEmbeddingServiceInterface {
+public class AiHttpEmbeddingService implements AiEmbeddingServiceInterface {
 
     private final AiClient aiClient;
 

@@ -7,7 +7,6 @@ import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiAestheticScoreService {
+public class AiHttpAestheticScoreService {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;
