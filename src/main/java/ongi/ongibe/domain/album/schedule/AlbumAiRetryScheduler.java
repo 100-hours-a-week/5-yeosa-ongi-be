@@ -1,21 +1,18 @@
 package ongi.ongibe.domain.album.schedule;
 
-import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.domain.ai.service.AiAlbumService;
+import ongi.ongibe.domain.ai.service.AiAPIAlbumService;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
-import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.event.AlbumRetryEvent;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
 @RequiredArgsConstructor
@@ -25,11 +22,11 @@ public class AlbumAiRetryScheduler {
     private final AlbumRepository albumRepository;
     private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final AiAlbumService aiAlbumService;
+    private final AiAPIAlbumService aiAPIAlbumService;
 
     @Scheduled(fixedRate = 5 * 60 * 1000) // 5분에 한번
     public void retryAlbumProcess() {
-        if (!aiAlbumService.isAiServerAvailable()) {
+        if (!aiAPIAlbumService.isAiServerAvailable()) {
             log.warn("ai 서버 현재 요청 불가. 재시도 중단");
             return;
         }
