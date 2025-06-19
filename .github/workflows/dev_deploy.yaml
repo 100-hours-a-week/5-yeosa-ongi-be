@@ -9,35 +9,31 @@ on:
 
 jobs:
   flyway-migration:
-    name: "Flyway: Validate · Migrate · Repair via Proxy VM"
-    runs-on: ubuntu-latest
+    name: Validate · Migrate · Repair via Proxy VM
+    runs-on: [self-hosted, linux, x64]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Fetch Flyway Secrets from Secret Manager
+      - name: Fetch DB credentials from Secret Manager
         id: fetch-secrets
         run: |
+          echo "DB_NAME=$(gcloud secrets versions access latest --secret=dev_db_name)" >> $GITHUB_ENV
           echo "DB_USER=$(gcloud secrets versions access latest --secret=db_user_dev)" >> $GITHUB_ENV
           echo "DB_PASS=$(gcloud secrets versions access latest --secret=db_password_dev)" >> $GITHUB_ENV
-          echo "FLYWAY_URL=$(gcloud secrets versions access latest --secret=dev_flyway_url)" >> $GITHUB_ENV
+          echo "FLYWAY_URL=jdbc:postgresql://127.0.0.1:5432/${DB_NAME}" >> $GITHUB_ENV
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '21'
-          distribution: 'temurin'
 
       - name: Install mysql client
         run: sudo apt-get update && sudo apt-get install -y mysql-client
 
-      - name: "Flyway: Validate"
+      - name: Validate
         run: |
           ./gradlew flywayValidate \
             -Dflyway.url=$FLYWAY_URL \
@@ -45,7 +41,7 @@ jobs:
             -Dflyway.password=$DB_PASS \
             --info
 
-      - name: "Flyway: Migrate (with retry/repair)"
+      - name: Migrate (with retry/repair)
         run: |
           if ./gradlew flywayMigrate \
                -Dflyway.url=$FLYWAY_URL \
@@ -60,7 +56,6 @@ jobs:
               -Dflyway.user=$DB_USER \
               -Dflyway.password=$DB_PASS \
               --info
-
             ./gradlew flywayMigrate \
               -Dflyway.url=$FLYWAY_URL \
               -Dflyway.user=$DB_USER \
@@ -68,7 +63,7 @@ jobs:
               --info
           fi
 
-      - name: "Flyway: Final Validate"
+      - name: Final Validate
         run: |
           ./gradlew flywayValidate \
             -Dflyway.url=$FLYWAY_URL \
@@ -82,27 +77,20 @@ jobs:
     needs: flyway-migration
     env:
       TAG: dev-${{ github.sha }}
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
-
+          distribution: temurin
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
       - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: dev-ongi-3-tier
-
       - name: Configure Docker Auth
-        run: |
-          gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
-
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
       - name: Build & Push Docker Image
         run: |
           docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
@@ -112,18 +100,14 @@ jobs:
     name: Trigger Cloud Build
     runs-on: ubuntu-latest
     needs: build-image
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
       - uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: dev-ongi-3-tier
-
       - name: Trigger Cloud Build
         run: |
           gcloud builds submit . \
@@ -139,25 +123,13 @@ jobs:
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       TAG: dev-${{ github.sha }}
-
     steps:
       - name: Notify on Success
         if: ${{ needs.deploy-backend.result == 'success' }}
         run: |
           echo '{
             "content": "**✅ DEV 백엔드 배포 완료!**",
-            "embeds": [
-              {
-                "title": "'"${{ github.event.pull_request.title }}"'",
-                "url": "'"${{ github.event.pull_request.html_url }}"'",
-                "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Author",     "value": "'"${{ github.actor }}"'",        "inline": true },
-                  { "name": "Image Tag",  "value": "'"${{ env.TAG }}"'",             "inline": true }
-                ],
-                "color": 3066993
-              }
-            ]
+            ...
           }' | curl -H "Content-Type: application/json" -X POST -d @- $DISCORD_WEBHOOK_URL
 
       - name: Notify on Failure
@@ -165,15 +137,5 @@ jobs:
         run: |
           echo '{
             "content": "**❌ DEV 백엔드 배포 실패!**",
-            "embeds": [
-              {
-                "title": "'"${{ github.event.pull_request.title }}"'",
-                "url": "'"${{ github.event.pull_request.html_url }}"'",
-                "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Author",     "value": "'"${{ github.actor }}"'",        "inline": true }
-                ],
-                "color": 15158332
-              }
-            ]
+            ...
           }' | curl -H "Content-Type: application/json" -X POST -d @- $DISCORD_WEBHOOK_URL
