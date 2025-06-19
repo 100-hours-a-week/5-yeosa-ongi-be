@@ -9,73 +9,97 @@ on:
 
 jobs:
   flyway-migration:
-    name: "Flyway: Validate & Migrate PROD DB"
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, linux, x64 ]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      - name: Set up gcloud
+      - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: dev-ongi-3-tier
 
-      - name: Fetch Flyway DB secrets
+      - name: Fetch DB credentials
+        id: fetch-secrets
         run: |
-          echo "DB_URL=$(gcloud secrets versions access latest --secret=db_url_prod)" >> $GITHUB_ENV
-          echo "DB_USER=$(gcloud secrets versions access latest --secret=db_user_prod)" >> $GITHUB_ENV
-          echo "DB_PASS=$(gcloud secrets versions access latest --secret=db_password_prod)" >> $GITHUB_ENV
+          # 1) Secret Manager 에서 기본 URL 가져오기
+          DB_URL=$(gcloud secrets versions access latest --secret=db_url_prod)
+          DB_USER=$(gcloud secrets versions access latest --secret=db_user_prod)
+          DB_PASS=$(gcloud secrets versions access latest --secret=db_password_prod)
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+          # 2) URL 뒤에 allowPublicKeyRetrieval 옵션 추가
+          DB_URL="${DB_URL}?allowPublicKeyRetrieval=true&useSSL=false"
 
-      - name: Initial Flyway Validate
-        id: initial-validate
-        continue-on-error: true
+          # 3) 환경 변수로 내보내기
+          echo "DB_URL=$DB_URL"  >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+
+      - name: Download & Install Flyway CLI locally
         run: |
-          ./gradlew flywayValidate \
-            -Dflyway.url=$DB_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS
+          # 1) 기존 설치 제거 (있으면)
+          rm -rf ~/.local/share/flyway
+          # 2) 압축 해제
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.12.0/flyway-commandline-10.12.0-linux-x64.tar.gz \
+            | tar xz
+          # 3) 전체 디렉터리 이동
+          mkdir -p ~/.local/share
+          mv flyway-10.12.0 ~/.local/share/flyway
+          # 4) PATH 등록
+          echo "$HOME/.local/share/flyway" >> $GITHUB_PATH
 
-      - name: Try Flyway Migrate
-        id: migrate
-        continue-on-error: true
+      - name: Verify Flyway installation
         run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=$DB_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS
+          flyway -v   # 버전 출력으로 확인
 
-      - name: Run Flyway Repair if Migrate Fails
-        if: steps.migrate.outcome == 'failure'
+      - name: Validate with Flyway CLI
         run: |
-          ./gradlew flywayRepair \
-            -Dflyway.url=$DB_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS
+          flyway \
+            -url="$DB_URL" \
+            -user="$DB_USER" \
+            -password="$DB_PASS" \
+            -locations=filesystem:src/main/resources/db/migration \
+            validate
 
-      - name: Retry Flyway Migrate after Repair
-        if: steps.migrate.outcome == 'failure'
+      - name: Migrate with Repair on Failure
         run: |
-          ./gradlew flywayMigrate \
-            -Dflyway.url=$DB_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS
+          if flyway \
+            -url="$DB_URL" \
+            -user="$DB_USER" \
+            -password="$DB_PASS" \
+            -locations=filesystem:src/main/resources/db/migration \
+            migrate; then
+            echo "✅ Flyway migration succeeded"
+          else
+            echo "⚠️ Migration failed, attempting repair"
+            flyway \
+              -url="$DB_URL" \
+              -user="$DB_USER" \
+              -password="$DB_PASS" \
+              -locations=filesystem:src/main/resources/db/migration \
+              repair
+            flyway \
+              -url="$DB_URL" \
+              -user="$DB_USER" \
+              -password="$DB_PASS" \
+              -locations=filesystem:src/main/resources/db/migration \
+              migrate
+          fi
 
-      - name: Final Flyway Validate
+      - name: Final Validate
         run: |
-          ./gradlew flywayValidate \
-            -Dflyway.url=$DB_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS
+          flyway \
+            -url="$DB_URL" \
+            -user="$DB_USER" \
+            -password="$DB_PASS" \
+            -locations=filesystem:src/main/resources/db/migration \
+            validate
 
   build-image:
     name: Build & Push Docker Image
