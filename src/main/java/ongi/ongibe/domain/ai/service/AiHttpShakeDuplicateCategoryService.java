@@ -19,7 +19,7 @@ public class AiHttpShakeDuplicateCategoryService {
     private final PictureRepository pictureRepository;
 
     @Transactional
-    public void analyzeShakyDuplicateCategory(Long albumId, List<String> s3keys) {
+    public void analyzeShakyDuplicateCategory(Long albumId, Long userId, List<String> s3keys) {
         log.info("[AI] 품질 분석 시작");
 
         try {
