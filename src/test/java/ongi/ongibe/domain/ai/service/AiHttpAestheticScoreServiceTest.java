@@ -1,6 +1,5 @@
 package ongi.ongibe.domain.ai.service;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,8 +8,6 @@ import java.util.List;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO.ScoreCategory;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO.ScoreCategory.ScoreEntry;
-import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
-import ongi.ongibe.domain.ai.dto.CategoryResponseDTO.CategoryResult;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -22,10 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AiAestheticScoreServiceTest {
+class AiHttpAestheticScoreServiceTest {
 
     @InjectMocks
-    private AiAestheticScoreService aiAestheticScoreService;
+    private AiHttpAestheticScoreService aiHttpAestheticScoreService;
 
     @Mock private AiClient aiClient;
     @Mock private PictureRepository pictureRepository;
@@ -69,7 +66,7 @@ class AiAestheticScoreServiceTest {
         when(aiClient.getAestheticScore(requestCategories)).thenReturn(scoreCategories);
 
         // when
-        aiAestheticScoreService.requestAestheticScores(album, s3keys);
+        aiHttpAestheticScoreService.requestAestheticScores(album, s3keys);
 
         // then
         verify(pictureRepository).updateScore(albumId, key1, 85.0);

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiShakeDuplicateCategoryService {
+public class AiHttpShakeDuplicateCategoryService {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;

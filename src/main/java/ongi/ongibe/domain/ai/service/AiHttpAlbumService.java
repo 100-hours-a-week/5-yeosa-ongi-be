@@ -21,11 +21,11 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
     private final AiClient aiClient;
     private final AlbumRepository albumRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final AiEmbeddingService aiEmbeddingService;
-    private final AiShakeDuplicateCategoryService aiShakeDuplicateCategoryService;
-    private final AiAestheticScoreService aiAestheticScoreService;
+    private final AiHttpEmbeddingService aiHttpEmbeddingService;
+    private final AiHttpShakeDuplicateCategoryService aiHttpShakeDuplicateCategoryService;
+    private final AiHttpAestheticScoreService aiHttpAestheticScoreService;
     private final AiThumbnailService aiThumbnailService;
-    private final AiClusterService aiClusterService;
+    private final AiHttpClusterService aiHttpClusterService;
 
     public boolean isAiServerAvailable() {
         return aiClient.isAiServerAvailable();
@@ -44,19 +44,19 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
             }
 
             // 1. 임베딩
-            aiEmbeddingService.requestEmbeddings(albumId, userId, s3keys);
+            aiHttpEmbeddingService.requestEmbeddings(albumId, userId, s3keys);
 
             // 2. 병렬 요청
-            aiShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(album, s3keys);
+            aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(album, s3keys);
 
             // 3. quality score
-            aiAestheticScoreService.requestAestheticScores(album, s3keys);
+            aiHttpAestheticScoreService.requestAestheticScores(album, s3keys);
 
             // 4. quality score 기반 썸네일 지정
             aiThumbnailService.setThumbnail(album, s3keys);
 
             // 5. 클러스터 분석
-            aiClusterService.requestCluster(album);
+            aiHttpClusterService.requestCluster(album);
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
             album.setProcessState(AlbumProcessState.DONE);

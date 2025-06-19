@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO.ClusterData;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.FaceCluster;
@@ -23,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiClusterService {
+public class AiHttpClusterService {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;

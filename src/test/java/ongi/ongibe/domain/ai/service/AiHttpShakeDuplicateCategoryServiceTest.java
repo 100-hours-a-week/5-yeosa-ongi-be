@@ -3,7 +3,6 @@ package ongi.ongibe.domain.ai.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,10 +21,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AiShakeDuplicateCategoryServiceTest {
+class AiHttpShakeDuplicateCategoryServiceTest {
 
     @InjectMocks
-    private AiShakeDuplicateCategoryService service;
+    private AiHttpShakeDuplicateCategoryService service;
 
     @Mock private AiClient aiClient;
 

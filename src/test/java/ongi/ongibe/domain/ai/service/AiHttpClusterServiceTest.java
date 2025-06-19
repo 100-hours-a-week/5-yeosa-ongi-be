@@ -1,6 +1,5 @@
 package ongi.ongibe.domain.ai.service;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,10 +23,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AiClusterServiceTest {
+class AiHttpClusterServiceTest {
 
     @InjectMocks
-    private AiClusterService aiClusterService;
+    private AiHttpClusterService aiHttpClusterService;
 
     @Mock
     private AiClient aiClient;
@@ -69,7 +68,7 @@ class AiClusterServiceTest {
         when(faceClusterRepository.findAllByAlbumId(albumId)).thenReturn(List.of(oldCluster));
 
         // when
-        aiClusterService.requestCluster(album);
+        aiHttpClusterService.requestCluster(album);
 
         // then
         verify(pictureFaceClusterRepository).deleteAllByFaceClusterIds(any(), eq(List.of(10L)));
@@ -86,7 +85,7 @@ class AiClusterServiceTest {
         when(faceClusterRepository.findAllByAlbumId(albumId)).thenReturn(List.of());
 
         // when
-        aiClusterService.requestCluster(album);
+        aiHttpClusterService.requestCluster(album);
 
         // then
         verify(faceClusterRepository).save(any(FaceCluster.class));
