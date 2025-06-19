@@ -3,7 +3,7 @@ package ongi.ongibe.domain.album.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.domain.ai.service.AiAlbumServiceInterface;
+import ongi.ongibe.domain.ai.aiInterface.AiAlbumServiceInterface;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
