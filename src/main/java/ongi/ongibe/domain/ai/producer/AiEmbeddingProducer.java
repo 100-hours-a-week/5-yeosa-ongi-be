@@ -20,7 +20,6 @@ public class AiEmbeddingProducer {
     private final AiKafkaProducer aiKafkaProducer;
 
     public void requestEmbeddings(Long albumId, Long userId, List<String> s3keys) {
-        log.info("Sending embeddings request to topic '{}'", requestTopic);
         String taskId = UlidCreator.getUlid().toString();
         KafkaDTOWrapper<AiImageRequestDTO> dto = new KafkaDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(s3keys));
         aiKafkaProducer.send(requestTopic, userId.toString(), dto);

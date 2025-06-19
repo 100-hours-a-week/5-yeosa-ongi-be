@@ -20,6 +20,6 @@ public class AiAlbumCreatedEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handledAlbumCreated(AlbumEvent event) {
         log.info("event received: {}", event.albumId());
-        albumProcessService.processAlbumAsync(event.albumId(), event.pictureS3Keys());
+        albumProcessService.processAlbumAsync(event.albumId(), event.userId(), event.pictureS3Keys());
     }
 }
