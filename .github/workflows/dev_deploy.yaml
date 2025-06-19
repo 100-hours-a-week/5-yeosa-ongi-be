@@ -43,13 +43,15 @@ jobs:
 
       - name: Download & Install Flyway CLI locally
         run: |
-          # 1) 압축 해제
+          # 1) 기존 설치 제거 (있으면)
+          rm -rf ~/.local/share/flyway
+          # 2) 압축 해제
           curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.12.0/flyway-commandline-10.12.0-linux-x64.tar.gz \
             | tar xz
-          # 2) 홈 디렉터리 아래로 이동 (lib 포함 전체 디렉터리 유지)
+          # 3) 전체 디렉터리 이동
           mkdir -p ~/.local/share
           mv flyway-10.12.0 ~/.local/share/flyway
-          # 3) PATH 추가
+          # 4) PATH 등록
           echo "$HOME/.local/share/flyway" >> $GITHUB_PATH
 
       - name: Verify Flyway installation
