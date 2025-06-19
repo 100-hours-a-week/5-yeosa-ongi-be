@@ -36,8 +36,7 @@ public class SecurityConfig {
             "/api/auth/**",
             "/actuator/**",
             "/sentry/**",
-            "/api/testauth",
-            "/kafka/**"
+            "/api/testauth"
     };
 
 
