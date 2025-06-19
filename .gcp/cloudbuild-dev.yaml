@@ -33,8 +33,8 @@ availableSecrets:
       env: AWS_REGION
     - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_dev/versions/latest"
       env: AI_SERVER_URL_DEV
-    - versionName: "projects/dev-ongi-3-tier/secrets/kafka_url/versions/latest"
-      env: KAFKA_URL
+    # - versionName: "projects/dev-ongi-3-tier/secrets/kafka_url/versions/latest"
+    #   env: KAFKA_URL
 
 steps:
   - id: deploy-backend
@@ -53,7 +53,7 @@ steps:
       - AWS_SECRET_ACCESS_KEY
       - AWS_REGION
       - AI_SERVER_URL_DEV
-      - KAFKA_URL
+      # - KAFKA_URL
     args:
       - '-c'
       - |
@@ -81,7 +81,7 @@ steps:
           --container-env=AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY \
           --container-env=AWS_REGION=$$AWS_REGION \
           --container-env=AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV \
-          --container-env=KAFKA_URL=$$KAFKA_URL \
+#          --container-env=KAFKA_URL=$$KAFKA_URL \
           --metadata="ssh-keys=$$SSH_KEYS" \
           --metadata-from-file=startup-script=.gcp/scripts/startup.sh \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
