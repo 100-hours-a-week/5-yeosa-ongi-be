@@ -67,7 +67,7 @@ class AiHttpShakeDuplicateCategoryServiceTest {
         when(aiClient.getCategories(albumId, s3keys)).thenReturn(List.of(result1, result2));
 
         //when
-        service.analyzeShakyDuplicateCategory(albumId, s3keys);
+        service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys);
 
         //then
         verify(pictureRepository).markPicturesAsShaky(albumId, shakeKeys);
@@ -83,7 +83,7 @@ class AiHttpShakeDuplicateCategoryServiceTest {
 
         // when then
         RuntimeException e = assertThrows(RuntimeException.class, () -> {
-            service.analyzeShakyDuplicateCategory(albumId, s3keys);
+            service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys);
         });
 
         assertTrue(e.getMessage().contains("AI 분석 실패"));
