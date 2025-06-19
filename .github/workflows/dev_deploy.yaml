@@ -10,7 +10,7 @@ on:
 jobs:
   flyway-migration:
     name: Validate · Migrate · Repair via Proxy VM
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [ self-hosted, linux, x64 ]
 
     steps:
       - name: Checkout code
@@ -30,47 +30,46 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Install mysql client
-        run: sudo apt-get update && sudo apt-get install -y mysql-client
+      - name: Verify mysql client
+        run: mysql --version
 
       - name: Validate
         run: |
           ./gradlew flywayValidate \
-            -Dflyway.url=$FLYWAY_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS \
+            "-Dflyway.url=$FLYWAY_URL" \
+            "-Dflyway.user=$DB_USER" \
+            "-Dflyway.password=$DB_PASS" \
             --info
 
       - name: Migrate (with retry/repair)
         run: |
           if ./gradlew flywayMigrate \
-               -Dflyway.url=$FLYWAY_URL \
-               -Dflyway.user=$DB_USER \
-               -Dflyway.password=$DB_PASS \
+               "-Dflyway.url=$FLYWAY_URL" \
+               "-Dflyway.user=$DB_USER" \
+               "-Dflyway.password=$DB_PASS" \
                --info; then
             echo "✅ Migrate succeeded"
           else
             echo "⚠️ Migrate failed → Repair then retry"
             ./gradlew flywayRepair \
-              -Dflyway.url=$FLYWAY_URL \
-              -Dflyway.user=$DB_USER \
-              -Dflyway.password=$DB_PASS \
+              "-Dflyway.url=$FLYWAY_URL" \
+              "-Dflyway.user=$DB_USER" \
+              "-Dflyway.password=$DB_PASS" \
               --info
             ./gradlew flywayMigrate \
-              -Dflyway.url=$FLYWAY_URL \
-              -Dflyway.user=$DB_USER \
-              -Dflyway.password=$DB_PASS \
+              "-Dflyway.url=$FLYWAY_URL" \
+              "-Dflyway.user=$DB_USER" \
+              "-Dflyway.password=$DB_PASS" \
               --info
           fi
 
       - name: Final Validate
         run: |
           ./gradlew flywayValidate \
-            -Dflyway.url=$FLYWAY_URL \
-            -Dflyway.user=$DB_USER \
-            -Dflyway.password=$DB_PASS \
+            "-Dflyway.url=$FLYWAY_URL" \
+            "-Dflyway.user=$DB_USER" \
+            "-Dflyway.password=$DB_PASS" \
             --info
-
   build-image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
