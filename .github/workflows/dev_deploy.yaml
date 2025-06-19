@@ -9,8 +9,7 @@ on:
 
 jobs:
   flyway-migration:
-    name: Flyway CLI Migrate via Proxy VM
-    runs-on: [ self-hosted, linux, x64 ]
+    runs-on: [self-hosted, linux, x64]
 
     steps:
       - name: Checkout code
@@ -21,6 +20,11 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: dev-ongi-3-tier
+
       - name: Fetch DB credentials
         id: fetch-secrets
         run: |
@@ -30,11 +34,18 @@ jobs:
 
       - name: Download & Install Flyway CLI locally
         run: |
+          # 1) 압축 해제
           curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.12.0/flyway-commandline-10.12.0-linux-x64.tar.gz \
             | tar xz
-          mkdir -p ~/.local/bin
-          mv flyway-10.12.0/flyway ~/.local/bin/
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # 2) 홈 디렉터리 아래로 이동 (lib 포함 전체 디렉터리 유지)
+          mkdir -p ~/.local/share
+          mv flyway-10.12.0 ~/.local/share/flyway
+          # 3) PATH 추가
+          echo "$HOME/.local/share/flyway" >> $GITHUB_PATH
+
+      - name: Verify Flyway installation
+        run: |
+          flyway -v   # 버전 출력으로 확인
 
       - name: Validate with Flyway CLI
         run: |
