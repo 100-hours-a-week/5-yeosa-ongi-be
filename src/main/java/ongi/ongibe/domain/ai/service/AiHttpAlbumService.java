@@ -3,6 +3,7 @@ package ongi.ongibe.domain.ai.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.aiInterface.AiAlbumServiceInterface;
 import ongi.ongibe.domain.ai.event.AlbumAiCreateNotificationEvent;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiAPIAlbumService implements AiAlbumServiceInterface {
+public class AiHttpAlbumService implements AiAlbumServiceInterface {
 
     private final AiClient aiClient;
     private final AlbumRepository albumRepository;
@@ -31,7 +32,7 @@ public class AiAPIAlbumService implements AiAlbumServiceInterface {
     }
 
     @Override
-    public void process(Album album, List<String> s3keys) {
+    public void process(Album album, Long userId, List<String> s3keys) {
         Long albumId = album.getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
@@ -43,7 +44,7 @@ public class AiAPIAlbumService implements AiAlbumServiceInterface {
             }
 
             // 1. 임베딩
-            aiEmbeddingService.requestEmbeddings(s3keys);
+            aiEmbeddingService.requestEmbeddings(albumId, userId, s3keys);
 
             // 2. 병렬 요청
             aiShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(album, s3keys);

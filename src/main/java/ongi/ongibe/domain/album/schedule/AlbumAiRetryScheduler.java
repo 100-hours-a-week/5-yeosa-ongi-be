@@ -3,7 +3,7 @@ package ongi.ongibe.domain.album.schedule;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.domain.ai.service.AiAPIAlbumService;
+import ongi.ongibe.domain.ai.service.AiHttpAlbumService;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -22,11 +22,11 @@ public class AlbumAiRetryScheduler {
     private final AlbumRepository albumRepository;
     private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final AiAPIAlbumService aiAPIAlbumService;
+    private final AiHttpAlbumService aiHttpAlbumService;
 
     @Scheduled(fixedRate = 5 * 60 * 1000) // 5분에 한번
     public void retryAlbumProcess() {
-        if (!aiAPIAlbumService.isAiServerAvailable()) {
+        if (!aiHttpAlbumService.isAiServerAvailable()) {
             log.warn("ai 서버 현재 요청 불가. 재시도 중단");
             return;
         }
