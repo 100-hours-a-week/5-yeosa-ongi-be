@@ -47,7 +47,7 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
             aiHttpEmbeddingService.requestEmbeddings(albumId, userId, s3keys);
 
             // 2. 병렬 요청
-            aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(album, s3keys);
+            aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(albumId, s3keys);
 
             // 3. quality score
             aiHttpAestheticScoreService.requestAestheticScores(album, s3keys);
