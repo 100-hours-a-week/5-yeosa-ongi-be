@@ -33,6 +33,8 @@ availableSecrets:
       env: AWS_REGION
     - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_dev/versions/latest"
       env: AI_SERVER_URL_DEV
+    - versionName: "projects/dev-ongi-3-tier/secrets/kafka_url/versions/latest"
+      env: KAFKA_URL
 
 steps:
   - id: deploy-backend
