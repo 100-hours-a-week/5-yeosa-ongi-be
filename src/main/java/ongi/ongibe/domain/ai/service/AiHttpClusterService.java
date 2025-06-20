@@ -30,10 +30,8 @@ public class AiHttpClusterService {
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void requestCluster(Album album) {
+    public void requestCluster(Long albumId, Long userId, List<String> s3keys) {
         log.info("[AI] 클러스터 시작");
-        Long albumId = album.getId();
-
         List<Long> faceClusterIds = faceClusterRepository.findAllByAlbumId(albumId).stream()
                 .map(FaceCluster::getId)
                 .toList();

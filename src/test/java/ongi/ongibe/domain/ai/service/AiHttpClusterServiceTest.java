@@ -2,6 +2,7 @@ package ongi.ongibe.domain.ai.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -68,7 +69,7 @@ class AiHttpClusterServiceTest {
         when(faceClusterRepository.findAllByAlbumId(albumId)).thenReturn(List.of(oldCluster));
 
         // when
-        aiHttpClusterService.requestCluster(album);
+        aiHttpClusterService.requestCluster(anyLong(), anyLong(), anyList());
 
         // then
         verify(pictureFaceClusterRepository).deleteAllByFaceClusterIds(any(), eq(List.of(10L)));
@@ -85,7 +86,7 @@ class AiHttpClusterServiceTest {
         when(faceClusterRepository.findAllByAlbumId(albumId)).thenReturn(List.of());
 
         // when
-        aiHttpClusterService.requestCluster(album);
+        aiHttpClusterService.requestCluster(anyLong(), anyLong(), anyList());
 
         // then
         verify(faceClusterRepository).save(any(FaceCluster.class));

@@ -21,7 +21,7 @@ public class AiHttpAestheticScoreService {
     private final PictureRepository pictureRepository;
 
     @Transactional
-    public void requestAestheticScores(Album album, List<String> s3keys) {
+    public void requestAestheticScores(Long albumId, Long userId, List<String> s3keys) {
         log.info("[AI] 미적 점수 분석 시작");
         List<Picture> pictures = pictureRepository.findAllByS3KeyIn(s3keys);
         List<AiAestheticScoreRequestDTO.Category> categories = AiAestheticScoreRequestDTO.from(pictures).categories();
@@ -29,7 +29,7 @@ public class AiHttpAestheticScoreService {
 
         for (var category : scores) {
             for (var entry : category.images()) {
-                pictureRepository.updateScore(album.getId(), entry.image(), entry.score());
+                pictureRepository.updateScore(albumId, entry.image(), entry.score());
             }
         }
         log.info("[AI] 미적 점수 분석 완료");
