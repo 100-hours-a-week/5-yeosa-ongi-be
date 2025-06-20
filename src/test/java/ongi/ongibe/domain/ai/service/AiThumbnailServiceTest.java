@@ -57,7 +57,7 @@ class AiThumbnailServiceTest {
         when(pic3.getQualityScore()).thenReturn(3.00f);
 
         //when
-        aiThumbnailService.setThumbnail(album, s3keys);
+        aiThumbnailService.setThumbnail(album.getId(), s3keys);
 
         //then
         verify(album).setThumbnailPicture(pic3);
