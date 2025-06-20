@@ -1,5 +1,7 @@
 package ongi.ongibe.domain.ai.service;
 
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +68,7 @@ class AiHttpAestheticScoreServiceTest {
         when(aiClient.getAestheticScore(requestCategories)).thenReturn(scoreCategories);
 
         // when
-        aiHttpAestheticScoreService.requestAestheticScores(album, s3keys);
+        aiHttpAestheticScoreService.requestAestheticScores(anyLong(), anyLong(), anyList());
 
         // then
         verify(pictureRepository).updateScore(albumId, key1, 85.0);

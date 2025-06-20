@@ -50,13 +50,13 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
             aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(albumId, userId, s3keys);
 
             // 3. quality score
-            aiHttpAestheticScoreService.requestAestheticScores(album, s3keys);
+            aiHttpAestheticScoreService.requestAestheticScores(albumId, userId, s3keys);
 
             // 4. quality score 기반 썸네일 지정
             aiThumbnailService.setThumbnail(album, s3keys);
 
             // 5. 클러스터 분석
-            aiHttpClusterService.requestCluster(album);
+            aiHttpClusterService.requestCluster(albumId, userId, s3keys);
             eventPublisher.publishEvent(new AlbumAiCreateNotificationEvent(albumId));
 
             album.setProcessState(AlbumProcessState.DONE);
