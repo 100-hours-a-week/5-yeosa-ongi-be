@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.aiInterface.AiShakeDuplicateCategoryServiceInterface;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -13,11 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiHttpShakeDuplicateCategoryService {
+public class AiHttpShakeDuplicateCategoryService implements
+        AiShakeDuplicateCategoryServiceInterface {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;
 
+    @Override
     @Transactional
     public void analyzeShakyDuplicateCategory(Long albumId, Long userId, List<String> s3keys) {
         log.info("[AI] 품질 분석 시작");
