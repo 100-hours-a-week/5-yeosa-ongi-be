@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Kafka 전송용 공통 Flat Wrapper DTO")
-public record KafkaDTOWrapper<T>(
+public record KafkaRequestDTOWrapper<T>(
         @Schema(description = "작업 식별자") String taskId,
         @Schema(description = "앨범 아이디") Long albumId,
         @JsonUnwrapped

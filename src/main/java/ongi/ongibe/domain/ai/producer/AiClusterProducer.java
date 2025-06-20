@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.aiInterface.AiClusterServiceInterface;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
-import ongi.ongibe.domain.ai.dto.KafkaDTOWrapper;
+import ongi.ongibe.domain.ai.dto.KafkaRequestDTOWrapper;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +29,7 @@ public class AiClusterProducer implements AiClusterServiceInterface {
         List<String> filteredKeys = pictureRepository.findAllByAlbumId(albumId).stream()
                 .map(Picture::getS3Key)
                 .toList();
-        KafkaDTOWrapper<AiImageRequestDTO> dto = new KafkaDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(filteredKeys));
+        KafkaRequestDTOWrapper<AiImageRequestDTO> dto = new KafkaRequestDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(filteredKeys));
         kafkaProducer.send(requestTopic, userId.toString(), dto);
     }
 }
