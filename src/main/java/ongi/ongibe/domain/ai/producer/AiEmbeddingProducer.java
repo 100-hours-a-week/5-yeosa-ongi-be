@@ -1,13 +1,12 @@
 package ongi.ongibe.domain.ai.producer;
 
-import com.github.f4b6a3.ulid.Ulid;
 import com.github.f4b6a3.ulid.UlidCreator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.aiInterface.AiEmbeddingServiceInterface;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
-import ongi.ongibe.domain.ai.dto.KafkaDTOWrapper;
+import ongi.ongibe.domain.ai.dto.KafkaRequestDTOWrapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +22,7 @@ public class AiEmbeddingProducer implements AiEmbeddingServiceInterface {
     @Override
     public void requestEmbeddings(Long albumId, Long userId, List<String> s3keys) {
         String taskId = "embedding-" + UlidCreator.getUlid().toString();
-        KafkaDTOWrapper<AiImageRequestDTO> dto = new KafkaDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(s3keys));
+        KafkaRequestDTOWrapper<AiImageRequestDTO> dto = new KafkaRequestDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(s3keys));
         aiKafkaProducer.send(requestTopic, userId.toString(), dto);
     }
 }
