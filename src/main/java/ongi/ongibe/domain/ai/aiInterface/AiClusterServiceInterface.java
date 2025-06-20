@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface AiClusterServiceInterface {
 
-    void requestCluster(Long albumId, Long userId, List<String> s3keys)
+    void requestCluster(Long albumId, Long userId, List<String> s3keys);
 }
