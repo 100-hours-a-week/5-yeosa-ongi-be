@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.aiInterface.AiClusterServiceInterface;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO.ClusterData;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.FaceCluster;
@@ -22,13 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiHttpClusterService {
+public class AiHttpClusterService implements AiClusterServiceInterface {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void requestCluster(Long albumId, Long userId, List<String> s3keys) {
         log.info("[AI] 클러스터 시작");
