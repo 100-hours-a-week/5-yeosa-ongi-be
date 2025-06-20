@@ -53,7 +53,7 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
             aiHttpAestheticScoreService.requestAestheticScores(albumId, userId, s3keys);
 
             // 4. quality score 기반 썸네일 지정
-            aiThumbnailService.setThumbnail(album, s3keys);
+            aiThumbnailService.setThumbnail(albumId, s3keys);
 
             // 5. 클러스터 분석
             aiHttpClusterService.requestCluster(albumId, userId, s3keys);

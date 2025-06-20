@@ -19,14 +19,15 @@ public class AiThumbnailService {
     private final PictureRepository pictureRepository;
 
     @Transactional
-    public void setThumbnail(Album album, List<String> s3keys) {
+    public void setThumbnail(Long albumId, List<String> s3keys) {
         log.info("[AI] 썸네일 지정 시작");
-        List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(album.getId(), s3keys);
+        List<Picture> updatedPictures = pictureRepository.findAllByAlbumIdAndS3KeyIn(albumId, s3keys);
 
         Picture thumbnail = updatedPictures.stream()
                 .max((p1, p2) -> Float.compare(p1.getQualityScore(), p2.getQualityScore()))
                 .orElseGet(updatedPictures::getFirst);
 
+        Album album = albumRepository.findById(albumId).orElseThrow(null);
         album.setThumbnailPicture(thumbnail);
         albumRepository.save(album);
         log.info("[AI] 썸네일 지정 완료");
