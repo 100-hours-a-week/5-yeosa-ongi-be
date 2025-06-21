@@ -45,7 +45,7 @@ public class UserCacheService {
     private final PictureRepository pictureRepository;
     private final PlaceRepository placeRepository;
 
-    private static final Duration TTL = Duration.ofHours(12);
+    private static final Duration TTL = Duration.ofSeconds(5);
 
     public UserTotalStateResponseDTO getUserTotalState(User user) {
         String key = CacheKeyUtil.key("userTotalStat", user.getId());
