@@ -53,6 +53,11 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @Override
+    protected String extractErrorData(KafkaResponseDTOWrapper<DuplicateResponseDTO> response) {
+        return "";
+    }
+
+    @Override
     protected AiStep getStep() {
         return AiStep.DUPLICATE;
     }
