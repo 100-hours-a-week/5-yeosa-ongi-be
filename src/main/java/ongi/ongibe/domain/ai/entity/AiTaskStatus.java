@@ -35,6 +35,14 @@ public class AiTaskStatus {
 
     private LocalDateTime updatedAt;
 
+    public void markPending() {
+        this.status = AiStatus.PENDING;
+    }
+
+    public void markInProgress() {
+        this.status = AiStatus.IN_PROGRESS;
+    }
+
     public void markSuccess() {
         this.status = AiStatus.SUCCESS;
         this.errorMsg = null;
