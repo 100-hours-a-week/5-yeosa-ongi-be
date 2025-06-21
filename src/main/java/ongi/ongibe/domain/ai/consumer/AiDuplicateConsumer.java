@@ -54,7 +54,7 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @Override
     protected String extractErrorData(KafkaResponseDTOWrapper<DuplicateResponseDTO> response) {
-        return "";
+        return response.body().data().isEmpty() ? "" : response.body().data().toString();
     }
 
     @Override
