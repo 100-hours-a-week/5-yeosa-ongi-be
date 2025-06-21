@@ -1,21 +1,33 @@
 package ongi.ongibe.domain.ai.consumer;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import ongi.ongibe.domain.ai.AiStep;
+import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
+import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class AiEmbeddingConsumer {
+public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> {
 
-    @Value("${kafka.topic.response.embedding}")
-    private String responseTopic;
-
-    @KafkaListener()
-    public void handleEmbeddingResponse(){
-
+    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository){
+        super(aiTaskStatusRepository);
     }
+
+    @KafkaListener(
+            topics = "#{'${kafka.topic.response.embedding}'}",
+            containerFactory = "batchKafkaListenerContainerFactory"
+    )
+    public void consume(List<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> responses) {
+        for (KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> res : responses) {
+            this.consume(res);
+        }
+    }
+
+    @Override protected String extractTaskId(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> r) { return r.taskId(); }
+    @Override protected String extractMessage(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> r) { return r.body().message(); }
+    @Override protected AiStep getStep() { return AiStep.EMBEDDING; }
 }
