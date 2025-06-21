@@ -36,5 +36,6 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
 
     protected abstract String extractTaskId(T response);
     protected abstract String extractMessage(T response);
+    protected abstract String extractErrorData(T response);
     protected abstract AiStep getStep();
 }
