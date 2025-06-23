@@ -1,4 +1,4 @@
-package ongi.ongibe.util;
+package ongi.ongibe.global.util;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

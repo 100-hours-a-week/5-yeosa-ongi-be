@@ -29,7 +29,7 @@ import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.executor.TransactionAfterCommitExecutor;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.JwtTokenProvider;
+import ongi.ongibe.global.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

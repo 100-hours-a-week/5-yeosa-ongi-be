@@ -16,7 +16,7 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.cache.CacheKeyUtil;
 import ongi.ongibe.global.cache.RedisCacheService;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.DateUtil;
+import ongi.ongibe.global.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 @Service

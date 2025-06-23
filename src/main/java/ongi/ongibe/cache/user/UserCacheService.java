@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.repository.PlaceRepository;
@@ -30,7 +29,7 @@ import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.cache.CacheKeyUtil;
 import ongi.ongibe.global.cache.RedisCacheService;
-import ongi.ongibe.util.DateUtil;
+import ongi.ongibe.global.util.DateUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 

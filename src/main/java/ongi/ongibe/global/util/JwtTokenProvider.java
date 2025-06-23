@@ -1,4 +1,4 @@
-package ongi.ongibe.util;
+package ongi.ongibe.global.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

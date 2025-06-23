@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import ongi.ongibe.domain.auth.OAuthProvider;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
-import ongi.ongibe.util.JwtTokenProvider;
+import ongi.ongibe.global.util.JwtTokenProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
