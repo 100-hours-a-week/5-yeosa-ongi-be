@@ -43,6 +43,11 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<DuplicateResponseDTO> response) {
+        return response.statusCode();
+    }
+
+    @Override
     protected String extractTaskId(KafkaResponseDTOWrapper<DuplicateResponseDTO> response) {
         return response.taskId();
     }

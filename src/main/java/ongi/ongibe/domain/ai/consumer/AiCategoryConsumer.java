@@ -40,6 +40,11 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     }
 
     @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<CategoryResponseDTO> response) {
+        return response.statusCode();
+    }
+
+    @Override
     protected String extractTaskId(KafkaResponseDTOWrapper<CategoryResponseDTO> response) {
         return response.taskId();
     }

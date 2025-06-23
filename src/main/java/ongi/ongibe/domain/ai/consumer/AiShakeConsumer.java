@@ -38,6 +38,11 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     }
 
     @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<ShakyResponseDTO> response) {
+        return response.statusCode();
+    }
+
+    @Override
     protected String extractTaskId(KafkaResponseDTOWrapper<ShakyResponseDTO> response) {
         return response.taskId();
     }

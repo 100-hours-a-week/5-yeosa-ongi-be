@@ -42,6 +42,11 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
+        return response.statusCode();
+    }
+
+    @Override
     protected String extractTaskId(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
         return response.taskId();
     }
