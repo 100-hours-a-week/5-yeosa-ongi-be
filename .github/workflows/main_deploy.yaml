@@ -102,6 +102,7 @@ jobs:
             validate
 
   build-image:
+    needs: flyway-migration
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     env:
