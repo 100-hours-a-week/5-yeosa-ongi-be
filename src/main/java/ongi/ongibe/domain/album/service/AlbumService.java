@@ -81,6 +81,7 @@ public class AlbumService {
     private static final String INVITE_LINK_PREFIX_PROD = "https://ongi.today/invite?token=";
     private static final String INVITE_LINK_PREFIX_DEV = "https://dev.ongi.today/invite?token=";
     private static final int MAX_PICTURE_SIZE = 30;
+    private static final int MAX_ALBUM_MEMBER = 9;
 
     @Transactional(readOnly = true)
     public BaseApiResponse<MonthlyAlbumResponseDTO> getMonthlyAlbum(String yearMonth) {
@@ -447,9 +448,11 @@ public class AlbumService {
             if (validateAlbumMember(album, user.getId())){
                 throw new AlbumException(HttpStatus.BAD_REQUEST, "이미 초대된 구성원을 또다시 초대할 수 없습니다.");
             }
+            if (userAlbumRepository.findAllByAlbum(album).size() > MAX_ALBUM_MEMBER) {
+                throw new AlbumException(HttpStatus.BAD_REQUEST, "앨범 구성원 정원 초과입니다.");
+            }
             UserAlbum userAlbum = UserAlbum.of(user, album, UserAlbumRole.NORMAL);
             userAlbumRepository.save(userAlbum);
-            redisInviteTokenRepository.remove(token);
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
 
