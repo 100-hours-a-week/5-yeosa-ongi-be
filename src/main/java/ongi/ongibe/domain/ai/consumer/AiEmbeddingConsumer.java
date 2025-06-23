@@ -28,6 +28,11 @@ public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
         }
     }
 
+    @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> response) {
+        return response.statusCode();
+    }
+
     @Override protected String extractTaskId(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> r) { return r.taskId(); }
     @Override protected String extractMessage(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> r) { return r.body().message(); }
 

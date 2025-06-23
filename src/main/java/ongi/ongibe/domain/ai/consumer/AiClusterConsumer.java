@@ -91,6 +91,11 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
 
 
     @Override
+    protected int extractStatusCode(KafkaResponseDTOWrapper<AiClusterResponseDTO> response) {
+        return response.statusCode();
+    }
+
+    @Override
     protected String extractTaskId(KafkaResponseDTOWrapper<AiClusterResponseDTO> response) {
         return response.taskId();
     }
