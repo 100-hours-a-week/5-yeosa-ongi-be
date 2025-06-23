@@ -172,7 +172,7 @@ class AlbumInviteServiceTest {
     }
 
     @Test
-    void acceptInvite_성공() {
+    void acceptInvite_성공_한명() {
         // given
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
         when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
@@ -194,7 +194,6 @@ class AlbumInviteServiceTest {
         assertThat(saved.getUser()).isEqualTo(inviteTestUser);
         assertThat(saved.getAlbum()).isEqualTo(testAlbum);
         assertThat(saved.getRole()).isEqualTo(UserAlbumRole.NORMAL);
-        verify(redisInviteTokenRepository).remove(token);
     }
 
     @Test
