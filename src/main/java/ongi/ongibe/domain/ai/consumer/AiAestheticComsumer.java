@@ -7,6 +7,7 @@ import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +21,10 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
         this.pictureRepository = pictureRepository;
     }
 
+    @KafkaListener(
+            topics = "#{'${kafka.topic.response.aesthetic'}",
+            containerFactory = "batchKafkaListenerContainerFactory"
+    )
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response : responses) {
             this.consume(response);

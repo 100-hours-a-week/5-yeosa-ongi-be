@@ -8,6 +8,7 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +23,10 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
         this.pictureRepository = pictureRepository;
     }
 
+    @KafkaListener(
+            topics = "#{'${kafka.topic.response.quality'}",
+            containerFactory = "batchKafkaListenerContainerFactory"
+    )
     public void consume(List<KafkaResponseDTOWrapper<ShakyResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<ShakyResponseDTO> res : responses) {
             this.consume(res);
