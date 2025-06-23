@@ -19,11 +19,11 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
             AiTaskStatus task = taskStatusRepository.findById(taskId)
                     .orElseThrow(() -> new IllegalArgumentException("task_id 없음: " + taskId));
             task.markPending();
-            switch (extractMessage(response)) {
-                case "success" -> task.markSuccess();
-                case "internal_server_error" -> task.markRetryOrFail("서버 오류");
-                case "invalid_request", "unauthorized_server" -> task.markFailed("요청/인증 오류");
-                case "invalid_image_url" -> task.markRetryOrFail("잘못된 이미지: " + extractErrorData(response));
+            switch (extractStatusCode(response)) {
+                case 201 -> task.markSuccess();
+                case 500 -> task.markRetryOrFail("서버 오류");
+                case 400, 403 -> task.markFailed("요청/인증 오류");
+                case 422 -> task.markRetryOrFail("잘못된 이미지: " + extractErrorData(response));
                 default -> task.markRetryOrFail("알 수 없는 오류: " + extractMessage(response));
             }
 
@@ -34,6 +34,7 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
         }
     }
 
+    protected abstract int extractStatusCode(T response);
     protected abstract String extractTaskId(T response);
     protected abstract String extractMessage(T response);
     protected abstract String extractErrorData(T response);
