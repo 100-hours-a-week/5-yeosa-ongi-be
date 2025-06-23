@@ -197,6 +197,29 @@ class AlbumInviteServiceTest {
     }
 
     @Test
+    void acceptInvite_구성원_초과_예외() {
+        // given
+        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
+        when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUser()).thenReturn(inviteTestUser);
+
+        List<UserAlbum> fullMembers = new ArrayList<>();
+        for (int i = 0; i <= 9; i++) {
+            fullMembers.add(UserAlbum.of(
+                    User.builder().id((long) i).nickname("user" + i).build(),
+                    testAlbum, UserAlbumRole.NORMAL));
+        }
+        when(userAlbumRepository.findAllByAlbum(testAlbum)).thenReturn(fullMembers);
+
+        // when & then
+        assertThatThrownBy(() -> albumService.acceptInvite(token))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("앨범 구성원 정원 초과입니다.");
+    }
+
+
+    @Test
     void acceptInvite_토큰없음_예외() {
         // given
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(false);
