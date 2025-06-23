@@ -4,6 +4,7 @@ import com.github.f4b6a3.ulid.UlidCreator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.aiInterface.AiClusterServiceInterface;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
 import ongi.ongibe.domain.ai.dto.KafkaRequestDTOWrapper;
@@ -24,12 +25,13 @@ public class AiClusterProducer implements AiClusterServiceInterface {
 
     @Override
     public void requestCluster(Long albumId, Long userId, List<String> s3keys) {
-        String taskId = "people-" + UlidCreator.getUlid().toString();
+        String topic = AiStep.PEOPLE.toString();
+        String taskId = topic + "-" + UlidCreator.getUlid().toString();
 
         List<String> filteredKeys = pictureRepository.findAllByAlbumId(albumId).stream()
                 .map(Picture::getS3Key)
                 .toList();
         KafkaRequestDTOWrapper<AiImageRequestDTO> dto = new KafkaRequestDTOWrapper<>(taskId, albumId, new AiImageRequestDTO(filteredKeys));
-        kafkaProducer.send(requestTopic, userId.toString(), dto);
+        kafkaProducer.send(requestTopic, topic + userId, dto);
     }
 }
