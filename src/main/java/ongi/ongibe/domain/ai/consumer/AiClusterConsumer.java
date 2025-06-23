@@ -42,7 +42,7 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     public void consume(List<KafkaResponseDTOWrapper<AiClusterResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiClusterResponseDTO> response : responses) {
             this.consume(response);
-            if (response.body().message().equals("success")) {
+            if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 List<Long> faceClusterIds = faceClusterRepository.findAllByAlbumId(albumId).stream()
                         .map(FaceCluster::getId)

@@ -28,7 +28,7 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     public void consume(List<KafkaResponseDTOWrapper<CategoryResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<CategoryResponseDTO> response : responses) {
             this.consume(response);
-            if (response.body().message().equals("success")) {
+            if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 List<CategoryResponseDTO.CategoryResult> categories = response.body().data();
                 for (var category : categories) {
