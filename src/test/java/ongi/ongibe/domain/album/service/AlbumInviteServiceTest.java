@@ -24,6 +24,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.auth.OAuthProvider;
+import ongi.ongibe.domain.notification.event.InviteMemberNotificationEvent;
 import ongi.ongibe.domain.user.UserStatus;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
@@ -194,6 +195,16 @@ class AlbumInviteServiceTest {
         assertThat(saved.getUser()).isEqualTo(inviteTestUser);
         assertThat(saved.getAlbum()).isEqualTo(testAlbum);
         assertThat(saved.getRole()).isEqualTo(UserAlbumRole.NORMAL);
+        verify(transactionAfterCommitExecutor).execute(any(Runnable.class));
+
+        ArgumentCaptor<InviteMemberNotificationEvent> inviteCaptor =
+                ArgumentCaptor.forClass(InviteMemberNotificationEvent.class);
+
+        verify(applicationEventPublisher).publishEvent(inviteCaptor.capture());
+
+        InviteMemberNotificationEvent publishedEvent = inviteCaptor.getValue();
+        assertThat(publishedEvent.albumId()).isEqualTo(albumId);
+        assertThat(publishedEvent.actorId()).isEqualTo(inviteTestUser.getId());
     }
 
     @Test
