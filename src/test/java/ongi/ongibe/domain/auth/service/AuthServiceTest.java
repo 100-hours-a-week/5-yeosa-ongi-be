@@ -23,7 +23,7 @@ import ongi.ongibe.global.exception.InvalidTokenException;
 import ongi.ongibe.global.exception.TokenNotFoundException;
 import ongi.ongibe.global.exception.TokenParsingException;
 import ongi.ongibe.global.s3.PresignedUrlService;
-import ongi.ongibe.util.JwtTokenProvider;
+import ongi.ongibe.global.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

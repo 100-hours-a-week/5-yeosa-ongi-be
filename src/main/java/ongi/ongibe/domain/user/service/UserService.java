@@ -1,28 +1,11 @@
 package ongi.ongibe.domain.user.service;
 
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import ongi.ongibe.cache.album.AlbumCacheService;
 import ongi.ongibe.cache.event.UserProfileUpdateCacheEvent;
 import ongi.ongibe.cache.user.UserCacheService;
 import ongi.ongibe.common.BaseApiResponse;
 import ongi.ongibe.domain.album.dto.UserUpdateRequestDTO;
-import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.repository.PlaceRepository;
-import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.user.dto.UserInfoResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPictureStatResponseDTO;
 import ongi.ongibe.domain.user.dto.UserPlaceStatResponseDTO;
@@ -33,13 +16,10 @@ import ongi.ongibe.domain.user.exception.UserException;
 import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.DateUtil;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
