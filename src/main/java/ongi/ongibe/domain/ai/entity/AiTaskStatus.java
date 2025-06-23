@@ -30,10 +30,18 @@ public class AiTaskStatus {
     @Column(columnDefinition = "TEXT")
     private String errorMsg;
 
+    @Column(columnDefinition = "TEXT")
+    private String s3keysJson;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    public void markStepEmbedding(){
+        this.step = AiStep.EMBEDDING;
+        this.errorMsg = null;
+    }
 
     public void markPending() {
         this.status = AiStatus.PENDING;
