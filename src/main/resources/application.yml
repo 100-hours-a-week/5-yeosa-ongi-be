@@ -39,7 +39,7 @@ kafka:
   topic:
     request:
       embedding : "album.ai.embedding.request"
-      quality : "album.ai.embedding.request"
+      quality : "album.ai.quality.request"
       duplicate : "album.ai.duplicate.request"
       category : "album.ai.category.request"
       aesthetic : "album.ai.aesthetic.request"
@@ -47,7 +47,7 @@ kafka:
       style : "album.ai.style.request"
     response:
       embedding: "album.ai.embedding.response"
-      quality: "album.ai.embedding.response"
+      quality: "album.ai.quality.response"
       duplicate: "album.ai.duplicate.response"
       category: "album.ai.category.response"
       aesthetic: "album.ai.aesthetic.response"
