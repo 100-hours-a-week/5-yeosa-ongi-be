@@ -30,10 +30,12 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     public void consume(List<KafkaResponseDTOWrapper<ShakyResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<ShakyResponseDTO> res : responses) {
             this.consume(res);
-            Long albumId = res.albumId();
-            List<String> shakyKeys = res.body().data();
-            pictureRepository.markPicturesAsShaky(albumId, shakyKeys);
-            log.info("[DUPLICATE] album {} 중복 {}장 처리 완료", albumId, shakyKeys.size());
+            if  (res.statusCode() == 201) {
+                Long albumId = res.albumId();
+                List<String> shakyKeys = res.body().data();
+                pictureRepository.markPicturesAsShaky(albumId, shakyKeys);
+                log.info("[DUPLICATE] album {} 중복 {}장 처리 완료", albumId, shakyKeys.size());
+            }
         }
     }
 

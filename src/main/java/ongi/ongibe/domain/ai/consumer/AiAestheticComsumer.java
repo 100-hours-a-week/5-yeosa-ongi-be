@@ -28,7 +28,7 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response : responses) {
             this.consume(response);
-            if (response.body().message().equals("success")) {
+            if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 List<AiAestheticScoreResponseDTO.ScoreCategory> scores = response.body().data();
                 for (var category : scores) {
