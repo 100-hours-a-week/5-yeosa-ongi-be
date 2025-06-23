@@ -64,6 +64,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3control:2.27.3'
     implementation 'software.amazon.awssdk:s3outposts:2.27.3'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.kafka:spring-kafka'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     implementation 'org.flywaydb:flyway-mysql'

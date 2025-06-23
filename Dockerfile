@@ -12,12 +12,15 @@ RUN gradle build -x test || return 0
 COPY . .
 RUN gradle clean build -x test
 
-# Stage 2: Create the runtime image
-FROM eclipse-temurin:21-jdk
+# Stage 2: Create the runtime image (without OpenTelemetry/Signoz)
+FROM eclipse-temurin:21-jdk AS runtime
 
 WORKDIR /app
+
+# 빌드된 JAR 복사
 COPY --from=builder /home/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "app.jar"]
+# 단순히 JAR만 실행
+ENTRYPOINT ["java", "-jar", "app.jar"]

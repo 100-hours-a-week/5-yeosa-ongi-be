@@ -34,3 +34,22 @@ logging:
     org.springframework.security.web.access: DEBUG
     org.springframework.web.client.RestTemplate: DEBUG
     org.apache.http: DEBUG
+
+kafka:
+  topic:
+    request:
+      embedding : "album.ai.embedding.request"
+      quality : "album.ai.embedding.request"
+      duplicate : "album.ai.duplicate.request"
+      category : "album.ai.category.request"
+      aesthetic : "album.ai.aesthetic.request"
+      people : "album.ai.people.request"
+      style : "album.ai.style.request"
+    response:
+      embedding: "album.ai.embedding.response"
+      quality: "album.ai.embedding.response"
+      duplicate: "album.ai.duplicate.response"
+      category: "album.ai.category.response"
+      aesthetic: "album.ai.aesthetic.response"
+      people: "album.ai.people.response"
+      style: "album.ai.style.response"

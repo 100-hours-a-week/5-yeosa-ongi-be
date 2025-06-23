@@ -29,7 +29,7 @@ public class AlbumCacheService {
     private final RedisCacheService redisCacheService;
     private final UserRepository userRepository;
 
-    private static final Duration TTL = Duration.ofMinutes(10);
+    private static final Duration TTL = Duration.ofSeconds(10);
 
     public MonthlyAlbumResponseDTO getMonthlyAlbum(Long userId, String requestYearMonth) {
         String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
