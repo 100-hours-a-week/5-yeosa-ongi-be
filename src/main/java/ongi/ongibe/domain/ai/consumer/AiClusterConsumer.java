@@ -10,6 +10,7 @@ import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO.ClusterData;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -28,8 +29,8 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
-    public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository, PictureFaceClusterRepository pictureFaceClusterRepository) {
-        super(aiTaskStatusRepository);
+    public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository, PictureFaceClusterRepository pictureFaceClusterRepository) {
+        super(aiTaskStatusRepository, transitionService);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,9 +19,9 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository,
+    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService,
             PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository);
+        super(aiTaskStatusRepository, transitionService);
         this.pictureRepository = pictureRepository;
     }
 

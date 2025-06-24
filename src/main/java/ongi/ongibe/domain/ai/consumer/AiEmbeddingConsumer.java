@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> {
 
-    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository){
-        super(aiTaskStatusRepository);
+    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService){
+        super(aiTaskStatusRepository, transitionService);
     }
 
     @KafkaListener(

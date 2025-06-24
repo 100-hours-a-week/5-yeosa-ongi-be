@@ -17,7 +17,6 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
 
     private final AiTaskStatusRepository taskStatusRepository;
     private final AiStepTransitionService stepTransitionService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public void consume(T response) {

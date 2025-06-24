@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,8 +17,8 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository);
+    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository) {
+        super(aiTaskStatusRepository, transitionService);
         this.pictureRepository = pictureRepository;
     }
 
