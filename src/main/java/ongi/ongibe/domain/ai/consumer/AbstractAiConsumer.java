@@ -1,5 +1,8 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
@@ -12,6 +15,8 @@ import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
 
     private final AiTaskStatusRepository taskStatusRepository;
+    private final AiStepTransitionService stepTransitionService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void consume(T response) {
@@ -25,6 +30,8 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
                 case 201 -> {
                     task.markSuccess();
                     taskStatusRepository.save(task);
+                    List<String> s3keys = objectMapper.readValue(task.getS3keysJson(), new TypeReference<>() {});
+                    stepTransitionService.handleStepCondition(task, s3keys);
                 }
                 case 428 -> {
                     task.markRetryOrFail("임베딩 필요 : " + extractErrorData(response));
