@@ -9,6 +9,7 @@ import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.entity.AiTaskStatus;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.global.util.JsonUtil;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -30,7 +31,7 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
                 case 201 -> {
                     task.markSuccess();
                     taskStatusRepository.save(task);
-                    List<String> s3keys = objectMapper.readValue(task.getS3keysJson(), new TypeReference<>() {});
+                    List<String> s3keys = JsonUtil.fromJson(task.getS3keysJson());
                     stepTransitionService.handleStepCondition(task, s3keys);
                 }
                 case 428 -> {
