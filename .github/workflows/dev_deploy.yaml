@@ -26,19 +26,27 @@ jobs:
 
       - name: Fetch DB credentials
         id: fetch-secrets
+        shell: bash
         run: |
-          # 1) Secret Manager 에서 기본 URL 가져오기
-          DB_URL=$(gcloud secrets versions access latest --secret=db_url_dev)
-          DB_USER=$(gcloud secrets versions access latest --secret=db_user_dev)
-          DB_PASS=$(gcloud secrets versions access latest --secret=db_password_dev)
+          # 1) 비공개로 처리할 환경 변수 가져오기
+          DB_URL="$(gcloud secrets versions access latest --secret=db_url_dev)?allowPublicKeyRetrieval=true&useSSL=false"
+          DB_USER="$(gcloud secrets versions access latest --secret=db_user_dev)"
+          DB_PASS="$(gcloud secrets versions access latest --secret=db_password_dev)"
 
-          # 2) URL 뒤에 allowPublicKeyRetrieval 옵션 추가
-          DB_URL="${DB_URL}?allowPublicKeyRetrieval=true&useSSL=false"
+          # 2) 모두 마스킹
+          echo "::add-mask::$DB_URL"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
 
-          # 3) 환경 변수로 내보내기
-          echo "DB_URL=$DB_URL"  >> $GITHUB_ENV
-          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
-          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          # 3) set +x 로 명령어 자체도 숨김
+          set +x
+
+          # 4) 한 번만 파일에 써서, 로그에는 아무것도 안 남기기
+          {
+            echo "DB_URL=$DB_URL"
+            echo "DB_USER=$DB_USER"
+            echo "DB_PASS=$DB_PASS"
+          } >> "$GITHUB_ENV"
 
       - name: Download & Install Flyway CLI locally
         run: |
