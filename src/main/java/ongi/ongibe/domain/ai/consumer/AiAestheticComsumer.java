@@ -23,7 +23,7 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @KafkaListener(
-            topics = "#{'${kafka.topic.response.aesthetic'}",
+            topics = "${kafka.topic.response.aesthetic}",
             containerFactory = "batchKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {

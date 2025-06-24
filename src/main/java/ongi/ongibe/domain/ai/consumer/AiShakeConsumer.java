@@ -25,7 +25,7 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     }
 
     @KafkaListener(
-            topics = "#{'${kafka.topic.response.quality'}",
+            topics = "${kafka.topic.response.quality}",
             containerFactory = "batchKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<ShakyResponseDTO>> responses) {

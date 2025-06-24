@@ -42,7 +42,6 @@ class AiHttpShakeDuplicateCategoryServiceTest {
     void setUp() {
         albumId = 1L;
         album = mock(Album.class);
-        when(album.getId()).thenReturn(albumId);
         key1 = "s3://img1.jpg";
         key2 = "s3://img2.jpg";
         key3 = "s3://img3.jpg";
