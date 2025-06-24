@@ -23,7 +23,7 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     }
 
     @KafkaListener(
-            topics = "#{'${kafka.topic.response.category}'}",
+            topics = "${kafka.topic.response.category}",
             containerFactory = "batchKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<CategoryResponseDTO>> responses) {
