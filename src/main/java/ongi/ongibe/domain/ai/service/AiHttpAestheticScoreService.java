@@ -3,6 +3,8 @@ package ongi.ongibe.domain.ai.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ongi.ongibe.domain.ai.aiInterface.AiAestheticServiceInterface;
+import ongi.ongibe.domain.ai.aiInterface.AiAlbumServiceInterface;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
@@ -15,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AiHttpAestheticScoreService {
+public class AiHttpAestheticScoreService implements AiAestheticServiceInterface {
 
     private final AiClient aiClient;
     private final PictureRepository pictureRepository;
