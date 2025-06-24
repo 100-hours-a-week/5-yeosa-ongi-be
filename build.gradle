@@ -82,6 +82,10 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
+configurations.all {
+    exclude group: 'commons-logging', module: 'commons-logging'
+}
+
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
