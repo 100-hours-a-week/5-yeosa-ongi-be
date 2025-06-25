@@ -10,6 +10,7 @@ on:
 jobs:
   flyway-migration:
     runs-on: [self-hosted, linux, x64]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
