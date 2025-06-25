@@ -32,13 +32,16 @@ public class AiEmbeddingProducer implements AiEmbeddingServiceInterface {
     public void requestEmbeddings(Long albumId, Long userId, List<String> s3keys) {
         String topic = AiStep.EMBEDDING.toString();
         String taskId = topic + "-" + UlidCreator.getUlid().toString();
+        String s3keyjson = JsonUtil.toJson(s3keys);
+        log.info("Sending embedding request to topic : {}", requestTopic);
+        log.info("albumId {}, userId {}, s3keys {}", albumId,  userId, s3keyjson);
         AiTaskStatus taskStatus = AiTaskStatus.builder()
                 .taskId(taskId)
                 .step(AiStep.EMBEDDING)
                 .status(AiStatus.PENDING)
                 .userId(userId)
                 .albumId(albumId)
-                .s3keysJson(JsonUtil.toJson(s3keys))
+                .s3keysJson(s3keyjson)
                 .retryCount(0)
                 .build();
         taskStatusRepository.save(taskStatus);

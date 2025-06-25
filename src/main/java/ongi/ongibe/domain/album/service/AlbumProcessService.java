@@ -36,6 +36,7 @@ public class AlbumProcessService {
         try{
             album.setProcessState(AlbumProcessState.IN_PROGRESS);
             albumRepository.save(album);
+            log.info("AiAlbumServiceInterface = {}", aiAlbumService.getClass());
             aiAlbumService.process(album, userId, pictureS3Keys);
         } catch (Exception e) {
             album.setProcessState(AlbumProcessState.FAILED);

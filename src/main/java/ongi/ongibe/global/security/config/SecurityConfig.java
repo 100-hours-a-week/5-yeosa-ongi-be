@@ -34,6 +34,7 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/auth/login/kakao",
             "/api/auth/**",
+            "/api/auth",
             "/actuator/**",
             "/sentry/**",
             "/api/testauth"
