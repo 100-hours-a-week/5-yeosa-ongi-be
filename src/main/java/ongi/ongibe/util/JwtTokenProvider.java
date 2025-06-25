@@ -38,7 +38,7 @@ public class JwtTokenProvider {
     }
 
 
-    private static final long ACCESS_TOKEN_VALIDITY = 60 * 5L;
+    private static final long ACCESS_TOKEN_VALIDITY = 60 * 10L;
     private static final long REFRESH_TOKEN_VALIDITY = 14 * 24 * 60 * 60L;
     private static final long INVITE_TOKEN_VALIDITY = 24 * 60 * 60L;
 
