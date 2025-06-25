@@ -31,14 +31,12 @@ COPY --from=builder /home/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# 변경점: OTLP endpoint를 https://ingest.us.signoz.cloud:443 로 하드코딩
-#         ingestion key는 환경변수 SIGNOZ_INGESTION_KEY 에서 읽음
 ENTRYPOINT ["sh", "-c", "\
   java \
     -javaagent:/opt/otel/opentelemetry-javaagent.jar \
     -Dotel.exporter.otlp.endpoint=https://ingest.us.signoz.cloud:443 \
     -Dotel.exporter.otlp.headers=\"signoz-ingestion-key=${SIGNOZ_INGESTION_KEY}\" \
-    -Dotel.service.name=${OTEL_SERVICE_NAME:-backend-dev} \
-    -Dotel.resource.attributes=deployment.environment=${DEPLOY_ENV:-dev} \
+    -Dotel.service.name=${OTEL_SERVICE_NAME:-backend} \
+    -Dotel.resource.attributes=deployment.environment=${DEPLOY_ENV} \
     -jar app.jar\
 "]
