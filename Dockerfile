@@ -12,12 +12,11 @@ RUN gradle build -x test || return 0
 COPY . .
 RUN gradle clean build -x test
 
-# Stage 2: Runtime image with OpenTelemetry(Java Agent) for SigNoz
+# Stage 2: Runtime image with OpenTelemetry(Java Agent) for SigNoz Cloud
 FROM eclipse-temurin:21-jdk AS runtime
 
-# Agent 및 SigNoz Collector endpoint를 인자로 받음
+# 변경점: Agent 버전만 ARG 로 받고, region 은 us 로 하드코딩
 ARG OTEL_AGENT_VERSION=2.16.0
-ARG SIGNOZ_OTLP_ENDPOINT="http://signoz-collector:4317"
 
 # OpenTelemetry Java Agent 다운로드
 RUN mkdir -p /opt/otel \
@@ -32,11 +31,13 @@ COPY --from=builder /home/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# Java Agent 및 OTLP 설정을 시스템 프로퍼티로 주입
+# 변경점: OTLP endpoint를 https://ingest.us.signoz.cloud:443 로 하드코딩
+#         ingestion key는 환경변수 SIGNOZ_INGESTION_KEY 에서 읽음
 ENTRYPOINT ["sh", "-c", "\
   java \
     -javaagent:/opt/otel/opentelemetry-javaagent.jar \
-    -Dotel.exporter.otlp.endpoint=${SIGNOZ_OTLP_ENDPOINT} \
+    -Dotel.exporter.otlp.endpoint=https://ingest.us.signoz.cloud:443 \
+    -Dotel.exporter.otlp.headers=\"signoz-ingestion-key=${SIGNOZ_INGESTION_KEY}\" \
     -Dotel.service.name=${OTEL_SERVICE_NAME:-backend-dev} \
     -Dotel.resource.attributes=deployment.environment=${DEPLOY_ENV:-dev} \
     -jar app.jar\
