@@ -135,13 +135,15 @@ jobs:
       - name: Build & Push Docker Image
         run: |
           docker build \
-            -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${TAG} .
-          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${TAG}
+            -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:TAG .
+          docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
   deploy-backend:
     name: Trigger Cloud Build
     runs-on: ubuntu-latest
     needs: build-image
+    env:
+      TAG: dev-${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: google-github-actions/auth@v2
