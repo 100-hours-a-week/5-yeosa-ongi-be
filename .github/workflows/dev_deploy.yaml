@@ -128,7 +128,10 @@ jobs:
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
       - name: Build & Push Docker Image
         run: |
-          docker build -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
+          docker build \
+            --build-arg OTEL_AGENT_VERSION=2.16.0 \
+            --build-arg SIGNOZ_OTLP_ENDPOINT="http://signoz-collector:4317" \
+            -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
   deploy-backend:
@@ -149,7 +152,7 @@ jobs:
         run: |
           gcloud builds submit . \
             --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=${{ env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
+            --substitutions=_IMAGE_TAG=${{ env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }},_SIGNOZ_OTLP_ENDPOINT="http://signoz-collector:4317" \
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
   notify-discord:
