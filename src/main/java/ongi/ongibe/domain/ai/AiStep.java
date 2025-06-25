@@ -5,7 +5,7 @@ public enum AiStep {
     QUALITY,
     DUPLICATE,
     CATEGORY,
-    AESTHETIC,
+    SCORE,
     PEOPLE
 
 }
