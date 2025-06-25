@@ -133,7 +133,7 @@ jobs:
             -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
-  deploy-backend:            # ← jobs: 바로 아래, build-image 와 같은 레벨로!
+  deploy-backend:
     name: Trigger Cloud Build
     runs-on: ubuntu-latest
     needs: build-image
