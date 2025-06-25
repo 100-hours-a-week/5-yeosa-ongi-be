@@ -126,34 +126,34 @@ jobs:
       - name: Configure Docker Auth
         run: |
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev --quiet
-      - name: Build & Push Docker Image
+      - name: Build & Push Docker Image (with OTEL args)
         run: |
           docker build \
             --build-arg OTEL_AGENT_VERSION=2.16.0 \
-            --build-arg SIGNOZ_OTLP_ENDPOINT="http://signoz-collector:4317" \
             -t asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG .
           docker push asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:$TAG
 
-  deploy-backend:
-    name: Trigger Cloud Build
-    runs-on: ubuntu-latest
-    needs: build-image
-    env:
-      TAG: dev-${{ github.sha }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: dev-ongi-3-tier
-      - name: Trigger Cloud Build
-        run: |
-          gcloud builds submit . \
-            --config=.gcp/cloudbuild-dev.yaml \
-            --substitutions=_IMAGE_TAG=${{ env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }},_SIGNOZ_OTLP_ENDPOINT="http://signoz-collector:4317" \
-            --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
+    deploy-backend:
+      name: Trigger Cloud Build
+      runs-on: ubuntu-latest
+      needs: build-image
+      env:
+        TAG: dev-${{ github.sha }}
+      steps:
+        - uses: actions/checkout@v4
+        - uses: google-github-actions/auth@v2
+          with:
+            credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+        - uses: google-github-actions/setup-gcloud@v2
+          with:
+            project_id: dev-ongi-3-tier
+        - name: Trigger Cloud Build
+          run: |
+            gcloud builds submit . \
+              --config=.gcp/cloudbuild-dev.yaml \
+              --substitutions=_IMAGE_TAG=${{ env.TAG }},_TEMPLATE_NAME=ongi-dev-${{ github.run_number }} \
+              --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
+  
 
   notify-discord:
     name: Notify Discord (전체 단계 결과)
