@@ -85,7 +85,7 @@ steps:
           --container-env=AWS_REGION=$$AWS_REGION \
           --container-env=AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV \
           --container-env=KAFKA_URL=$$KAFKA_URL \
-          --container-env=SIGNOZ_INGESTION_KEY=$$SIGNOZ_INGESTION_KEY
+          --container-env=SIGNOZ_INGESTION_KEY=$$SIGNOZ_INGESTION_KEY \
           --metadata="ssh-keys=$$SSH_KEYS" \
           --metadata-from-file=startup-script=.gcp/scripts/startup.sh \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
