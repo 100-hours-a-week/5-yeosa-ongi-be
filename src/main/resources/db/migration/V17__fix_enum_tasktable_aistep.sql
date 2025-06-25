@@ -1,0 +1,5 @@
+ALTER TABLE ai_task_status
+    MODIFY step VARCHAR(20);
+
+ALTER TABLE ai_task_status
+    MODIFY step ENUM('EMBEDDING', 'QUALITY', 'DUPLICATE', 'CATEGORY', 'SCORE', 'PEOPLE') NOT NULL;
