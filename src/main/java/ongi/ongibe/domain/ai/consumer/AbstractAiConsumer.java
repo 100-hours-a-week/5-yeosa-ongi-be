@@ -21,6 +21,7 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
     @Override
     public void consume(T response) {
         String taskId = extractTaskId(response);
+        log.info("[DEBUG] 컨슘 시작, 아이디 : {} ",  taskId);
         try {
             AiTaskStatus task = taskStatusRepository.findById(taskId)
                     .orElseThrow(() -> new IllegalArgumentException("task_id 없음: " + taskId));
