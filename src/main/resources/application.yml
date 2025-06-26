@@ -42,7 +42,7 @@ kafka:
       quality : "album.ai.quality.request"
       duplicate : "album.ai.duplicate.request"
       category : "album.ai.category.request"
-      aesthetic : "album.ai.aesthetic.request"
+      score : "album.ai.score.request"
       people : "album.ai.people.request"
       style : "album.ai.style.request"
     response:
@@ -50,6 +50,6 @@ kafka:
       quality: "album.ai.quality.response"
       duplicate: "album.ai.duplicate.response"
       category: "album.ai.category.response"
-      aesthetic: "album.ai.aesthetic.response"
+      score: "album.ai.score.response"
       people: "album.ai.people.response"
       style: "album.ai.style.response"
