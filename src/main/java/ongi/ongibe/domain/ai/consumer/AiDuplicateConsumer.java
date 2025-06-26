@@ -27,7 +27,7 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @KafkaListener(
             topics = "${kafka.topic.response.duplicate}",
-            containerFactory = "batchKafkaListenerContainerFactory"
+            containerFactory = "duplicateKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<DuplicateResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<DuplicateResponseDTO> response : responses) {

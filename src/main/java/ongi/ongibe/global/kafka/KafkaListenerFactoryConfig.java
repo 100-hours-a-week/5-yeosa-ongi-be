@@ -1,8 +1,13 @@
 package ongi.ongibe.global.kafka;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
+import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
+import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
+import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
+import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +23,7 @@ import org.springframework.util.backoff.FixedBackOff;
 public class KafkaListenerFactoryConfig {
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> batchKafkaListenerContainerFactory(
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<ShakyResponseDTO>> shakeKafkaListenerContainerFactory(
             KafkaProperties kafkaProperties,
             DefaultErrorHandler errorHandler
     ) {
@@ -30,6 +35,77 @@ public class KafkaListenerFactoryConfig {
                 true
         );
     }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<DuplicateResponseDTO>> duplicateKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
+    ) {
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiClusterResponseDTO>> clusterKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
+    ) {
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<CategoryResponseDTO>> categoryKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
+    ) {
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> aestheticKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
+    ) {
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> embeddingKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
+    ) {
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
+    }
+
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory

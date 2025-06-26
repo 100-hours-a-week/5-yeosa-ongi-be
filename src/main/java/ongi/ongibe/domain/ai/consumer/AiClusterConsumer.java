@@ -38,7 +38,7 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
 
     @KafkaListener(
             topics = "${kafka.topic.response.people}",
-            containerFactory = "batchKafkaListenerContainerFactory"
+            containerFactory = "clusterKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiClusterResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiClusterResponseDTO> response : responses) {
