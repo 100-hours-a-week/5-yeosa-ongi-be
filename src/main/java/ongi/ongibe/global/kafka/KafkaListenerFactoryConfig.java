@@ -29,7 +29,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<ShakyResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
@@ -43,7 +43,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<DuplicateResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
@@ -57,7 +57,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<AiClusterResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
@@ -71,7 +71,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<CategoryResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
@@ -85,7 +85,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
@@ -99,7 +99,7 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<>() {},
+                new TypeReference<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>>() {},
                 errorHandler,
                 2,
                 true
