@@ -1,6 +1,10 @@
 package ongi.ongibe.global.kafka;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
+import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import org.apache.kafka.common.TopicPartition;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -14,29 +18,18 @@ import org.springframework.util.backoff.FixedBackOff;
 public class KafkaListenerFactoryConfig {
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> singleKafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> consumerFactory, DefaultErrorHandler errorHandler
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> batchKafkaListenerContainerFactory(
+            KafkaProperties kafkaProperties,
+            DefaultErrorHandler errorHandler
     ) {
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, Object>();
-        factory.setConsumerFactory(consumerFactory);
-        factory.setBatchListener(false);
-        factory.setConcurrency(1);
-        factory.setCommonErrorHandler(errorHandler);
-        return factory;
+        return KafkaListenerFactoryHelper.buildListenerFactory(
+                kafkaProperties,
+                new TypeReference<>() {},
+                errorHandler,
+                2,
+                true
+        );
     }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> batchKafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> consumerFactory, DefaultErrorHandler errorHandler
-    ){
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, Object>();
-        factory.setConsumerFactory(consumerFactory);
-        factory.setBatchListener(true);
-        factory.setConcurrency(2);
-        factory.setCommonErrorHandler(errorHandler);
-        return factory;
-    }
-
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory
