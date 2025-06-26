@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AiAestheticScoreProducer implements AiAestheticServiceInterface {
 
-    @Value("${kafka.topic.request.aesthetic}")
+    @Value("${kafka.topic.request.score}")
     private String requestTopic;
     private final AiKafkaProducer aiKafkaProducer;
     private final PictureRepository pictureRepository;
@@ -30,11 +30,11 @@ public class AiAestheticScoreProducer implements AiAestheticServiceInterface {
 
     @Override
     public void requestAestheticScores(Long albumId, Long userId, List<String> s3keys) {
-        String topic = AiStep.AESTHETIC.toString();
+        String topic = AiStep.SCORE.toString();
         String taskId = topic + "-" + UlidCreator.getUlid().toString();
         AiTaskStatus taskStatus = AiTaskStatus.builder()
                 .taskId(taskId)
-                .step(AiStep.AESTHETIC)
+                .step(AiStep.SCORE)
                 .status(AiStatus.PENDING)
                 .userId(userId)
                 .albumId(albumId)

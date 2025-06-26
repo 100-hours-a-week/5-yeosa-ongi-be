@@ -23,7 +23,7 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @KafkaListener(
-            topics = "${kafka.topic.response.aesthetic}",
+            topics = "${kafka.topic.response.score}",
             containerFactory = "batchKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {
@@ -65,6 +65,6 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @Override
     protected AiStep getStep() {
-        return AiStep.AESTHETIC;
+        return AiStep.SCORE;
     }
 }
