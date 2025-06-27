@@ -9,6 +9,7 @@ import ongi.ongibe.domain.album.dto.AlbumCommentResponseDTO;
 import ongi.ongibe.domain.album.entity.Comments;
 import ongi.ongibe.domain.album.service.AlbumCommentService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,5 +42,11 @@ public class AlbumCommentController {
     public ResponseEntity<BaseApiResponse<Void>> updateComments(@PathVariable Long albumId, @PathVariable Long commentsId, @RequestBody AlbumCommentRequestDTO request) {
         albumCommentService.updateComments(albumId, commentsId, request.comments());
         return ResponseEntity.ok(BaseApiResponse.success("COMMENT_UPDATE_SUCCESS", "댓글 수정이 성공했습니다.", null));
+    }
+
+    @DeleteMapping("/comments/{commentsId}")
+    public ResponseEntity<BaseApiResponse<Void>> deleteComments(@PathVariable Long albumId, @PathVariable Long commentsId) {
+        albumCommentService.deleteComments(albumId, commentsId);
+        return ResponseEntity.ok(BaseApiResponse.success("COMMENT_DELETE_SUCCESS", "댓글 삭제에 성공했습니다.", null));
     }
 }

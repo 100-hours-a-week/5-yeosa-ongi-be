@@ -63,4 +63,9 @@ public class AlbumCommentService {
         comments.setContent(updateComments);
         commentRepository.save(comments);
     }
+
+    @Transactional
+    public void deleteComments(Long albumId, Long commentsId) {
+        commentRepository.deleteById(commentsId, LocalDateTime.now());
+    }
 }
