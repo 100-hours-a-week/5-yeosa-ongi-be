@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ongi.ongibe.domain.user.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Service;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
+@Getter @Setter
 @SQLDelete(sql = "update comments set deleted_at = NOW() where id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Comments {
