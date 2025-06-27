@@ -4,12 +4,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumCommentRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumCommentResponseDTO;
 import ongi.ongibe.domain.album.entity.Comments;
 import ongi.ongibe.domain.album.service.AlbumCommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +27,13 @@ public class AlbumCommentController {
     @GetMapping("/comments")
     public ResponseEntity<BaseApiResponse<List<AlbumCommentResponseDTO>>> findAllByAlbumId(@PathVariable Long albumId) {
         return ResponseEntity.ok(albumCommentService.readComments(albumId));
+    }
+
+    @PostMapping("/comments")
+    public ResponseEntity<BaseApiResponse<Void>> createComments(@PathVariable Long albumId, @RequestBody
+            AlbumCommentRequestDTO request) {
+        albumCommentService.createComments(albumId, request.comments());
+        return ResponseEntity.ok(BaseApiResponse.success("COMMENT_CREATE_SUCCESS", "댓글 작성이 성공했습니다.", null));
     }
 
 }
