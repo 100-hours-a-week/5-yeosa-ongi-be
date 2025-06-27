@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,4 +37,9 @@ public class AlbumCommentController {
         return ResponseEntity.ok(BaseApiResponse.success("COMMENT_CREATE_SUCCESS", "댓글 작성이 성공했습니다.", null));
     }
 
+    @PutMapping("/comments/{commentsId}")
+    public ResponseEntity<BaseApiResponse<Void>> updateComments(@PathVariable Long albumId, @PathVariable Long commentsId, @RequestBody AlbumCommentRequestDTO request) {
+        albumCommentService.updateComments(albumId, commentsId, request.comments());
+        return ResponseEntity.ok(BaseApiResponse.success("COMMENT_UPDATE_SUCCESS", "댓글 수정이 성공했습니다.", null));
+    }
 }

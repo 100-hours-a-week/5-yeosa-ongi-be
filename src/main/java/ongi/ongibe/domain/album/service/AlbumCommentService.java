@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumCommentRequestDTO;
 import ongi.ongibe.domain.album.dto.AlbumCommentResponseDTO;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.entity.Comments;
@@ -29,7 +30,7 @@ public class AlbumCommentService {
     private final SecurityUtil securityUtil;
 
     @Transactional(readOnly = true)
-    public BaseApiResponse<List<AlbumCommentResponseDTO>> readComments(@PathVariable("albumId") Long albumId) {
+    public BaseApiResponse<List<AlbumCommentResponseDTO>> readComments(Long albumId) {
         Album album = albumRepository.findById(albumId).orElseThrow(
                 () -> new AlbumException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
         );
@@ -40,7 +41,7 @@ public class AlbumCommentService {
     }
 
     @Transactional
-    public void createComments(@PathVariable("albumId") Long albumId, String comment) {
+    public void createComments(Long albumId, String comment) {
         User user = securityUtil.getCurrentUser();
         Album album = albumRepository.findById(albumId).orElseThrow(
                 () -> new AlbumException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
@@ -51,6 +52,15 @@ public class AlbumCommentService {
                 .content(comment)
                 .createdAt(LocalDateTime.now())
                 .build();
+        commentRepository.save(comments);
+    }
+
+    @Transactional
+    public void updateComments(Long albumId, Long commentsId, String updateComments) {
+        Comments comments = commentRepository.findById(commentsId).orElseThrow(
+                () -> new AlbumException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다.")
+        );
+        comments.setContent(updateComments);
         commentRepository.save(comments);
     }
 }
