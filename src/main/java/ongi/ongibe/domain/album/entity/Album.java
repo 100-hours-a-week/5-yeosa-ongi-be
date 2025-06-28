@@ -65,7 +65,18 @@ public class Album {
     private LocalDateTime deletedAt;
 
     @Builder.Default
+    private int likeCount = 0;
+
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AlbumProcessState processState = AlbumProcessState.NOT_STARTED;
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        this.likeCount--;
+    }
 }
