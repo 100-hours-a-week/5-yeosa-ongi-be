@@ -11,4 +11,12 @@ public class CacheKeyUtil {
         }
         return sb.toString();
     }
+
+    public static String albumLikeCountKey(Long albumId) {
+        return PREFIX + "album:%d:like_count".formatted(albumId);
+    }
+
+    public static String albumUserLikedKey(Long albumId, Long userId) {
+        return PREFIX + "album:%d:liked:%d".formatted(albumId, userId);
+    }
 }
