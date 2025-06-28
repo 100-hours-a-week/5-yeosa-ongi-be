@@ -3,10 +3,12 @@ package ongi.ongibe.global.cache;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class RedisCacheService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
     public <T> void set(String key, T value, Duration ttl) {
@@ -28,10 +30,20 @@ public class RedisCacheService {
 
     public <T> Optional<T> get(String key, Class<T> clazz) {
         try {
-            String json = redisTemplate.opsForValue().get(key);
-            if (json == null)
+            Object raw = redisTemplate.opsForValue().get(key);
+            if (raw == null)
                 return Optional.empty();
-            return Optional.of(objectMapper.readValue(json, clazz));
+            if (raw instanceof String json) {
+                return Optional.of(objectMapper.readValue(json, clazz));
+            }
+            if (clazz.isInstance(raw)) {
+                return Optional.of(clazz.cast(raw));
+            }
+
+            log.warn("RedisCache 형 변환 불일치 (key: {}, expected: {}, actual: {})",
+                    key, clazz.getName(), raw.getClass().getName());
+            return Optional.empty();
+
         } catch (Exception e) {
             log.error("RedisCache 조회 실패 (key: {}): {}", key, e.getMessage(), e);
             return Optional.empty();
@@ -40,5 +52,18 @@ public class RedisCacheService {
 
     public void evict(String key) {
         redisTemplate.delete(key);
+    }
+
+    public <T> T execute(
+            RedisScript<T> script,
+            List<String> keys,
+            Object... args
+    ) {
+        try {
+            return redisTemplate.execute(script, keys, args);
+        } catch (Exception e) {
+            log.error("Redis Lua Script 실행 실패 (keys: {}, args: {}): {}", keys, args, e.getMessage(), e);
+            return null;
+        }
     }
 }
