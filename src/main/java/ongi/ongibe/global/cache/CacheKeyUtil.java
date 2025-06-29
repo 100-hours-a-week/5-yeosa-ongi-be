@@ -13,10 +13,10 @@ public class CacheKeyUtil {
     }
 
     public static String albumLikeCountKey(Long albumId) {
-        return PREFIX + "album:%d:like_count".formatted(albumId);
+        return PREFIX + "::album:%d:like_count".formatted(albumId);
     }
 
     public static String albumUserLikedKey(Long albumId, Long userId) {
-        return PREFIX + "album:%d:liked:%d".formatted(albumId, userId);
+        return PREFIX + "::album:%d:liked:%d".formatted(albumId, userId);
     }
 }

@@ -18,9 +18,9 @@ public class RedisLuaConfig {
     }
 
     @Bean(name = "dislikeScript")
-    public DefaultRedisScript<Long> unlikeScript() {
+    public DefaultRedisScript<Long> dislikeScript() {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-        script.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/unlike_album.lua")));
+        script.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/dislike_album.lua")));
         script.setResultType(Long.class);
         return script;
     }
