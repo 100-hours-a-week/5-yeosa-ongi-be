@@ -1,4 +1,4 @@
-if redis.call("EXISTS", KEYS[2]) == 1 then
+if redis.call("GET", KEYS[2]) == "1" then
     return 0  -- 이미 좋아요한 경우
 else
     redis.call("INCR", KEYS[1])

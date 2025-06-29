@@ -25,7 +25,7 @@ public class AlbumLikeSyncScheduler {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisCacheService redisCacheService;
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0/10 * * * * *")
     @Transactional
     public void syncAlbumLikeData() {
         log.info("[SYNC] Redis → DB 좋아요 데이터 동기화 시작");
@@ -76,11 +76,11 @@ public class AlbumLikeSyncScheduler {
                 return;
             }
 
-            Boolean liked = stringRedisTemplate.hasKey(key);
+            int liked = redisCacheService.get(key, Integer.class).orElse(0);
             log.info("albumId: {}, userId: {}", albumId, userId);
             log.info("liked: {}", liked);
 
-            if (Boolean.TRUE.equals(liked)) {
+            if (liked == 1) {
                 albumLikeRepository.upsert(albumId, userId);
                 log.info("albumLikeRepository.upsert(albumId={}, userId={}) 호출", albumId, userId);
             } else {
