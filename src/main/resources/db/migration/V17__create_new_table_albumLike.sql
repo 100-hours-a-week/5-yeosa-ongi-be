@@ -9,7 +9,7 @@ CREATE TABLE album_likes(
 
     CONSTRAINT fk_album_likes_user
         FOREIGN KEY (user_id)
-            REFERENCES user(id),
+            REFERENCES users(id),
 
     CONSTRAINT uq_album_user UNIQUE (album_id, user_id)
 )

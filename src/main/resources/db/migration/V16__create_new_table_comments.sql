@@ -12,5 +12,5 @@ CREATE TABLE comments (
 
                           CONSTRAINT fk_comments_user
                               FOREIGN KEY (user_id)
-                                  REFERENCES user(id)
+                                  REFERENCES users(id)
 );
