@@ -2,6 +2,7 @@ package ongi.ongibe.domain.ai.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.ulid.UlidCreator;
+import io.swagger.v3.core.util.Json;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -56,5 +58,18 @@ public class AiEmbeddingProducer implements AiEmbeddingServiceInterface {
         aiKafkaProducer.send(requestTopic, topic + userId, dto);
         taskStatus.markInProgress();
         taskStatusRepository.save(taskStatus);
+    }
+
+    public void reRequestEmbeddings(String taskId) {
+        String topic = AiStep.EMBEDDING.toString();
+        AiTaskStatus taskStatus = taskStatusRepository.findById(taskId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found")
+        );
+
+        KafkaRequestDTOWrapper<AiImageRequestDTO> dto = new KafkaRequestDTOWrapper<>(
+                taskId, taskStatus.getAlbumId(),
+                new AiImageRequestDTO(JsonUtil.fromJson(taskStatus.getS3keysJson()))
+        );
+        aiKafkaProducer.send(requestTopic, topic + taskStatus.getUserId(), dto);
     }
 }
