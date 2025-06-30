@@ -25,18 +25,23 @@ jobs:
         with:
           project_id: dev-ongi-3-tier
 
-      - name: Fetch DB credentials
+      - name: Fetch DB credentials (PROD)
         id: fetch-secrets
         run: |
-          # 1) Secret Manager 에서 기본 URL 가져오기
+          # 1) Secret Manager에서 URL·계정·비밀번호 가져오기
           DB_URL=$(gcloud secrets versions access latest --secret=db_url_prod)
           DB_USER=$(gcloud secrets versions access latest --secret=db_user_prod)
           DB_PASS=$(gcloud secrets versions access latest --secret=db_password_prod)
-
-          # 2) URL 뒤에 allowPublicKeyRetrieval 옵션 추가
+          
+          # 2) URL에 옵션 추가
           DB_URL="${DB_URL}?allowPublicKeyRetrieval=true&useSSL=false"
-
-          # 3) 환경 변수로 내보내기
+          
+          # 3) 모두 마스킹
+          echo "::add-mask::$DB_URL"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          
+          # 4) 환경 변수로 내보내기
           echo "DB_URL=$DB_URL"  >> $GITHUB_ENV
           echo "DB_USER=$DB_USER" >> $GITHUB_ENV
           echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
@@ -58,42 +63,34 @@ jobs:
         run: |
           flyway -v   # 버전 출력으로 확인
 
-      - name: Validate with Flyway CLI
+      - name: Validate, Repair & Migrate with Flyway CLI
         run: |
-          flyway \
-            -url="$DB_URL" \
-            -user="$DB_USER" \
-            -password="$DB_PASS" \
-            -locations=filesystem:src/main/resources/db/migration \
-            validate
-
-      - name: Migrate with Repair on Failure
-        run: |
-          if flyway \
-            -url="$DB_URL" \
-            -user="$DB_USER" \
-            -password="$DB_PASS" \
-            -locations=filesystem:src/main/resources/db/migration \
-            migrate; then
-            echo "✅ Flyway migration succeeded"
-          else
-            echo "⚠️ Migration failed, attempting repair"
+          # 1) 사전 검증(validate)
+          if ! flyway \
+               -url="$DB_URL" \
+               -user="$DB_USER" \
+               -password="$DB_PASS" \
+               -locations=filesystem:src/main/resources/db/migration \
+               validate; then
+            echo "Validation failed. Running repair..."
+            # 2) 오류 레코드 정리(repair)
             flyway \
               -url="$DB_URL" \
               -user="$DB_USER" \
               -password="$DB_PASS" \
               -locations=filesystem:src/main/resources/db/migration \
               repair
-            flyway \
-              -url="$DB_URL" \
-              -user="$DB_USER" \
-              -password="$DB_PASS" \
-              -locations=filesystem:src/main/resources/db/migration \
-              migrate
           fi
 
-      - name: Final Validate
-        run: |
+          # 3) 실제 마이그레이션(migrate)
+          flyway \
+            -url="$DB_URL" \
+            -user="$DB_USER" \
+            -password="$DB_PASS" \
+            -locations=filesystem:src/main/resources/db/migration \
+            migrate
+
+          # 4) 최종 검증(final validate)
           flyway \
             -url="$DB_URL" \
             -user="$DB_USER" \
@@ -102,6 +99,7 @@ jobs:
             validate
 
   build-image:
+    needs: flyway-migration
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     env:
@@ -158,47 +156,61 @@ jobs:
             --service-account=projects/dev-ongi-3-tier/serviceAccounts/github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com
 
   notify-discord:
-    name: Notify Discord (Success/Failure)
-    needs: deploy-backend
-    if: ${{ always() }}
+    name: Notify Discord (전체 단계 결과 - PROD)
     runs-on: ubuntu-latest
+    needs:
+      - flyway-migration
+      - build-image
+      - deploy-backend
+    if: always()
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      TAG: prod-${{ github.sha }}
+      FLYWAY_STATUS: ${{ needs.flyway-migration.result }}
+      BUILD_STATUS:  ${{ needs.build-image.result }}
+      DEPLOY_STATUS: ${{ needs.deploy-backend.result }}
     steps:
-      - name: Notify on Success
-        if: ${{ needs.deploy-backend.result == 'success' }}
+      - name: Construct & send Discord notification for PROD
         run: |
-          echo '{
-            "content": "**✅ PROD 백엔드 배포 완료!**",
-            "embeds": [
-              {
-                "title": "'"${{ github.event.pull_request.title }}"'",
-                "url": "'"${{ github.event.pull_request.html_url }}"'",
-                "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Actor",      "value": "'"${{ github.actor }}"'",     "inline": true },
-                  { "name": "Image Tag",  "value": "'"${{ env.TAG }}"'",          "inline": true }
+          # 기본: 모두 성공 메시지
+          HEADER="✅ PROD 백엔드 배포 완료!"
+          COLOR=3066993
+  
+          # 하나라도 실패 시
+          if [[ "$FLYWAY_STATUS" != "success" || "$BUILD_STATUS" != "success" || "$DEPLOY_STATUS" != "success" ]]; then
+            HEADER="❌ PROD 백엔드 배포 실패!"
+            COLOR=15158332
+          fi
+  
+          # jq 로 JSON payload 생성
+          PAYLOAD=$(jq -nc \
+            --arg content "$HEADER" \
+            --arg title   "${{ github.event.pull_request.title }}" \
+            --arg url     "${{ github.event.pull_request.html_url }}" \
+            --arg fs      "$FLYWAY_STATUS" \
+            --arg bs      "$BUILD_STATUS" \
+            --arg ds      "$DEPLOY_STATUS" \
+            --arg repo    "${{ github.repository }}" \
+            --arg actor   "${{ github.actor }}" \
+            --argjson color "$COLOR" \
+            '{
+              content: $content,
+              embeds: [{
+                title: $title,
+                url:   $url,
+                fields: [
+                  { name: "Flyway Migration",   value: $fs, inline: true },
+                  { name: "Build & Push Image", value: $bs, inline: true },
+                  { name: "Deploy Backend",     value: $ds, inline: true },
+                  { name: "Repository",         value: $repo, inline: true },
+                  { name: "Actor",              value: $actor, inline: true }
                 ],
-                "color": 3066993
-              }
-            ]
-          }' | curl -H "Content-Type: application/json" -X POST -d @- $DISCORD_WEBHOOK_URL
-
-      - name: Notify on Failure
-        if: ${{ needs.deploy-backend.result == 'failure' }}
-        run: |
-          echo '{
-            "content": "**❌ PROD 백엔드 배포 실패!**",
-            "embeds": [
-              {
-                "title": "'"${{ github.event.pull_request.title }}"'",
-                "url": "'"${{ github.event.pull_request.html_url }}"'",
-                "fields": [
-                  { "name": "Repository", "value": "'"${{ github.repository }}"'", "inline": true },
-                  { "name": "Actor",      "value": "'"${{ github.actor }}"'",     "inline": true }
-                ],
-                "color": 15158332
-              }
-            ]
-          }' | curl -H "Content-Type: application/json" -X POST -d @- $DISCORD_WEBHOOK_URL
+                color: $color
+              }]
+            }'
+          )
+  
+          # Discord 로 전송
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$PAYLOAD" \
+               "$DISCORD_WEBHOOK_URL"

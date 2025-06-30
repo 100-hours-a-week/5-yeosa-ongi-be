@@ -24,6 +24,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.RedisInviteTokenRepository;
 import ongi.ongibe.domain.album.repository.UserAlbumRepository;
 import ongi.ongibe.domain.auth.OAuthProvider;
+import ongi.ongibe.domain.notification.event.InviteMemberNotificationEvent;
 import ongi.ongibe.domain.user.UserStatus;
 import ongi.ongibe.domain.user.entity.User;
 import ongi.ongibe.domain.user.repository.UserRepository;
@@ -172,7 +173,7 @@ class AlbumInviteServiceTest {
     }
 
     @Test
-    void acceptInvite_성공() {
+    void acceptInvite_성공_한명() {
         // given
         when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
         when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
@@ -194,8 +195,40 @@ class AlbumInviteServiceTest {
         assertThat(saved.getUser()).isEqualTo(inviteTestUser);
         assertThat(saved.getAlbum()).isEqualTo(testAlbum);
         assertThat(saved.getRole()).isEqualTo(UserAlbumRole.NORMAL);
-        verify(redisInviteTokenRepository).remove(token);
+        verify(transactionAfterCommitExecutor).execute(any(Runnable.class));
+
+        ArgumentCaptor<InviteMemberNotificationEvent> inviteCaptor =
+                ArgumentCaptor.forClass(InviteMemberNotificationEvent.class);
+
+        verify(applicationEventPublisher).publishEvent(inviteCaptor.capture());
+
+        InviteMemberNotificationEvent publishedEvent = inviteCaptor.getValue();
+        assertThat(publishedEvent.albumId()).isEqualTo(albumId);
+        assertThat(publishedEvent.actorId()).isEqualTo(inviteTestUser.getId());
     }
+
+    @Test
+    void acceptInvite_구성원_초과_예외() {
+        // given
+        when(redisInviteTokenRepository.existsByToken(token)).thenReturn(true);
+        when(jwtTokenProvider.validateAndExtractInviteId(token)).thenReturn(albumId);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(testAlbum));
+        when(securityUtil.getCurrentUser()).thenReturn(inviteTestUser);
+
+        List<UserAlbum> fullMembers = new ArrayList<>();
+        for (int i = 0; i <= 9; i++) {
+            fullMembers.add(UserAlbum.of(
+                    User.builder().id((long) i).nickname("user" + i).build(),
+                    testAlbum, UserAlbumRole.NORMAL));
+        }
+        when(userAlbumRepository.findAllByAlbum(testAlbum)).thenReturn(fullMembers);
+
+        // when & then
+        assertThatThrownBy(() -> albumService.acceptInvite(token))
+                .isInstanceOf(AlbumException.class)
+                .hasMessageContaining("앨범 구성원 정원 초과입니다.");
+    }
+
 
     @Test
     void acceptInvite_토큰없음_예외() {
