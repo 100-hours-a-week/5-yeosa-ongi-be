@@ -47,14 +47,28 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
                 case 428 -> {
                     task.markRetryOrFail("임베딩 필요 : " + extractErrorData(response));
                     task.markStepEmbedding();
+                    album.setProcessState(AlbumProcessState.FAILED);
                 }
-                case 500 -> task.markRetryOrFail("서버 오류");
-                case 400, 403 -> task.markFailed("요청/인증 오류");
-                case 422 -> task.markRetryOrFail("잘못된 이미지: " + extractErrorData(response));
-                default -> task.markRetryOrFail("알 수 없는 오류: " + extractMessage(response));
+                case 500 -> {
+                    task.markRetryOrFail("서버 오류");
+                    album.setProcessState(AlbumProcessState.FAILED);
+                }
+                case 400, 403 -> {
+                    task.markFailed("요청/인증 오류");
+                    album.setProcessState(AlbumProcessState.FAILED);
+                }
+                case 422 -> {
+                    task.markRetryOrFail("잘못된 이미지: " + extractErrorData(response));
+                    album.setProcessState(AlbumProcessState.FAILED);
+                }
+                default -> {
+                    task.markRetryOrFail("알 수 없는 오류: " + extractMessage(response));
+                    album.setProcessState(AlbumProcessState.FAILED);
+                }
             }
 
             taskStatusRepository.save(task);
+            albumRepository.save(album);
         } catch (Exception e) {
             log.error("[{}] 처리 실패: {}", getStep(), e.getMessage(), e);
             album.setProcessState(AlbumProcessState.FAILED);
