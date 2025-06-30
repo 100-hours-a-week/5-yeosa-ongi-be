@@ -23,7 +23,7 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
 
     private final AiTaskStatusRepository taskStatusRepository;
     private final AiStepTransitionService stepTransitionService;
-    protected final AlbumProcessService albumProcessService;
+    private final AlbumProcessService albumProcessService;
 
     @Override
     public void consume(T response) {

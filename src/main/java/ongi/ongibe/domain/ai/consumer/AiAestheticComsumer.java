@@ -43,7 +43,6 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
                 }
                 log.info("[Aesthetic] album {}, {}개 카테고리 처리 완료", albumId, scores.size());
             }
-            albumProcessService.markProcess(response.albumId(), AlbumProcessState.DONE);
         }
     }
 
