@@ -1,11 +1,14 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
+import ongi.ongibe.domain.ai.dto.AiErrorResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
+import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
@@ -21,21 +24,27 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, AlbumProcessService albumProcessService) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService);
+    public AiAestheticComsumer(
+            AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AiEmbeddingProducer embeddingProducer, ObjectMapper objectMapper,PictureRepository pictureRepository, AlbumProcessService albumProcessService) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 
     @KafkaListener(
             topics = "${kafka.topic.response.score}",
-            containerFactory = "aestheticKafkaListenerContainerFactory"
+            containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response : responses) {
             this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
-                List<AiAestheticScoreResponseDTO.ScoreCategory> scores = response.body().data();
+
+                AiAestheticScoreResponseDTO body = objectMapper.convertValue(
+                        response.body(), AiAestheticScoreResponseDTO.class);
+
+                List<AiAestheticScoreResponseDTO.ScoreCategory> scores = body.data();
+                log.info("albumId = {}, score = {}", albumId, scores.size());
                 for (var category : scores) {
                     for (var entry : category.images()) {
                         pictureRepository.updateScore(albumId, entry.image(), entry.score());
@@ -63,13 +72,21 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @Override
     protected String extractMessage(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
-        return response.body().message();
+        if (response.statusCode() == 201) {
+            return response.body().message();
+        }
+        var error = objectMapper.convertValue(response.body(), AiErrorResponseDTO.class);
+        return error.message();
     }
 
+
     @Override
-    protected String extractErrorData(
-            KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
-        return response.body().data().isEmpty() ? "" : response.body().data().toString();
+    protected String extractErrorData(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
+        if (response.statusCode() == 201) {
+            return response.body().data().toString();
+        }
+        var error = objectMapper.convertValue(response.body(), AiErrorResponseDTO.class);
+        return error.data() == null ? "" : error.data().toString();
     }
 
     @Override

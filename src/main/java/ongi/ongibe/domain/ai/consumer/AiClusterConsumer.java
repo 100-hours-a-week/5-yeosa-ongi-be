@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO.ClusterData;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
+import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
@@ -32,8 +34,8 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
     public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository,
-            AlbumProcessService albumProcessService, PictureFaceClusterRepository pictureFaceClusterRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService);
+            AlbumProcessService albumProcessService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureFaceClusterRepository pictureFaceClusterRepository) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;
@@ -41,7 +43,7 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
 
     @KafkaListener(
             topics = "${kafka.topic.response.people}",
-            containerFactory = "clusterKafkaListenerContainerFactory"
+            containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiClusterResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiClusterResponseDTO> response : responses) {
@@ -57,8 +59,8 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
                     faceClusterRepository.deleteAllByIdInBatch(faceClusterIds);
                     log.info("[AI] 기존 클러스터 및 매핑 삭제 완료 (총 {}개)", faceClusterIds.size());
                 }
-
-                List<ClusterData> clusterData = response.body().data();
+                AiClusterResponseDTO dto = objectMapper.convertValue(response.body(), AiClusterResponseDTO.class);
+                List<ClusterData> clusterData = dto.data();
 
                 Map<String, Picture> pictureMap = pictureRepository.findAllByAlbumId(albumId)
                         .stream()

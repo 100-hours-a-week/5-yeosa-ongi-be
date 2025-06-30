@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
@@ -7,6 +8,7 @@ import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
+import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -21,23 +23,24 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     private final PictureRepository pictureRepository;
 
     public AiShakeConsumer(
-            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService, PictureRepository pictureRepository) {
-        super(taskStatusRepository, transitionService, albumProcessService);
+            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer,PictureRepository pictureRepository) {
+        super(taskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 
     @KafkaListener(
             topics = "${kafka.topic.response.quality}",
-            containerFactory = "shakeKafkaListenerContainerFactory"
+            containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<ShakyResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<ShakyResponseDTO> res : responses) {
             this.consume(res);
             if  (res.statusCode() == 201) {
+                ShakyResponseDTO dto = objectMapper.convertValue(res.body(), ShakyResponseDTO.class);
                 Long albumId = res.albumId();
-                List<String> shakyKeys = res.body().data();
+                List<String> shakyKeys = dto.data();
                 pictureRepository.markPicturesAsShaky(albumId, shakyKeys);
-                log.info("[DUPLICATE] album {} 중복 {}장 처리 완료", albumId, shakyKeys.size());
+                log.info("[DUPLICATE] album {} 사진 흔들림 {}장 처리 완료", albumId, shakyKeys.size());
             }
         }
     }
