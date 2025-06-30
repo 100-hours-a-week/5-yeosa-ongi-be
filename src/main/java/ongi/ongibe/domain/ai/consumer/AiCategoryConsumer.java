@@ -1,11 +1,13 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
+import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -20,21 +22,22 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     private final PictureRepository pictureRepository;
 
     public AiCategoryConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService,
-            AlbumProcessService albumProcessService, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService);
+            AlbumProcessService albumProcessService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureRepository pictureRepository) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 
     @KafkaListener(
             topics = "${kafka.topic.response.category}",
-            containerFactory = "categoryKafkaListenerContainerFactory"
+            containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<CategoryResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<CategoryResponseDTO> response : responses) {
             this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
-                List<CategoryResponseDTO.CategoryResult> categories = response.body().data();
+                CategoryResponseDTO dto = objectMapper.convertValue(response.body(), CategoryResponseDTO.class);
+                List<CategoryResponseDTO.CategoryResult> categories = dto.data();
                 for (var category : categories) {
                     pictureRepository.updateTag(albumId, category.images(), category.category());
                 }

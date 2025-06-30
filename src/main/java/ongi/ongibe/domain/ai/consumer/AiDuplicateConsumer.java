@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.ai.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
+import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -21,22 +23,24 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService,
+    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService, ObjectMapper objectMapper,
+            AiEmbeddingProducer embeddingProducer,
             PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService);
+        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 
     @KafkaListener(
             topics = "${kafka.topic.response.duplicate}",
-            containerFactory = "duplicateKafkaListenerContainerFactory"
+            containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<DuplicateResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<DuplicateResponseDTO> response : responses) {
             this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
-                List<String> duplicateKeys = response.body().data().stream()
+                DuplicateResponseDTO dto = objectMapper.convertValue(response.body(), DuplicateResponseDTO.class);
+                List<String> duplicateKeys = dto.data().stream()
                         .flatMap(List::stream)
                         .toList();
                 pictureRepository.markPicturesAsDuplicated(albumId, duplicateKeys);
