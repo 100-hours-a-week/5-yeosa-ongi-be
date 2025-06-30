@@ -9,7 +9,12 @@ import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.entity.AiTaskStatus;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.AlbumProcessState;
+import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.global.util.JsonUtil;
+import org.springframework.http.HttpStatus;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -17,11 +22,16 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
 
     private final AiTaskStatusRepository taskStatusRepository;
     private final AiStepTransitionService stepTransitionService;
+    private final AlbumRepository albumRepository;
 
     @Override
     public void consume(T response) {
         String taskId = extractTaskId(response);
         log.info("[DEBUG] 컨슘 시작, 아이디 : {} ",  taskId);
+        Long albumId = extractAlbumId(response);
+        Album album = albumRepository.findById(albumId).orElseThrow(
+                () -> new AlbumException(HttpStatus.NOT_FOUND, "Album Not Found when kafka consume")
+        );
         try {
             AiTaskStatus task = taskStatusRepository.findById(taskId)
                     .orElseThrow(() -> new IllegalArgumentException("task_id 없음: " + taskId));
@@ -47,10 +57,13 @@ public abstract class AbstractAiConsumer<T> implements AiConsumerInterface<T> {
             taskStatusRepository.save(task);
         } catch (Exception e) {
             log.error("[{}] 처리 실패: {}", getStep(), e.getMessage(), e);
+            album.setProcessState(AlbumProcessState.FAILED);
+            albumRepository.save(album);
             throw new RuntimeException(e);
         }
     }
 
+    protected abstract Long extractAlbumId(T response);
     protected abstract int extractStatusCode(T response);
     protected abstract String extractTaskId(T response);
     protected abstract String extractMessage(T response);

@@ -12,8 +12,13 @@ import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
 import ongi.ongibe.domain.ai.dto.KafkaRequestDTOWrapper;
 import ongi.ongibe.domain.ai.entity.AiTaskStatus;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.AlbumProcessState;
+import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.global.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +31,7 @@ public class AiEmbeddingProducer implements AiEmbeddingServiceInterface {
     private String requestTopic;
     private final AiKafkaProducer aiKafkaProducer;
     private final AiTaskStatusRepository taskStatusRepository;
+    private final AlbumRepository albumRepository;
 
     @Override
     @Transactional

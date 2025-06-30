@@ -15,6 +15,7 @@ import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -29,8 +30,9 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
-    public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository, PictureFaceClusterRepository pictureFaceClusterRepository) {
-        super(aiTaskStatusRepository, transitionService);
+    public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository,
+            AlbumRepository albumRepository, PictureFaceClusterRepository pictureFaceClusterRepository) {
+        super(aiTaskStatusRepository, transitionService, albumRepository);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;
@@ -90,6 +92,11 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
         }
     }
 
+
+    @Override
+    protected Long extractAlbumId(KafkaResponseDTOWrapper<AiClusterResponseDTO> response) {
+        return response.albumId();
+    }
 
     @Override
     protected int extractStatusCode(KafkaResponseDTOWrapper<AiClusterResponseDTO> response) {

@@ -7,6 +7,7 @@ import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,8 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService);
+    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, AlbumRepository albumRepository) {
+        super(aiTaskStatusRepository, transitionService, albumRepository);
         this.pictureRepository = pictureRepository;
     }
 
@@ -43,6 +44,11 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     }
 
     @Override
+    protected Long extractAlbumId(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
+        return response.albumId();
+    }
+
+    @Override
     protected int extractStatusCode(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
         return response.statusCode();
     }
@@ -54,13 +60,13 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @Override
     protected String extractMessage(KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
-        return response.body().data().isEmpty() ? "" : response.body().data().toString();
+        return response.body().message();
     }
 
     @Override
     protected String extractErrorData(
             KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response) {
-        return "";
+        return response.body().data().isEmpty() ? "" : response.body().data().toString();
     }
 
     @Override

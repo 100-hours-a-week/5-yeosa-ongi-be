@@ -8,6 +8,7 @@ import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> {
 
-    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService){
-        super(aiTaskStatusRepository, transitionService);
+    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumRepository albumRepository) {
+        super(aiTaskStatusRepository, transitionService, albumRepository);
     }
 
     @KafkaListener(
@@ -28,6 +29,11 @@ public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
         for (KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> res : responses) {
             this.consume(res);
         }
+    }
+
+    @Override
+    protected Long extractAlbumId(KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> response) {
+        return response.albumId();
     }
 
     @Override

@@ -7,6 +7,7 @@ import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,9 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
 
     private final PictureRepository pictureRepository;
 
-    public AiCategoryConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService);
+    public AiCategoryConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService,
+            AlbumRepository albumRepository, PictureRepository pictureRepository) {
+        super(aiTaskStatusRepository, transitionService, albumRepository);
         this.pictureRepository = pictureRepository;
     }
 
@@ -38,6 +40,11 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
                 log.info("[Category] album {} category {}개 분리 완료", albumId, categories.size());
             }
         }
+    }
+
+    @Override
+    protected Long extractAlbumId(KafkaResponseDTOWrapper<CategoryResponseDTO> response) {
+        return response.albumId();
     }
 
     @Override
