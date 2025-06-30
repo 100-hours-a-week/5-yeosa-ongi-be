@@ -1,6 +1,7 @@
 package ongi.ongibe.global.kafka;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
@@ -20,91 +21,23 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
+@Slf4j
 public class KafkaListenerFactoryConfig {
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<ShakyResponseDTO>> shakeKafkaListenerContainerFactory(
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<Object>> genericKafkaListenerContainerFactory(
             KafkaProperties kafkaProperties,
             DefaultErrorHandler errorHandler
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<ShakyResponseDTO>>() {},
+                new TypeReference<KafkaResponseDTOWrapper<Object>>() {},
                 errorHandler,
                 2,
                 true
         );
     }
 
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<DuplicateResponseDTO>> duplicateKafkaListenerContainerFactory(
-            KafkaProperties kafkaProperties,
-            DefaultErrorHandler errorHandler
-    ) {
-        return KafkaListenerFactoryHelper.buildListenerFactory(
-                kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<DuplicateResponseDTO>>() {},
-                errorHandler,
-                2,
-                true
-        );
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiClusterResponseDTO>> clusterKafkaListenerContainerFactory(
-            KafkaProperties kafkaProperties,
-            DefaultErrorHandler errorHandler
-    ) {
-        return KafkaListenerFactoryHelper.buildListenerFactory(
-                kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<AiClusterResponseDTO>>() {},
-                errorHandler,
-                2,
-                true
-        );
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<CategoryResponseDTO>> categoryKafkaListenerContainerFactory(
-            KafkaProperties kafkaProperties,
-            DefaultErrorHandler errorHandler
-    ) {
-        return KafkaListenerFactoryHelper.buildListenerFactory(
-                kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<CategoryResponseDTO>>() {},
-                errorHandler,
-                2,
-                true
-        );
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> aestheticKafkaListenerContainerFactory(
-            KafkaProperties kafkaProperties,
-            DefaultErrorHandler errorHandler
-    ) {
-        return KafkaListenerFactoryHelper.buildListenerFactory(
-                kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>>() {},
-                errorHandler,
-                2,
-                true
-        );
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> embeddingKafkaListenerContainerFactory(
-            KafkaProperties kafkaProperties,
-            DefaultErrorHandler errorHandler
-    ) {
-        return KafkaListenerFactoryHelper.buildListenerFactory(
-                kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>>() {},
-                errorHandler,
-                2,
-                true
-        );
-    }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
@@ -122,7 +55,14 @@ public class KafkaListenerFactoryConfig {
     @Bean
     public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer recoverer) {
         FixedBackOff fixedBackOff = new FixedBackOff(3000L, 2);
-        return new DefaultErrorHandler(recoverer, fixedBackOff);
+        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, fixedBackOff);
+
+        handler.setRetryListeners((record, ex, deliveryAttempt) ->
+                log.warn("[Kafka Retry] Record={}, attempt={}, ex={}",
+                        record.value(), deliveryAttempt, ex.getMessage())
+        );
+
+        return handler;
     }
 
     @Bean

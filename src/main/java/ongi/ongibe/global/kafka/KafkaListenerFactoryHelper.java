@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 public class KafkaListenerFactoryHelper {
@@ -23,7 +24,7 @@ public class KafkaListenerFactoryHelper {
         var consumerFactory = new DefaultKafkaConsumerFactory<>(
                 kafkaProperties.buildConsumerProperties(),
                 new StringDeserializer(),
-                valueDeserializer
+                new ErrorHandlingDeserializer<>(valueDeserializer)
         );
 
         var factory = new ConcurrentKafkaListenerContainerFactory<String, T>();
