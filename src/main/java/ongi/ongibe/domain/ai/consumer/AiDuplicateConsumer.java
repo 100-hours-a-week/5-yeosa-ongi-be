@@ -11,6 +11,7 @@ import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +21,9 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumRepository albumRepository,
+    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService,
             PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumRepository);
+        super(aiTaskStatusRepository, transitionService, albumProcessService);
         this.pictureRepository = pictureRepository;
     }
 

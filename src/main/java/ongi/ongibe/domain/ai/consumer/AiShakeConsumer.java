@@ -10,6 +10,7 @@ import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,8 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     private final PictureRepository pictureRepository;
 
     public AiShakeConsumer(
-            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, AlbumRepository albumRepository, PictureRepository pictureRepository) {
-        super(taskStatusRepository, transitionService, albumRepository);
+            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService, PictureRepository pictureRepository) {
+        super(taskStatusRepository, transitionService, albumProcessService);
         this.pictureRepository = pictureRepository;
     }
 

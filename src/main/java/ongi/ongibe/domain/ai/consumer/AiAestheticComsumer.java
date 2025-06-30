@@ -7,8 +7,10 @@ import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +20,8 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, AlbumRepository albumRepository) {
-        super(aiTaskStatusRepository, transitionService, albumRepository);
+    public AiAestheticComsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, AlbumProcessService albumProcessService) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService);
         this.pictureRepository = pictureRepository;
     }
 

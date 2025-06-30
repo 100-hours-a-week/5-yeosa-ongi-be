@@ -19,6 +19,7 @@ import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +32,8 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
     public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository,
-            AlbumRepository albumRepository, PictureFaceClusterRepository pictureFaceClusterRepository) {
-        super(aiTaskStatusRepository, transitionService, albumRepository);
+            AlbumProcessService albumProcessService, PictureFaceClusterRepository pictureFaceClusterRepository) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;

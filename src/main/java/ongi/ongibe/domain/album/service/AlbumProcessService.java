@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.aiInterface.AiAlbumServiceInterface;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.exception.AlbumException;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -42,5 +43,13 @@ public class AlbumProcessService {
             album.setProcessState(AlbumProcessState.FAILED);
             albumRepository.save(album);
         }
+    }
+
+    @Transactional
+    public void markProcess(Long albumId, AlbumProcessState processState) {
+        Album album = albumRepository.findById(albumId).orElseThrow(
+                () -> new AlbumException(HttpStatus.NOT_FOUND, "album not found.")
+        );
+        album.setProcessState(processState);
     }
 }

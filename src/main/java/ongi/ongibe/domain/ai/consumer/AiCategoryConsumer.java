@@ -9,6 +9,7 @@ import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
+import ongi.ongibe.domain.album.service.AlbumProcessService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,8 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     private final PictureRepository pictureRepository;
 
     public AiCategoryConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService,
-            AlbumRepository albumRepository, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumRepository);
+            AlbumProcessService albumProcessService, PictureRepository pictureRepository) {
+        super(aiTaskStatusRepository, transitionService, albumProcessService);
         this.pictureRepository = pictureRepository;
     }
 
