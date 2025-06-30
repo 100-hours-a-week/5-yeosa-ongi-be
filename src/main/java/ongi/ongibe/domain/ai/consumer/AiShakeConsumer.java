@@ -8,6 +8,7 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
+import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,8 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
     private final PictureRepository pictureRepository;
 
     public AiShakeConsumer(
-            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository) {
-        super(taskStatusRepository, transitionService);
+            AiTaskStatusRepository taskStatusRepository, AiStepTransitionService transitionService, AlbumRepository albumRepository, PictureRepository pictureRepository) {
+        super(taskStatusRepository, transitionService, albumRepository);
         this.pictureRepository = pictureRepository;
     }
 
@@ -38,6 +39,11 @@ public class AiShakeConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<
                 log.info("[DUPLICATE] album {} 중복 {}장 처리 완료", albumId, shakyKeys.size());
             }
         }
+    }
+
+    @Override
+    protected Long extractAlbumId(KafkaResponseDTOWrapper<ShakyResponseDTO> response) {
+        return response.albumId();
     }
 
     @Override
