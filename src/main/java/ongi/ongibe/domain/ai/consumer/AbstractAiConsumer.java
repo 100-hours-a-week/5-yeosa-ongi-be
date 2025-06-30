@@ -90,7 +90,7 @@ public abstract class AbstractAiConsumer<T extends KafkaResponseDTOWrapper<?>> i
     protected abstract AiStep getStep();
 
     private void checkAndMarkAlbumDoneIfAllStepsSucceeded(Long albumId) {
-        int successCount = taskStatusRepository.countSuccessStepsByAlbumId(albumId, AiStatus.SUCCESS);
+        int successCount = taskStatusRepository.countSuccessStepsByAlbumId(albumId);
         if (successCount == AiStep.values().length) {
             albumProcessService.markProcess(albumId, AlbumProcessState.DONE);
             log.info("[AI] Album {} 모든 단계 성공 → DONE 처리 완료", albumId);
