@@ -25,7 +25,7 @@ public class AlbumLikeSyncScheduler {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisCacheService redisCacheService;
 
-    @Scheduled(cron = "0/10 * * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void syncAlbumLikeData() {
         log.info("[SYNC] Redis → DB 좋아요 데이터 동기화 시작");

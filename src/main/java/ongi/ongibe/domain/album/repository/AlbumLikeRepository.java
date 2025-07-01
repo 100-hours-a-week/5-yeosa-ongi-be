@@ -25,4 +25,5 @@ public interface AlbumLikeRepository extends JpaRepository<AlbumLike, Long> {
     @Query(value = "DELETE FROM album_likes WHERE album_id = :albumId AND user_id = :userId", nativeQuery = true)
     void deleteByAlbumIdAndUserId(@Param("albumId") Long albumId, @Param("userId") Long userId);
 
+    boolean existsByAlbumIdAndUserId(Long albumId, Long userId);
 }
