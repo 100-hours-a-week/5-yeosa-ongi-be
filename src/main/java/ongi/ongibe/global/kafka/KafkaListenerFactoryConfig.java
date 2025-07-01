@@ -38,7 +38,6 @@ public class KafkaListenerFactoryConfig {
         );
     }
 
-
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory
@@ -51,17 +50,15 @@ public class KafkaListenerFactoryConfig {
         return factory;
     }
 
-
     @Bean
     public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer recoverer) {
-        FixedBackOff fixedBackOff = new FixedBackOff(3000L, 2);
+        FixedBackOff fixedBackOff = new FixedBackOff(3000L, 3);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, fixedBackOff);
 
         handler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.warn("[Kafka Retry] Record={}, attempt={}, ex={}",
                         record.value(), deliveryAttempt, ex.getMessage())
         );
-
         return handler;
     }
 
