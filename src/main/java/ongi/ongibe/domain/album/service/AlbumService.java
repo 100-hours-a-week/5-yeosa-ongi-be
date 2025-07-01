@@ -30,6 +30,7 @@ import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.CommentRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -74,6 +75,7 @@ public class AlbumService {
     private final UserCacheService userCacheService;
     private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
     private final EntityManager entityManager;
+    private final CommentRepository commentRepository;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -147,10 +149,12 @@ public class AlbumService {
                     );
                 }).toList();
 
+        int commentCount = commentRepository.countAllByAlbum(album);
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
                 album.getName(),
                 pictureInfos,
                 album.getProcessState(),
+                commentCount,
                 clusterInfos
         );
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
