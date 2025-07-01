@@ -12,7 +12,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Qualifier("kafka")
+@Primary
+//@Qualifier("kafka")
 @Service
 @RequiredArgsConstructor
 @Slf4j
