@@ -2,6 +2,7 @@ package ongi.ongibe.domain.album.controller;
 
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumLikeResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumLikeToggleResponseDTO;
 import ongi.ongibe.domain.album.service.AlbumLikeService;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,9 @@ public class AlbumLikeController {
     }
 
     @GetMapping
-    public ResponseEntity<BaseApiResponse>
+    public ResponseEntity<BaseApiResponse<AlbumLikeResponseDTO>> getAlbumLike(@PathVariable Long albumId){
+        BaseApiResponse<AlbumLikeResponseDTO> response = albumLikeService.getAlbumLike(albumId);
+        return ResponseEntity.ok(response);
+    }
 
 }

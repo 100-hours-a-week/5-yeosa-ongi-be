@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.common.BaseApiResponse;
+import ongi.ongibe.domain.album.dto.AlbumLikeResponseDTO;
 import ongi.ongibe.domain.album.dto.AlbumLikeToggleResponseDTO;
 import ongi.ongibe.domain.album.repository.AlbumLikeRepository;
 import ongi.ongibe.domain.user.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 @Slf4j
@@ -89,5 +91,16 @@ public class AlbumLikeService {
         int likeCount = albumLikeRepository.countByAlbumId(albumId);
         redisCacheService.set(countKey, likeCount, Duration.ofDays(30));
         return likeCount;
+    }
+
+    @Transactional
+    public BaseApiResponse<AlbumLikeResponseDTO> getAlbumLike(Long albumId){
+        int count = getLiked(albumId);
+        AlbumLikeResponseDTO dto = new AlbumLikeResponseDTO(count);
+        return BaseApiResponse.success(
+                "LIKE_READ_SUCCESS",
+                "좋아요 조회 성공했습니다",
+                dto
+        );
     }
 }
