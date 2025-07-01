@@ -5,6 +5,7 @@ import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 
 public record AlbumCreateRequestGeoFrontDTO(
         String albumName,
+        List<String> concepts,
         List<PictureRequestDTO> pictureUrls
 ) {
     public record PictureRequestDTO(
