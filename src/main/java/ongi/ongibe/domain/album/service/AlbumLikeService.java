@@ -96,11 +96,27 @@ public class AlbumLikeService {
     @Transactional
     public BaseApiResponse<AlbumLikeResponseDTO> getAlbumLike(Long albumId){
         int count = getLiked(albumId);
-        AlbumLikeResponseDTO dto = new AlbumLikeResponseDTO(count);
+        boolean isLike = checkUserLiked(albumId, securityUtil.getCurrentUserId());
+        AlbumLikeResponseDTO dto = new AlbumLikeResponseDTO(count, isLike);
         return BaseApiResponse.success(
                 "LIKE_READ_SUCCESS",
                 "좋아요 조회 성공했습니다",
                 dto
         );
+    }
+
+    private boolean checkUserLiked(Long albumId, Long userId){
+        String userKey =  CacheKeyUtil.albumUserLikedKey(albumId, userId);
+        Optional<Integer> cachedCount = redisCacheService.get(userKey, Integer.class);
+
+        if (cachedCount.isPresent()) {
+            return cachedCount.get() == 1;
+        }
+
+        boolean existsInDB = albumLikeRepository.existsByAlbumIdAndUserId(albumId, userId);
+        if (existsInDB) {
+            redisCacheService.set(userKey, 1, Duration.ofDays(30));
+        }
+        return existsInDB;
     }
 }
