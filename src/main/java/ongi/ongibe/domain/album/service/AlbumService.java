@@ -25,11 +25,13 @@ import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.AlbumConcept;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.AlbumConceptRepository;
 import ongi.ongibe.domain.album.repository.CommentRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
@@ -76,6 +78,7 @@ public class AlbumService {
     private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
     private final EntityManager entityManager;
     private final CommentRepository commentRepository;
+    private final AlbumConceptRepository albumConceptRepository;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -179,7 +182,8 @@ public class AlbumService {
     }
 
     @Transactional
-    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
+    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs,
+            List<String> concepts) {
         if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 " + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다");
         }
@@ -191,6 +195,13 @@ public class AlbumService {
 
         associateAlbumWithUser(user, album);
         persistAlbum(album, pictures);
+        for (String concept : concepts) {
+            AlbumConcept albumConcept = AlbumConcept.builder()
+                    .concept(concept)
+                    .album(album)
+                    .build();
+            albumConceptRepository.save(albumConcept);
+        }
 
         List<String> s3Keys = pictures.stream()
                 .map(Picture::getS3Key)
@@ -207,7 +218,7 @@ public class AlbumService {
         });
 
         eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-        eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys));
+        eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys, concepts));
     }
 
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
@@ -254,6 +265,11 @@ public class AlbumService {
             refreshAllMemberTotalStateCache(album);
 
         });
+
+        List<AlbumConcept> conceptEntities = albumConceptRepository.findAllByAlbum(album);
+        List<String> concepts = conceptEntities.stream()
+                .map(AlbumConcept::getConcept)
+                .toList();
         eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys));
     }
 
