@@ -20,4 +20,6 @@ public interface CommentRepository extends JpaRepository<Comments, Long> {
     update Comments comments set comments.deletedAt = :now where comments.id = :commentsId
     """)
     void deleteById(@Param("commentsId") Long commentsId, @Param("now")LocalDateTime now);
+
+    int countAllByAlbum(Album album);
 }
