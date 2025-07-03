@@ -35,6 +35,8 @@ availableSecrets:
       env: AI_SERVER_URL_DEV
     - versionName: "projects/dev-ongi-3-tier/secrets/kafka_url/versions/latest"
       env: KAFKA_URL
+    - versionName: "projects/dev-ongi-3-tier/secrets/signoz_ingestion_key/versions/latest"
+      env: SIGNOZ_INGESTION_KEY
 
 steps:
   - id: deploy-backend
@@ -54,6 +56,7 @@ steps:
       - AWS_REGION
       - AI_SERVER_URL_DEV
       - KAFKA_URL
+      - SIGNOZ_INGESTION_KEY
     args:
       - '-c'
       - |
@@ -82,12 +85,13 @@ steps:
           --container-env=AWS_REGION=$$AWS_REGION \
           --container-env=AI_SERVER_URL_DEV=$$AI_SERVER_URL_DEV \
           --container-env=KAFKA_URL=$$KAFKA_URL \
+          --container-env=SIGNOZ_INGESTION_KEY=$$SIGNOZ_INGESTION_KEY \
           --metadata="ssh-keys=$$SSH_KEYS" \
           --metadata-from-file=startup-script=.gcp/scripts/startup.sh \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=dev-backend
-
+        
         echo ▶ MIG 롤링 업데이트
         gcloud compute instance-groups managed rolling-action start-update dev-ongi-backend-mig \
           --region=asia-northeast3 \
