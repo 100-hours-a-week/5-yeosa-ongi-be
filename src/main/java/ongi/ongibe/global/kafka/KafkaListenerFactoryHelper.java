@@ -1,6 +1,11 @@
 package ongi.ongibe.global.kafka;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -20,6 +25,10 @@ public class KafkaListenerFactoryHelper {
     ) {
         JsonDeserializer<T> valueDeserializer = new JsonDeserializer<>(typeReference);
         valueDeserializer.addTrustedPackages("*");
+        valueDeserializer.ignoreTypeHeaders();
+        valueDeserializer.setRemoveTypeHeaders(false);
+        valueDeserializer.setUseTypeMapperForKey(false); // 메시지 key가 JSON이면 true
+        valueDeserializer.setUseTypeHeaders(false); // type headers 사용 X
 
         var consumerFactory = new DefaultKafkaConsumerFactory<>(
                 kafkaProperties.buildConsumerProperties(),

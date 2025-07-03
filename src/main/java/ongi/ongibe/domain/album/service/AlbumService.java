@@ -73,7 +73,7 @@ public class AlbumService {
     private final PresignedUrlService presignedUrlService;
     private final AlbumCacheService albumCacheService;
     private final UserCacheService userCacheService;
-    private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
+    private final TransactionAfterCommitExecutor afterCommitExecutor;
     private final EntityManager entityManager;
     private final CommentRepository commentRepository;
 
@@ -198,16 +198,16 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
 
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
             userCacheService.refreshUserTotalState(user);
             userCacheService.refreshUserTagState(user, yearMonth);
             userCacheService.refreshUserPictureStat(user, yearMonth);
             userCacheService.refreshUserPlaceStat(user, yearMonth);
-        });
 
-        eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-        eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys));
+            eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
+            eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys));
+        });
     }
 
 //    public void createAlbum(String albumName, List<String> pictureUrls) {
@@ -249,7 +249,7 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberMonthlyAlbumCache(album);
             refreshAllMemberTotalStateCache(album);
 
@@ -329,7 +329,7 @@ public class AlbumService {
         }
         pictureFaceClusterRepository.deleteAllByPictureIds(now, pictureIds);
 
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
         });
@@ -354,7 +354,7 @@ public class AlbumService {
         entityManager.flush();
 
         albumCacheService.evictMonthlyAlbum(user.getId(), DateUtil.getYearMonth(album.getCreatedAt()));
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
         });
@@ -460,7 +460,7 @@ public class AlbumService {
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
 
-            transactionAfterCommitExecutor.execute(()->{
+            afterCommitExecutor.execute(()->{
                 refreshAllMemberTotalStateCache(album);
                 refreshAllMemberMonthlyAlbumCache(album);
             });

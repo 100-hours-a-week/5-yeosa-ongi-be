@@ -31,10 +31,10 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<Object>>() {},
+                new TypeReference<>() {},
                 errorHandler,
-                2,
-                true
+                1,
+                false
         );
     }
 

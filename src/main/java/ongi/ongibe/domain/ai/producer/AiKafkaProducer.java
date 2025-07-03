@@ -13,7 +13,7 @@ public class AiKafkaProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Transactional
+    @Transactional("kafkaTransactionManager")
     public void send(String topic, String key, Object payload) {
         kafkaTemplate.send(topic, key, payload);
         log.info("Sent message to kafka topic : {}", topic);

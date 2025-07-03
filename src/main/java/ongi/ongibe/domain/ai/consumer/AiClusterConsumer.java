@@ -17,11 +17,10 @@ import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
+import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +33,8 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
 
     public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository,
-            AlbumProcessService albumProcessService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureFaceClusterRepository pictureFaceClusterRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
+            AlbumMarkService albumMarkService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureFaceClusterRepository pictureFaceClusterRepository) {
+        super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;

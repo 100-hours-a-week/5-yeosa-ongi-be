@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 //@Primary
-@Service
+@Service("httpAiAlbumService")
 @RequiredArgsConstructor
 @Slf4j
 public class AiHttpAlbumService implements AiAlbumServiceInterface {

@@ -10,11 +10,8 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
-import ongi.ongibe.domain.album.AlbumProcessState;
-import ongi.ongibe.domain.album.entity.Album;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
+import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +22,8 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     private final PictureRepository pictureRepository;
 
     public AiAestheticComsumer(
-            AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AiEmbeddingProducer embeddingProducer, ObjectMapper objectMapper,PictureRepository pictureRepository, AlbumProcessService albumProcessService) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
+            AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AiEmbeddingProducer embeddingProducer, ObjectMapper objectMapper,PictureRepository pictureRepository, AlbumMarkService albumMarkService) {
+        super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 

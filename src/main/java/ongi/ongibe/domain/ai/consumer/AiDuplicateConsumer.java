@@ -2,8 +2,6 @@ package ongi.ongibe.domain.ai.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
@@ -11,9 +9,8 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
+import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -23,10 +20,10 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     private final PictureRepository pictureRepository;
 
-    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumProcessService albumProcessService, ObjectMapper objectMapper,
+    public AiDuplicateConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, AlbumMarkService albumMarkService, ObjectMapper objectMapper,
             AiEmbeddingProducer embeddingProducer,
             PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
+        super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 

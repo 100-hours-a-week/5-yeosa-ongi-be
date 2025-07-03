@@ -36,11 +36,12 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      transaction-id-prefix: tx-be-
 
     consumer:
       group-id: be-group
-      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
 
     listener:
       ack-mode: batch
@@ -64,3 +65,7 @@ ai:
 
 custom:
   isProd: false
+
+logging:
+  level:
+    org.springframework.kafka.support.serializer: DEBUG

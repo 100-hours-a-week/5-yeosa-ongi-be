@@ -2,7 +2,6 @@ package ongi.ongibe.domain.ai.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiEmbeddingResponseDTO;
@@ -10,8 +9,7 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
+import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +17,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> {
 
-    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, ObjectMapper objectMapper, AlbumProcessService albumProcessService,
+    public AiEmbeddingConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, ObjectMapper objectMapper, AlbumMarkService albumMarkService,
             AiEmbeddingProducer embeddingProducer) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
+        super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
     }
 
     @KafkaListener(

@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ongi.ongibe.domain.ai.AiStatus;
 import ongi.ongibe.domain.ai.AiStep;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Getter
@@ -42,6 +43,7 @@ public class AiTaskStatus {
     private String s3keysJson;
 
     @Column(updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

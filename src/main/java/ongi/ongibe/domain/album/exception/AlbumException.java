@@ -7,5 +7,6 @@ public class AlbumException extends ResponseStatusException {
 
     public AlbumException(HttpStatus status, String message) {
         super(status, message);
+        System.out.println("AlbumException!!!!!!!!!!!!!!!!");
     }
 }
