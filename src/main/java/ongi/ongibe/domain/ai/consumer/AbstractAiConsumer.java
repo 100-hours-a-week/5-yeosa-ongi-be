@@ -27,6 +27,7 @@ public abstract class AbstractAiConsumer<T extends KafkaResponseDTOWrapper<?>> i
 
     @Override
     public void consume(T response) {
+        System.out.println("컨슘 시작!");
         String taskId = extractTaskId(response);
         int statusCode = extractStatusCode(response);
         Long albumId = extractAlbumId(response);

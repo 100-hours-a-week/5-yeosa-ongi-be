@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
+import ongi.ongibe.domain.ai.dto.AiCategoryRequestDTO;
 import ongi.ongibe.domain.ai.dto.AiClusterResponseDTO;
 import ongi.ongibe.domain.ai.dto.AiImageRequestDTO;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
@@ -85,8 +86,8 @@ public class AiClient {
         return response != null && response.data() != null ? response.data() : List.of();
     }
 
-    public List<CategoryResponseDTO.CategoryResult> getCategories(Long albumId, List<String> keys) {
-        var response = postJsonWithRetry(CATEGORY_PATH, new AiImageRequestDTO(keys), CategoryResponseDTO.class);
+    public List<CategoryResponseDTO.CategoryResult> getCategories(Long albumId, List<String> keys, List<String> concepts) {
+        var response = postJsonWithRetry(CATEGORY_PATH, new AiCategoryRequestDTO(keys, concepts), CategoryResponseDTO.class);
         return response != null && response.data() != null ? response.data() : List.of();
     }
 

@@ -217,7 +217,7 @@ public class AlbumService {
             userCacheService.refreshUserPlaceStat(user, yearMonth);
 
             eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-            eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys));
+            eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys, concepts));
         });
     }
 
@@ -246,12 +246,16 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
+        List<String> concepts = albumConceptRepository.findAllByAlbum(album).stream()
+                .map(AlbumConcept::getConcept)
+                .toList();
+
         afterCommitExecutor.execute(() ->{
             refreshAllMemberMonthlyAlbumCache(album);
             refreshAllMemberTotalStateCache(album);
 
         });
-        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys));
+        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys, concepts));
     }
 
     @Transactional

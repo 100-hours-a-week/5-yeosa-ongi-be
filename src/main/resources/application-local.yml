@@ -17,7 +17,7 @@ spring:
     url: ${FLYWAY_URL:jdbc:mysql://localhost:3306/ongi}
     user: ${FLYWAY_USER:root}
     password: ${FLYWAY_PASSWORD:root}
-    baseline-version: 21
+    baseline-version: 20
     baseline-on-migrate: true
 
   kakao:
@@ -39,7 +39,7 @@ spring:
       transaction-id-prefix: tx-be-
 
     consumer:
-      group-id: be-group
+      group-id: be-group-testtest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: latest
 

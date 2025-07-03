@@ -19,6 +19,6 @@ public class AlbumCreatedRetryEventListener {
     @EventListener
     public void handledAlbumCreatedRetry(AlbumRetryEvent event) {
         log.info("retry event received: {}", event.albumId());
-        albumProcessTransactionService.processAlbumTransaction(event.albumId(), event.userId(), event.pictureS3Keys());
+        albumProcessTransactionService.processAlbumTransaction(event.albumId(), event.userId(), event.pictureS3Keys(), event.concepts());
     }
 }

@@ -32,7 +32,7 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
     }
 
     @Override
-    public void process(Album album, Long userId, List<String> s3keys) {
+    public void process(Album album, Long userId, List<String> s3keys, List<String> concepts) {
         Long albumId = album.getId();
         log.info("[AI] 앨범 {} 에 대한 AI 분석 시작 - 총 {}장", albumId, s3keys.size());
         try {
@@ -47,7 +47,7 @@ public class AiHttpAlbumService implements AiAlbumServiceInterface {
             aiHttpEmbeddingService.requestEmbeddings(albumId, userId, s3keys);
 
             // 2. 병렬 요청
-            aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(albumId, userId, s3keys);
+            aiHttpShakeDuplicateCategoryService.analyzeShakyDuplicateCategory(albumId, userId, s3keys, concepts);
 
             // 3. quality score
             aiHttpAestheticScoreService.requestAestheticScores(albumId, userId, s3keys);

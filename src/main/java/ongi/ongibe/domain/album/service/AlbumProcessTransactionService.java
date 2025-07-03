@@ -30,14 +30,14 @@ public class AlbumProcessTransactionService {
 
     @Async
     @Transactional
-    public void processAlbumTransaction(Long albumId, Long userId, List<String> pictureS3Keys) {
+    public void processAlbumTransaction(Long albumId, Long userId, List<String> pictureS3Keys, List<String> concepts) {
         geoService.geoAndKakaoAndSave(albumId, pictureS3Keys);
         Album album = albumRepository.findById(albumId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다.")
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "앨범을 찾을 수 없습니다!")
         );
         album.setProcessState(AlbumProcessState.IN_PROGRESS);
         albumRepository.saveAndFlush(album);
         log.info("AiAlbumServiceInterface = {}", aiAlbumService.getClass());
-        aiAlbumService.process(album, userId, pictureS3Keys);
+        aiAlbumService.process(album, userId, pictureS3Keys, concepts);
     }
 }

@@ -21,6 +21,6 @@ public class AiAlbumCreatedEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handledAlbumCreated(AlbumEvent event) {
         log.info("event received: {}", event.albumId());
-        albumProcessTransactionService.processAlbumTransaction(event.albumId(), event.userId(), event.pictureS3Keys());
+        albumProcessTransactionService.processAlbumTransaction(event.albumId(), event.userId(), event.pictureS3Keys(), event.concepts());
     }
 }

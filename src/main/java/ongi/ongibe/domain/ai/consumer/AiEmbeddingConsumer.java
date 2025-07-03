@@ -28,6 +28,7 @@ public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
             containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> responses) {
+        System.out.println(">>> AiEmbeddingConsumer.consume(List) called!");
         for (KafkaResponseDTOWrapper<AiEmbeddingResponseDTO> res : responses) {
             this.consume(res);
         }
