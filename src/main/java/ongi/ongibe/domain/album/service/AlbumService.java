@@ -210,20 +210,6 @@ public class AlbumService {
         });
     }
 
-//    public void createAlbum(String albumName, List<String> pictureUrls) {
-//        if (pictureUrls.size() > 100){
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
-//        }
-//        User user = securityUtil.getCurrentUser();
-//        Album album = getEmptyAlbum(albumName);
-//        List<Picture> pictures = createPictures(pictureUrls, album, user);
-//        album.setPictures(pictures);
-//        album.setThumbnailPicture(pictures.getFirst());
-//        associateAlbumWithUser(user, album);
-//        persistAlbum(album, pictures);
-//        eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
-//    }
-
     @Transactional
     public void addPictures(Long albumId, List<? extends PictureUrlCoordinateDTO> pictureUrls) {
         Album album = getAlbumIfMember(albumId);

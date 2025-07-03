@@ -58,10 +58,6 @@ public class AlbumController {
         albumService.createAlbum(request.albumName(), pictureDTOs);
         return ResponseEntity.ok(BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null));
     }
-//    public ResponseEntity<BaseApiResponse<Void>> createAlbum(@RequestBody AlbumCreateRequestDTO request) {
-//        albumService.createAlbum(request.albumName(), request.pictureUrls());
-//        return ResponseEntity.ok(BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null));
-//    }
 
     @Operation(summary = "앨범 사진 추가", description = "기존 앨범에 사진을 추가합니다.")
     @ApiResponse(responseCode = "200", description = "사진 추가 성공")
@@ -71,10 +67,6 @@ public class AlbumController {
         albumService.addPictures(albumId, pictureDTOs);
         return ResponseEntity.ok(BaseApiResponse.success("PICTURE_ADD_SUCCESS", "앨범 사진 추가 요청이 접수되었습니다.", null));
     }
-//    public ResponseEntity<BaseApiResponse<Void>> addPictureAlbum(@PathVariable Long albumId, @RequestBody AlbumPictureAddRequestDTO request) {
-//        albumService.addPictures(albumId, request.pictureUrls());
-//        return ResponseEntity.ok(BaseApiResponse.success("PICTURE_ADD_SUCCESS", "앨범 사진 추가 요청이 접수되었습니다.", null));
-//    }
 
     @Operation(summary = "앨범 이름 수정", description = "앨범의 이름을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "앨범 이름 수정 성공")
