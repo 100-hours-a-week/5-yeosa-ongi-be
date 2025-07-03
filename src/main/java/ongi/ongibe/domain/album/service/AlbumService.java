@@ -270,7 +270,7 @@ public class AlbumService {
         List<String> concepts = conceptEntities.stream()
                 .map(AlbumConcept::getConcept)
                 .toList();
-        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys));
+        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys, concepts));
     }
 
     @Transactional
