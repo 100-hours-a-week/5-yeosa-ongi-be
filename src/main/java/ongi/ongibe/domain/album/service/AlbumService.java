@@ -25,11 +25,13 @@ import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.AlbumConcept;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.AlbumConceptRepository;
 import ongi.ongibe.domain.album.repository.CommentRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
@@ -76,6 +78,7 @@ public class AlbumService {
     private final TransactionAfterCommitExecutor afterCommitExecutor;
     private final EntityManager entityManager;
     private final CommentRepository commentRepository;
+    private final AlbumConceptRepository albumConceptRepository;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -179,7 +182,7 @@ public class AlbumService {
     }
 
     @Transactional
-    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
+    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs, List<String> concepts) {
         if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 " + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다");
         }
@@ -197,6 +200,14 @@ public class AlbumService {
                 .toList();
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
+
+        for (String concept : concepts) {
+            AlbumConcept albumConcept = AlbumConcept.builder()
+                    .album(album)
+                    .concept(concept)
+                    .build();
+            albumConceptRepository.save(albumConcept);
+        }
 
         afterCommitExecutor.execute(() ->{
             albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);

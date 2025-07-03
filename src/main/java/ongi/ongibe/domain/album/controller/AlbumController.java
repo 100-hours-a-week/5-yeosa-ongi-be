@@ -55,7 +55,7 @@ public class AlbumController {
     @PostMapping
     public ResponseEntity<BaseApiResponse<Void>> createAlbum(@RequestBody AlbumCreateRequestGeoFrontDTO request) {
         List<? extends PictureUrlCoordinateDTO> pictureDTOs = request.pictureUrls(); // 명시적 타입
-        albumService.createAlbum(request.albumName(), pictureDTOs);
+        albumService.createAlbum(request.albumName(), pictureDTOs, request.concepts());
         return ResponseEntity.ok(BaseApiResponse.success("ALBUM_CREATE_SUCCESS", "앨범 생성 요청이 접수되었습니다.", null));
     }
 
