@@ -1,5 +1,6 @@
 package ongi.ongibe.domain.album.service;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,11 @@ public class AlbumProcessTransactionService {
     private final GeoService geoService;
     private final AiAlbumServiceInterface aiAlbumService;
     private final AlbumRepository albumRepository;
+
+    @PostConstruct
+    public void init() {
+        log.info("🥔🥔🥔AlbumProcessTransactionService init🥔🥔");
+    }
 
     @Async
     @Transactional
