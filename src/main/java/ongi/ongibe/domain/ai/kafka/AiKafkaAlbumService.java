@@ -28,8 +28,6 @@ public class AiKafkaAlbumService implements AiAlbumServiceInterface {
     public void process(Album album, Long userId, List<String> s3keys,  List<String> concepts) {
         Long albumId = album.getId();
         log.info("🔥 트랜잭션 커밋 이후 Kafka 전송 시작 - albumId: {}", albumId);
-        Album validAlbum = albumRepository.findById(albumId).orElse(null);
-        log.info("앨범 정체 : {}",  validAlbum);
         embeddingProducer.requestEmbeddings(albumId, userId, s3keys);
     }
 }

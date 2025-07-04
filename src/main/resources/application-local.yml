@@ -12,6 +12,8 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3306/ongi}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 50
 
   flyway:
     url: ${FLYWAY_URL:jdbc:mysql://localhost:3306/ongi}
@@ -39,7 +41,7 @@ spring:
       transaction-id-prefix: tx-be-
 
     consumer:
-      group-id: be-group-testtest
+      group-id: be-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: latest
 

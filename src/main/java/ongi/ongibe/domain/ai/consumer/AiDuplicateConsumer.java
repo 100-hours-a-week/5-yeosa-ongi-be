@@ -33,7 +33,6 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     )
     public void consume(List<KafkaResponseDTOWrapper<DuplicateResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<DuplicateResponseDTO> response : responses) {
-            this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 DuplicateResponseDTO dto = objectMapper.convertValue(response.body(), DuplicateResponseDTO.class);
@@ -43,6 +42,7 @@ public class AiDuplicateConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
                 pictureRepository.markPicturesAsDuplicated(albumId, duplicateKeys);
                 log.info("[DUPLICATE] album {} 중복 {}장 처리 완료", albumId, duplicateKeys.size());
             }
+            this.consume(response);
         }
     }
 

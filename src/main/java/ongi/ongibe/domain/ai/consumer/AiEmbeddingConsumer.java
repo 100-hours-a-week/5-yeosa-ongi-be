@@ -24,7 +24,7 @@ public class AiEmbeddingConsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
 
     @KafkaListener(
             topics = "${kafka.topic.response.embedding}",
-            groupId = "be-group",
+            groupId = "be-group-test",
             containerFactory = "genericKafkaListenerContainerFactory"
     )
     public void consume(List<KafkaResponseDTOWrapper<AiEmbeddingResponseDTO>> responses) {
