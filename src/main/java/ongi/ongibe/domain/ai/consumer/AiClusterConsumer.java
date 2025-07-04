@@ -46,7 +46,6 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     )
     public void consume(List<KafkaResponseDTOWrapper<AiClusterResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiClusterResponseDTO> response : responses) {
-            this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 List<Long> faceClusterIds = faceClusterRepository.findAllByAlbumId(albumId).stream()
@@ -64,7 +63,11 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
                 Map<String, Picture> pictureMap = pictureRepository.findAllByAlbumId(albumId)
                         .stream()
                         .collect(Collectors.toMap(Picture::getS3Key, p -> p));
+
+                List<FaceCluster> newFaceClusters = new java.util.ArrayList<>();
+                List<PictureFaceCluster> newMappings = new java.util.ArrayList<>();
                 int clusterIndex = 1;
+
                 for (var cluster : clusterData) {
                     var repKey = cluster.representativeFace().image();
                     Picture repPic = pictureMap.get(repKey);
@@ -78,7 +81,7 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
                             .bboxX2(bbox.get(2))
                             .bboxY2(bbox.get(3))
                             .build();
-                    faceClusterRepository.save(faceCluster);
+                    newFaceClusters.add(faceCluster);
 
                     var mappings = cluster.images().stream()
                             .map(pictureMap::get)
@@ -87,9 +90,13 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
                                     .faceCluster(faceCluster)
                                     .build())
                             .toList();
-                    pictureFaceClusterRepository.saveAll(mappings);
-                    log.info("[AI] 클러스터 완료");
+                    newMappings.addAll(mappings);
                 }
+
+                faceClusterRepository.saveAll(newFaceClusters);
+                pictureFaceClusterRepository.saveAll(newMappings);
+                log.info("[AI] 클러스터 및 매핑 정보 {}개 일괄 저장 완료", newFaceClusters.size());
+            this.consume(response);
             }
         }
     }

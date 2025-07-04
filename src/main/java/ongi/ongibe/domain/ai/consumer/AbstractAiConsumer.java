@@ -8,6 +8,7 @@ import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiErrorResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.entity.AiTaskStatus;
+import ongi.ongibe.domain.ai.exception.RetryableKafkaException;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
@@ -38,8 +39,13 @@ public abstract class AbstractAiConsumer<T extends KafkaResponseDTOWrapper<?>> i
 
             if (statusCode == 201) {
                 handleSuccess(task, albumId);
+            } else if (statusCode == 428) {
+                embeddingProducer.reRequestEmbeddings(task.getTaskId());
+                handleError(task, albumId, statusCode, response.body());
+                throw new RetryableKafkaException("Status 428: Retrying after embedding");
             } else {
                 handleError(task, albumId, statusCode, response.body());
+                throw new RetryableKafkaException("Status " + statusCode + ": Retrying");
             }
 
             taskStatusRepository.save(task);
