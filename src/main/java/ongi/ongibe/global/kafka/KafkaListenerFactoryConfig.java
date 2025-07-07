@@ -9,6 +9,7 @@ import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
+import ongi.ongibe.domain.album.exception.AlbumException;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -54,6 +55,8 @@ public class KafkaListenerFactoryConfig {
     public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer recoverer) {
         FixedBackOff fixedBackOff = new FixedBackOff(3000L, 3);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, fixedBackOff);
+
+        handler.addNotRetryableExceptions(AlbumException.class);
 
         handler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.warn("[Kafka Retry] Record={}, attempt={}, ex={}",

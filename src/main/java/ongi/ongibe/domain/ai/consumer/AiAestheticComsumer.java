@@ -2,8 +2,6 @@ package ongi.ongibe.domain.ai.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.AiAestheticScoreResponseDTO;
@@ -12,7 +10,6 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
-import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -36,6 +33,7 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
     )
     public void consume(List<KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO>> responses) {
         for (KafkaResponseDTOWrapper<AiAestheticScoreResponseDTO> response : responses) {
+            this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
 
@@ -43,26 +41,14 @@ public class AiAestheticComsumer extends AbstractAiConsumer<KafkaResponseDTOWrap
                         response.body(), AiAestheticScoreResponseDTO.class);
 
                 List<AiAestheticScoreResponseDTO.ScoreCategory> scores = body.data();
-                List<String> s3keys = scores.stream()
-                        .flatMap(category -> category.images().stream())
-                        .map(AiAestheticScoreResponseDTO.ScoreCategory.ScoreEntry::image)
-                        .toList();
-
-                Map<String, Picture> pictureMap = pictureRepository.findAllByS3KeyIn(s3keys).stream()
-                        .collect(Collectors.toMap(Picture::getS3Key, p -> p));
-
+                log.info("albumId = {}, score = {}", albumId, scores.size());
                 for (var category : scores) {
                     for (var entry : category.images()) {
-                        Picture picture = pictureMap.get(entry.image());
-                        if (picture != null) {
-                            picture.setQualityScore((float) entry.score());
-                        }
+                        pictureRepository.updateScore(albumId, entry.image(), entry.score());
                     }
                 }
-                pictureRepository.saveAll(pictureMap.values());
-                log.info("[Aesthetic] album {}, {}개 카테고리 처리 완료", albumId, scores.size());
+                log.info("[Aesthetic] album {}, 점수 처리 완료", albumId);
             }
-            this.consume(response);
         }
     }
 
