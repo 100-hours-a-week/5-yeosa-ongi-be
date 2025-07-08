@@ -41,7 +41,7 @@ spring:
       transaction-id-prefix: tx-be-
 
     consumer:
-      group-id: be-group-testtest
+      group-id: be-group-local
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: latest
 
