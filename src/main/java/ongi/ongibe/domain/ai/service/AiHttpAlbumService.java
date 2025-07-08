@@ -12,8 +12,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-//@Primary
-@Service("httpAiAlbumService")
+@Primary
+//@Service("httpAiAlbumService")
 @RequiredArgsConstructor
 @Slf4j
 public class AiHttpAlbumService implements AiAlbumServiceInterface {
