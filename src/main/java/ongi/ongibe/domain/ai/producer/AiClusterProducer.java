@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AiClusterProducer implements AiClusterServiceInterface {
 
-    @Value("${kafka.topic.request.category}")
+    @Value("${kafka.topic.request.people}")
     private String requestTopic;
     private final AiKafkaProducer kafkaProducer;
     private final PictureRepository pictureRepository;

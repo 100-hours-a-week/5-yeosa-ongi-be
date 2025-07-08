@@ -61,12 +61,13 @@ class AiHttpShakeDuplicateCategoryServiceTest {
     @Test
     void analyzeShakyDuplicateCategory_정상() {
         //given
+        List<String> concepts = List.of("testTag1", "testTag2", "testTag3");
         when(aiClient.getShakyKeys(albumId, s3keys)).thenReturn(shakeKeys);
         when(aiClient.getDuplicateGroups(albumId, s3keys)).thenReturn(duplicateKeys);
-        when(aiClient.getCategories(albumId, s3keys)).thenReturn(List.of(result1, result2));
+        when(aiClient.getCategories(albumId, s3keys, concepts)).thenReturn(List.of(result1, result2));
 
         //when
-        service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys);
+        service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys, concepts);
 
         //then
         verify(pictureRepository).markPicturesAsShaky(albumId, shakeKeys);
@@ -79,10 +80,11 @@ class AiHttpShakeDuplicateCategoryServiceTest {
     void analyzeShakyDuplicateCategory_실패시_예외던짐() {
         // given
         when(aiClient.getShakyKeys(albumId, s3keys)).thenThrow(new RuntimeException("AI 통신 실패"));
+        List<String> concepts = List.of("testTag1", "testTag2", "testTag3");
 
         // when then
         RuntimeException e = assertThrows(RuntimeException.class, () -> {
-            service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys);
+            service.analyzeShakyDuplicateCategory(albumId, 1L, s3keys, concepts);
         });
 
         assertTrue(e.getMessage().contains("AI 분석 실패"));

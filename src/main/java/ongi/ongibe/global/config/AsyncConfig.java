@@ -24,19 +24,4 @@ public class AsyncConfig implements AsyncConfigurer {
             log.error("[Async 예외] 메서드: {}, 메시지: {}", method.getName(), ex.getMessage(), ex);
         };
     }
-
-
-    @Bean(name = "asyncExecutor")
-    public TaskExecutor asyncExecutor() {
-        Executor virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        return new ConcurrentTaskExecutor(
-                new DelegatingSecurityContextExecutor(virtualThreadExecutor)
-        );
-    }
-
-    @Override
-    public Executor getAsyncExecutor() {
-        return asyncExecutor();
-    }
-
 }

@@ -12,12 +12,14 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3306/ongi}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 50
 
   flyway:
     url: ${FLYWAY_URL:jdbc:mysql://localhost:3306/ongi}
     user: ${FLYWAY_USER:root}
     password: ${FLYWAY_PASSWORD:root}
-    baseline-version: 21
+    baseline-version: 20
     baseline-on-migrate: true
 
   kakao:
@@ -36,11 +38,12 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      transaction-id-prefix: tx-be-
 
     consumer:
-      group-id: be-group
-      enable-auto-commit: false
+      group-id: be-group-local
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
 
     listener:
       ack-mode: batch
@@ -64,3 +67,7 @@ ai:
 
 custom:
   isProd: false
+
+logging:
+  level:
+    org.springframework.kafka.support.serializer: DEBUG

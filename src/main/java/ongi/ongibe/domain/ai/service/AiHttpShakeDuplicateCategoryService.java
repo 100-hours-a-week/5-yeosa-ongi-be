@@ -22,13 +22,13 @@ public class AiHttpShakeDuplicateCategoryService implements
 
     @Override
     @Transactional
-    public void analyzeShakyDuplicateCategory(Long albumId, Long userId, List<String> s3keys) {
+    public void analyzeShakyDuplicateCategory(Long albumId, Long userId, List<String> s3keys, List<String> concepts) {
         log.info("[AI] 품질 분석 시작");
 
         try {
             var shakyFuture = CompletableFuture.supplyAsync(() -> aiClient.getShakyKeys(albumId, s3keys));
             var duplicateFuture = CompletableFuture.supplyAsync(() -> aiClient.getDuplicateGroups(albumId, s3keys));
-            var categoryFuture = CompletableFuture.supplyAsync(() -> aiClient.getCategories(albumId, s3keys));
+            var categoryFuture = CompletableFuture.supplyAsync(() -> aiClient.getCategories(albumId, s3keys, concepts));
 
             List<String> shakyKeys = shakyFuture.join(); // CompletionException 발생 시 여기서 터짐
             pictureRepository.markPicturesAsShaky(albumId, shakyKeys);

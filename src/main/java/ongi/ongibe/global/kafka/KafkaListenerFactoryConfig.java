@@ -9,6 +9,7 @@ import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
 import ongi.ongibe.domain.ai.dto.DuplicateResponseDTO;
 import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.dto.ShakyResponseDTO;
+import ongi.ongibe.domain.album.exception.AlbumException;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -31,13 +32,12 @@ public class KafkaListenerFactoryConfig {
     ) {
         return KafkaListenerFactoryHelper.buildListenerFactory(
                 kafkaProperties,
-                new TypeReference<KafkaResponseDTOWrapper<Object>>() {},
+                new TypeReference<>() {},
                 errorHandler,
-                2,
-                true
+                1,
+                false
         );
     }
-
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
@@ -51,17 +51,17 @@ public class KafkaListenerFactoryConfig {
         return factory;
     }
 
-
     @Bean
     public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer recoverer) {
-        FixedBackOff fixedBackOff = new FixedBackOff(3000L, 2);
+        FixedBackOff fixedBackOff = new FixedBackOff(3000L, 3);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, fixedBackOff);
+
+        handler.addNotRetryableExceptions(AlbumException.class);
 
         handler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.warn("[Kafka Retry] Record={}, attempt={}, ex={}",
                         record.value(), deliveryAttempt, ex.getMessage())
         );
-
         return handler;
     }
 

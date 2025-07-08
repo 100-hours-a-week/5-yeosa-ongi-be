@@ -1,6 +1,7 @@
 package ongi.ongibe.domain.ai.repository.queryDSL;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Objects;
@@ -14,24 +15,27 @@ public class AiTaskStatusRepositoryImpl implements AiTaskStatusRepositoryQueryDS
 
     private final JPAQueryFactory queryFactory;
 
-    @Override
     public int countSuccessStepsByAlbumId(Long albumId) {
         QAiTaskStatus ats = QAiTaskStatus.aiTaskStatus;
+        QAiTaskStatus atsSub = new QAiTaskStatus("atsSub");
 
-        List<AiTaskStatus> latestSuccessTasks = queryFactory
+        var query = queryFactory
                 .selectFrom(ats)
                 .where(
                         ats.albumId.eq(albumId),
                         ats.status.eq(AiStatus.SUCCESS),
                         ats.createdAt.in(
-                                queryFactory
-                                        .select(ats.createdAt.max())
-                                        .from(ats)
-                                        .where(ats.albumId.eq(albumId))
-                                        .groupBy(ats.step)
+                                JPAExpressions
+                                        .select(atsSub.createdAt.max())
+                                        .from(atsSub)
+                                        .where(atsSub.albumId.eq(albumId))
+                                        .groupBy(atsSub.step)
                         )
-                )
-                .fetch();
+                );
+
+        System.out.println("[DEBUG] JPQL: " + query.toString()); // JPQL 확인용
+
+        List<AiTaskStatus> latestSuccessTasks = query.fetch();
 
         return (int) latestSuccessTasks.stream()
                 .map(AiTaskStatus::getStep)

@@ -6,8 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.service.AiHttpAlbumService;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.AlbumConcept;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.event.AlbumRetryEvent;
+import ongi.ongibe.domain.album.repository.AlbumConceptRepository;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,6 +25,7 @@ public class AlbumAiRetryScheduler {
     private final PictureRepository pictureRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final AiHttpAlbumService aiHttpAlbumService;
+    private final AlbumConceptRepository albumConceptRepository;
 
     @Scheduled(fixedRate = 5 * 60 * 1000) // 5분에 한번
     public void retryAlbumProcess() {
@@ -41,11 +44,13 @@ public class AlbumAiRetryScheduler {
                         .map(Picture::getS3Key)
                         .filter(s -> !s.isBlank())
                         .toList();
-
+                List<String> concepts = albumConceptRepository.findAllByAlbum(album).stream()
+                        .map(AlbumConcept::getConcept)
+                        .toList();
                 album.setProcessState(AlbumProcessState.IN_PROGRESS);
                 Long userId = album.getUserAlbums().getFirst().getUser().getId();
                 log.info("[AI 재시도] 앨범 ID: {}, 사진 수: {}", album.getId(), pictureKeys.size());
-                eventPublisher.publishEvent(new AlbumRetryEvent(album.getId(), userId, pictureKeys));
+                eventPublisher.publishEvent(new AlbumRetryEvent(album.getId(), userId, pictureKeys, concepts));
             } catch (Exception e) {
                 log.error("[AI 재시도 실패] 앨범 ID: {}, message: {}", album.getId(), e.getMessage(), e);
                 album.setProcessState(AlbumProcessState.FAILED);

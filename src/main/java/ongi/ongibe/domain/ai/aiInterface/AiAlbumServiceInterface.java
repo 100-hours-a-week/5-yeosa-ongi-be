@@ -5,6 +5,6 @@ import ongi.ongibe.domain.album.entity.Album;
 
 public interface AiAlbumServiceInterface {
 
-    void process(Album album, Long userId, List<String> s3keys);
+    void process(Album album, Long userId, List<String> s3keys, List<String> concepts);
 
 }

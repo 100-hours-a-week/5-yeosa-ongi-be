@@ -2,6 +2,8 @@ package ongi.ongibe.domain.ai.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ongi.ongibe.domain.ai.AiStep;
 import ongi.ongibe.domain.ai.dto.CategoryResponseDTO;
@@ -9,9 +11,9 @@ import ongi.ongibe.domain.ai.dto.KafkaResponseDTOWrapper;
 import ongi.ongibe.domain.ai.kafka.AiStepTransitionService;
 import ongi.ongibe.domain.ai.producer.AiEmbeddingProducer;
 import ongi.ongibe.domain.ai.repository.AiTaskStatusRepository;
-import ongi.ongibe.domain.album.repository.AlbumRepository;
+import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.repository.PictureRepository;
-import ongi.ongibe.domain.album.service.AlbumProcessService;
+import ongi.ongibe.domain.album.service.AlbumMarkService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +24,9 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     private final PictureRepository pictureRepository;
 
     public AiCategoryConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService,
-            AlbumProcessService albumProcessService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureRepository pictureRepository) {
-        super(aiTaskStatusRepository, transitionService, albumProcessService, objectMapper, embeddingProducer);
+            ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureRepository pictureRepository,
+            AlbumMarkService albumMarkService) {
+        super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
     }
 
@@ -33,16 +36,30 @@ public class AiCategoryConsumer extends AbstractAiConsumer<KafkaResponseDTOWrapp
     )
     public void consume(List<KafkaResponseDTOWrapper<CategoryResponseDTO>> responses) {
         for(KafkaResponseDTOWrapper<CategoryResponseDTO> response : responses) {
-            this.consume(response);
             if (response.statusCode() == 201) {
                 Long albumId = response.albumId();
                 CategoryResponseDTO dto = objectMapper.convertValue(response.body(), CategoryResponseDTO.class);
                 List<CategoryResponseDTO.CategoryResult> categories = dto.data();
+
+                List<String> s3keys = categories.stream()
+                        .flatMap(category -> category.images().stream())
+                        .toList();
+
+                Map<String, Picture> pictureMap = pictureRepository.findAllByS3KeyIn(s3keys).stream()
+                        .collect(Collectors.toMap(Picture::getS3Key, p -> p));
+
                 for (var category : categories) {
-                    pictureRepository.updateTag(albumId, category.images(), category.category());
+                    for (var s3key : category.images()) {
+                        Picture picture = pictureMap.get(s3key);
+                        if (picture != null) {
+                            picture.setTag(category.category());
+                        }
+                    }
                 }
+                pictureRepository.saveAll(pictureMap.values());
                 log.info("[Category] album {} category {}개 분리 완료", albumId, categories.size());
             }
+            this.consume(response);
         }
     }
 

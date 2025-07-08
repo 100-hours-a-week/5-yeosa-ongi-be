@@ -266,8 +266,9 @@ class AlbumServiceTest {
                 new PictureRequestDTO("link1.jpeg", 37.5665, 126.9780),
                 new PictureRequestDTO("link2.jpeg", 35.5665, 126.9780)
         );
+        List<String> concepts = List.of("test1", "test2", "test3");
 
-        albumService.createAlbum(newAlbumName, pictureDTOs);
+        albumService.createAlbum(newAlbumName, pictureDTOs, concepts);
 
         assertThat(albumRepository.findByName("newAlbumName")).isNotNull();
         assertThat(albumRepository.findByName("newAlbumName").orElseThrow().getPictures().size()).isEqualTo(2);
@@ -283,8 +284,9 @@ class AlbumServiceTest {
                         126.0 + (i * 0.01)  // 경도: 126.01 ~ 126.35
                 ))
                 .toList();
+        List<String> concepts = List.of("test1", "test2", "test3");
 
-        assertThatThrownBy(() -> albumService.createAlbum(newAlbumName, pictureDTOs))
+        assertThatThrownBy(() -> albumService.createAlbum(newAlbumName, pictureDTOs, concepts))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("장을 초과하여 추가할 수 없습니다");
     }
