@@ -3,10 +3,12 @@ package ongi.ongibe.global.cache;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class RedisCacheService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> objectRedisTemplate;
     private final ObjectMapper objectMapper;
 
     public <T> void set(String key, T value, Duration ttl) {
@@ -40,5 +43,18 @@ public class RedisCacheService {
 
     public void evict(String key) {
         redisTemplate.delete(key);
+    }
+
+    public <T> T execute(
+            RedisScript<T> script,
+            List<String> keys,
+            Object... args
+    ) {
+        try {
+            return objectRedisTemplate.execute(script, keys, args);
+        } catch (Exception e) {
+            log.error("Redis Lua Script 실행 실패 (keys: {}, args: {}): {}", keys, args, e.getMessage(), e);
+            return null;
+        }
     }
 }

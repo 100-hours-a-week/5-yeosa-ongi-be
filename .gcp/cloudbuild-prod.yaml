@@ -83,6 +83,7 @@ steps:
           --container-env=AI_SERVER_URL_PROD=$$AI_SERVER_URL_PROD \
           --container-env=SIGNOZ_INGESTION_KEY=$$SIGNOZ_INGESTION_KEY \
           --metadata="ssh-keys=$$SSH_KEYS" \
+          --metadata-from-file=startup-script=.gcp/scripts/startup.sh \
           --service-account=github-cd-builder@dev-ongi-3-tier.iam.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --tags=prod-backend

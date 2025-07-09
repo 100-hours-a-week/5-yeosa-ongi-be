@@ -25,11 +25,14 @@ import ongi.ongibe.domain.album.dto.AlbumSummaryResponseDTO;
 import ongi.ongibe.domain.album.dto.MonthlyAlbumResponseDTO;
 import ongi.ongibe.domain.album.dto.PictureUrlCoordinateDTO;
 import ongi.ongibe.domain.album.entity.Album;
+import ongi.ongibe.domain.album.entity.AlbumConcept;
 import ongi.ongibe.domain.album.entity.FaceCluster;
 import ongi.ongibe.domain.album.entity.Picture;
 import ongi.ongibe.domain.album.entity.PictureFaceCluster;
 import ongi.ongibe.domain.album.event.AlbumEvent;
 import ongi.ongibe.domain.album.exception.AlbumException;
+import ongi.ongibe.domain.album.repository.AlbumConceptRepository;
+import ongi.ongibe.domain.album.repository.CommentRepository;
 import ongi.ongibe.domain.album.repository.FaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureFaceClusterRepository;
 import ongi.ongibe.domain.album.repository.PictureRepository;
@@ -45,8 +48,8 @@ import ongi.ongibe.domain.user.repository.UserRepository;
 import ongi.ongibe.global.executor.TransactionAfterCommitExecutor;
 import ongi.ongibe.global.s3.PresignedUrlService;
 import ongi.ongibe.global.security.util.SecurityUtil;
-import ongi.ongibe.util.DateUtil;
-import ongi.ongibe.util.JwtTokenProvider;
+import ongi.ongibe.global.util.DateUtil;
+import ongi.ongibe.global.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -72,8 +75,10 @@ public class AlbumService {
     private final PresignedUrlService presignedUrlService;
     private final AlbumCacheService albumCacheService;
     private final UserCacheService userCacheService;
-    private final TransactionAfterCommitExecutor transactionAfterCommitExecutor;
+    private final TransactionAfterCommitExecutor afterCommitExecutor;
     private final EntityManager entityManager;
+    private final CommentRepository commentRepository;
+    private final AlbumConceptRepository albumConceptRepository;
 
     @Value("${custom.isProd}")
     private boolean isProd;
@@ -147,10 +152,12 @@ public class AlbumService {
                     );
                 }).toList();
 
+        int commentCount = commentRepository.countAllByAlbum(album);
         AlbumDetailResponseDTO responseDTO = new AlbumDetailResponseDTO(
                 album.getName(),
                 pictureInfos,
                 album.getProcessState(),
+                commentCount,
                 clusterInfos
         );
         return BaseApiResponse.success("ALBUM_ACCESS_SUCCESS", "앨범 조회 성공", responseDTO);
@@ -175,7 +182,7 @@ public class AlbumService {
     }
 
     @Transactional
-    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs) {
+    public void createAlbum(String albumName, List<? extends PictureUrlCoordinateDTO> pictureDTOs, List<String> concepts) {
         if (pictureDTOs.size() > MAX_PICTURE_SIZE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 " + MAX_PICTURE_SIZE + "장을 초과하여 추가할 수 없습니다");
         }
@@ -194,31 +201,25 @@ public class AlbumService {
 
         String yearMonth = DateUtil.getYearMonth(LocalDateTime.now());
 
-        transactionAfterCommitExecutor.execute(() ->{
+        for (String concept : concepts) {
+            AlbumConcept albumConcept = AlbumConcept.builder()
+                    .album(album)
+                    .concept(concept)
+                    .build();
+            albumConceptRepository.save(albumConcept);
+        }
+
+        afterCommitExecutor.execute(() ->{
             albumCacheService.refreshMonthlyAlbum(user.getId(), yearMonth);
             userCacheService.refreshUserTotalState(user);
             userCacheService.refreshUserTagState(user, yearMonth);
             userCacheService.refreshUserPictureStat(user, yearMonth);
             userCacheService.refreshUserPlaceStat(user, yearMonth);
+
+            eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
+            eventPublisher.publishEvent(new AlbumEvent(album.getId(), user.getId(), s3Keys, concepts));
         });
-
-        eventPublisher.publishEvent(new AlbumCreatedNotificationEvent(album.getId(), user.getId()));
-        eventPublisher.publishEvent(new AlbumEvent(album.getId(), s3Keys));
     }
-
-//    public void createAlbum(String albumName, List<String> pictureUrls) {
-//        if (pictureUrls.size() > 100){
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진은 100장을 초과하여 추가할 수 없습니다");
-//        }
-//        User user = securityUtil.getCurrentUser();
-//        Album album = getEmptyAlbum(albumName);
-//        List<Picture> pictures = createPictures(pictureUrls, album, user);
-//        album.setPictures(pictures);
-//        album.setThumbnailPicture(pictures.getFirst());
-//        associateAlbumWithUser(user, album);
-//        persistAlbum(album, pictures);
-//        eventPublisher.publishEvent(new AlbumEvent(album.getId(), pictureUrls));
-//    }
 
     @Transactional
     public void addPictures(Long albumId, List<? extends PictureUrlCoordinateDTO> pictureUrls) {
@@ -245,12 +246,16 @@ public class AlbumService {
                 .map(Picture::getS3Key)
                 .toList();
 
-        transactionAfterCommitExecutor.execute(() ->{
+        List<String> concepts = albumConceptRepository.findAllByAlbum(album).stream()
+                .map(AlbumConcept::getConcept)
+                .toList();
+
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberMonthlyAlbumCache(album);
             refreshAllMemberTotalStateCache(album);
 
         });
-        eventPublisher.publishEvent(new AlbumEvent(albumId, pictureKeys));
+        eventPublisher.publishEvent(new AlbumEvent(albumId, user.getId(), pictureKeys, concepts));
     }
 
     @Transactional
@@ -325,7 +330,7 @@ public class AlbumService {
         }
         pictureFaceClusterRepository.deleteAllByPictureIds(now, pictureIds);
 
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
         });
@@ -350,7 +355,7 @@ public class AlbumService {
         entityManager.flush();
 
         albumCacheService.evictMonthlyAlbum(user.getId(), DateUtil.getYearMonth(album.getCreatedAt()));
-        transactionAfterCommitExecutor.execute(() ->{
+        afterCommitExecutor.execute(() ->{
             refreshAllMemberTotalStateCache(album);
             refreshAllMemberMonthlyAlbumCache(album);
         });
@@ -456,7 +461,7 @@ public class AlbumService {
             AlbumInviteResponseDTO response = new AlbumInviteResponseDTO(tokenAlbumId,
                     album.getName());
 
-            transactionAfterCommitExecutor.execute(()->{
+            afterCommitExecutor.execute(()->{
                 refreshAllMemberTotalStateCache(album);
                 refreshAllMemberMonthlyAlbumCache(album);
             });

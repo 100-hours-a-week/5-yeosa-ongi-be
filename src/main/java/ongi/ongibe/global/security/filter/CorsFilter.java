@@ -19,7 +19,8 @@ public class CorsFilter implements Filter {
     private static final Set<String> ALLOWED_ORIGINS = Set.of(
             "https://ongi.today",
             "http://localhost:5173",
-            "https://dev.ongi.today"
+            "https://dev.ongi.today",
+            "http://localhost:8080"
     );
 
     @Override

@@ -3,7 +3,7 @@ package ongi.ongibe.global.security.config;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import ongi.ongibe.global.security.filter.JwtAuthenticationFilter;
-import ongi.ongibe.util.JwtTokenProvider;
+import ongi.ongibe.global.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +34,7 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/auth/login/kakao",
             "/api/auth/**",
+            "/api/auth",
             "/actuator/**",
             "/sentry/**",
             "/api/testauth"

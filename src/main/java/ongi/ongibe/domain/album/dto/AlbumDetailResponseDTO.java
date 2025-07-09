@@ -9,6 +9,7 @@ public record AlbumDetailResponseDTO(
         @Schema(description = "앨범 제목") String title,
         @Schema(description = "사진 정보 목록") List<PictureInfo> picture,
         @Schema(description = "앨범 AI 분석 상태") AlbumProcessState albumProcessState,
+        @Schema(description = "댓글 수") int commentCount,
         @Schema(description = "사람 클러스터 정보 목록") List<ClusterInfo> cluster
 ) {
     public record PictureInfo(

@@ -4,5 +4,7 @@ import java.util.List;
 
 public record AlbumRetryEvent(
         Long albumId,
-        List<String> pictureS3Keys
+        Long userId,
+        List<String> pictureS3Keys,
+        List<String> concepts
 ) {}

@@ -174,13 +174,11 @@ jobs:
           # 기본: 모두 성공 메시지
           HEADER="✅ PROD 백엔드 배포 완료!"
           COLOR=3066993
-          
           # 하나라도 실패 시
           if [[ "$FLYWAY_STATUS" != "success" || "$BUILD_STATUS" != "success" || "$DEPLOY_STATUS" != "success" ]]; then
             HEADER="❌ PROD 백엔드 배포 실패!"
             COLOR=15158332
           fi
-          
           # jq 로 JSON payload 생성
           PAYLOAD=$(jq -nc \
             --arg content "$HEADER" \
@@ -208,7 +206,6 @@ jobs:
               }]
             }'
           )
-          
           # Discord 로 전송
           curl -H "Content-Type: application/json" \
                -X POST \
