@@ -33,6 +33,6 @@ public class RedisInviteTokenRepository implements InviteTokenRepository {
 
     @Override
     public boolean existsByToken(String token) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key(token)));
+        return redisTemplate.hasKey(key(token));
     }
 }
