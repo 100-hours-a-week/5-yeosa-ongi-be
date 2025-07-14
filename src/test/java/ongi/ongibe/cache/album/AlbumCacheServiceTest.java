@@ -46,8 +46,6 @@ class AlbumCacheServiceTest {
     private SecurityUtil securityUtil;
     @Mock
     private RedisCacheService redisCacheService;
-    @Mock
-    private UserRepository userRepository;
 
     private static final Duration TTL = Duration.ofSeconds(10);
     private static final Duration LOCK_TTL = Duration.ofSeconds(3);
@@ -83,7 +81,6 @@ class AlbumCacheServiceTest {
         given(redisCacheService.tryLock(lockKey, LOCK_TTL)).willReturn(true);
 
         User user = mock(User.class);
-        MonthlyAlbumResponseDTO built = mock(MonthlyAlbumResponseDTO.class);
 
         given(securityUtil.getCurrentUser()).willReturn(user);
         given(userAlbumRepository.findAllByUser(user)).willReturn(List.of()); // empty list
@@ -141,7 +138,7 @@ class AlbumCacheServiceTest {
 
     @Test
     void test_onlyOneThreadAcquiresLock_andBuildsCache() throws Exception {
-        int threadCount = 10;
+        int threadCount = 100;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(threadCount);
