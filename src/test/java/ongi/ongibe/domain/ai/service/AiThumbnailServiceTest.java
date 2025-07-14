@@ -38,6 +38,7 @@ class AiThumbnailServiceTest {
         albumId = 1L;
         album = mock(Album.class);
         when(album.getId()).thenReturn(albumId);
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
 
         key1 = "s3://img1.jpg";
         key2 = "s3://img2.jpg";
