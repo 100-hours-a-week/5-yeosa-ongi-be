@@ -8,11 +8,12 @@ import ongi.ongibe.domain.ai.event.AlbumAiCreateNotificationEvent;
 import ongi.ongibe.domain.album.AlbumProcessState;
 import ongi.ongibe.domain.album.entity.Album;
 import ongi.ongibe.domain.album.repository.AlbumRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-@Primary
+@Qualifier("http")
 @Service
 @RequiredArgsConstructor
 @Slf4j

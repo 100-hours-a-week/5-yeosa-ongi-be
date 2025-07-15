@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-//@Primary
-@Qualifier("kafka")
+@Primary
+//@Qualifier("kafka")
 @Service
 @RequiredArgsConstructor
 @Slf4j
