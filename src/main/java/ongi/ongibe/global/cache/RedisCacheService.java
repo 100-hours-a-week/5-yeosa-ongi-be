@@ -57,4 +57,12 @@ public class RedisCacheService {
             return null;
         }
     }
+
+    public boolean tryLock(String lockKey, Duration ttl) {
+        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, "LOCK", ttl));
+    }
+
+    public void unlock(String lockKey) {
+        redisTemplate.delete(lockKey);
+    }
 }

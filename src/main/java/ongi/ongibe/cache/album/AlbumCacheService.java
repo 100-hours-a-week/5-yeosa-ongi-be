@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +31,41 @@ public class AlbumCacheService {
     private final UserRepository userRepository;
 
     private static final Duration TTL = Duration.ofSeconds(10);
+    private static final Duration LockTTL = Duration.ofSeconds(3);
 
     public MonthlyAlbumResponseDTO getMonthlyAlbum(Long userId, String requestYearMonth) {
         String yearMonth = String.valueOf(DateUtil.parseOrNow(requestYearMonth));
         String key = CacheKeyUtil.key("monthlyAlbum", userId, yearMonth);
-        return redisCacheService.get(key, MonthlyAlbumResponseDTO.class).orElseGet(() ->{
-            User user = securityUtil.getCurrentUser();
-            MonthlyAlbumResponseDTO response = buildMonthlyAlbumResponse(user, yearMonth);
-            redisCacheService.set(key, response, TTL);
-            return response;
-        });
+        String lockKey = key + ":lock";
+
+        Optional<MonthlyAlbumResponseDTO> cached = redisCacheService.get(key, MonthlyAlbumResponseDTO.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+        boolean getLock = redisCacheService.tryLock(lockKey, LockTTL);
+        if (getLock) {
+            try{
+                User user = securityUtil.getCurrentUser();
+                MonthlyAlbumResponseDTO response = buildMonthlyAlbumResponse(user, yearMonth);
+                redisCacheService.set(key, response, TTL);
+                return response;
+            } finally {
+                redisCacheService.unlock(lockKey);
+            }
+        }
+        int retry = 5;
+        while (retry-- > 0) {
+            try{
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            Optional<MonthlyAlbumResponseDTO> retryCache = redisCacheService.get(key, MonthlyAlbumResponseDTO.class);
+            if (retryCache.isPresent()) {
+                return retryCache.get();
+            }
+        }
+        throw new IllegalStateException("캐시 로딩 실패 : " + key);
     }
 
     private List<AlbumInfo> getAlbumInfos(List<UserAlbum> userAlbumList, String yearMonth) {

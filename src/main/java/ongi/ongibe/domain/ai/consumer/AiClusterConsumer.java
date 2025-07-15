@@ -31,13 +31,15 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
     private final PictureRepository pictureRepository;
     private final FaceClusterRepository faceClusterRepository;
     private final PictureFaceClusterRepository pictureFaceClusterRepository;
+    private final FaceClusterSaveService faceClusterSaveService;
 
     public AiClusterConsumer(AiTaskStatusRepository aiTaskStatusRepository, AiStepTransitionService transitionService, PictureRepository pictureRepository, FaceClusterRepository faceClusterRepository,
-            AlbumMarkService albumMarkService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureFaceClusterRepository pictureFaceClusterRepository) {
+            AlbumMarkService albumMarkService, ObjectMapper objectMapper, AiEmbeddingProducer embeddingProducer, PictureFaceClusterRepository pictureFaceClusterRepository, FaceClusterSaveService faceClusterSaveService) {
         super(aiTaskStatusRepository, transitionService, albumMarkService, objectMapper, embeddingProducer);
         this.pictureRepository = pictureRepository;
         this.faceClusterRepository = faceClusterRepository;
         this.pictureFaceClusterRepository = pictureFaceClusterRepository;
+        this.faceClusterSaveService =  faceClusterSaveService;
     }
 
     @KafkaListener(
@@ -93,8 +95,7 @@ public class AiClusterConsumer extends AbstractAiConsumer<KafkaResponseDTOWrappe
                     newMappings.addAll(mappings);
                 }
 
-                faceClusterRepository.saveAll(newFaceClusters);
-                pictureFaceClusterRepository.saveAll(newMappings);
+                faceClusterSaveService.saveAll(newFaceClusters, newMappings);
                 log.info("[AI] 클러스터 및 매핑 정보 {}개 일괄 저장 완료", newFaceClusters.size());
             this.consume(response);
             }
