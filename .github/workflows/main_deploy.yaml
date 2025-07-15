@@ -9,7 +9,7 @@ on:
 
 jobs:
   flyway-migration:
-    runs-on: [ self-hosted, linux, x64 ]
+    runs-on: [ self-hosted, linux, x64, prod]
 
     steps:
       - name: Checkout code
