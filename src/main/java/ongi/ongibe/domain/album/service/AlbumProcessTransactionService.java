@@ -23,11 +23,6 @@ public class AlbumProcessTransactionService {
     private final AiAlbumServiceInterface aiAlbumService;
     private final AlbumRepository albumRepository;
 
-    @PostConstruct
-    public void init() {
-        log.info("🥔🥔🥔AlbumProcessTransactionService init🥔🥔");
-    }
-
     @Async
     @Transactional
     public void processAlbumTransaction(Long albumId, Long userId, List<String> pictureS3Keys, List<String> concepts) {
