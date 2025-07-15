@@ -33,7 +33,7 @@ availableSecrets:
       env: AWS_REGION
     - versionName: "projects/dev-ongi-3-tier/secrets/ai_server_url_prod/versions/latest"
       env: AI_SERVER_URL_PROD
-    - versionName: "projects/dev-ongi-3-tier/secrets/kafka_url/versions/latest"
+    - versionName: "projects/dev-ongi-3-tier/secrets/kafka_broker_url_prod/versions/latest"
       env: KAFKA_URL
     - versionName: "projects/dev-ongi-3-tier/secrets/signoz_ingestion_key/versions/latest"
       env: SIGNOZ_INGESTION_KEY
