@@ -73,6 +73,7 @@ steps:
           --image-project=cos-cloud \
           --container-image="asia-northeast3-docker.pkg.dev/dev-ongi-3-tier/dev-ongi-spring-repo/backend:${_IMAGE_TAG}" \
           --container-env=SPRING_PROFILES_ACTIVE=dev \
+          --container-env=OTEL_SERVICE_NAME=dev \
           --container-env=SPRING_DATASOURCE_URL=$$DB_URL \
           --container-env=SPRING_DATASOURCE_USERNAME=$$DB_USER \
           --container-env=SPRING_DATASOURCE_PASSWORD=$$DB_PASS \

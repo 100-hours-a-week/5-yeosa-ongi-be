@@ -33,6 +33,7 @@ EXPOSE 8080
 
 ENTRYPOINT ["sh", "-c", "\
   java \
+    -Duser.timezone=Asia/Seoul \
     -javaagent:/opt/otel/opentelemetry-javaagent.jar \
     -Dotel.exporter.otlp.endpoint=https://ingest.us.signoz.cloud:443 \
     -Dotel.exporter.otlp.headers=\"signoz-ingestion-key=${SIGNOZ_INGESTION_KEY}\" \
