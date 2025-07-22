@@ -27,7 +27,7 @@ public class AlbumAiRetryScheduler {
     private final AiHttpAlbumService aiHttpAlbumService;
     private final AlbumConceptRepository albumConceptRepository;
 
-    @Scheduled(fixedRate = 5 * 60 * 1000) // 5분에 한번
+    @Scheduled(fixedRate = 30 * 60 * 1000) // 5분에 한번
     public void retryAlbumProcess() {
         if (!aiHttpAlbumService.isAiServerAvailable()) {
             log.warn("ai 서버 현재 요청 불가. 재시도 중단");
