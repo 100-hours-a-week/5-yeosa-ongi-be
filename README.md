@@ -30,21 +30,20 @@
 ```
 main
 ├── java/ongi/ongibe
-│   ├── domain                 # 주요 도메인별 패키지 (비즈니스 로직 중심)
-│   │   ├── ai                # AI 분석 단계별 Kafka Producer/Consumer 및 HTTP Client
+│   ├── domain                # 주요 도메인별 패키지 (비즈니스 로직 중심)
+│   │   ├── ai                # AI 분석 단계별 Kafka Producer, Consumer 및 API 기반 통신 모듈
 │   │   │   ├── aiInterface   # AI 연동을 위한 서비스 인터페이스 모음
 │   │   │   ├── consumer      # Kafka Consumer (각 AI 분석 단계별 메시지 처리)
 │   │   │   ├── controller    # AI 헬스체크용 컨트롤러
 │   │   │   ├── dto           # AI 요청/응답 DTO
-│   │   │   ├── entity        # AI 분석 상태 저장 엔티티 (ex. AiTaskStatus)
+│   │   │   ├── entity        # AI 분석 상태 저장 엔티티
 │   │   │   ├── event         # AI 분석 완료 시 발행되는 이벤트 객체
 │   │   │   ├── exception     # Kafka 재시도 등 커스텀 예외 정의
-│   │   │   ├── kafka         # Kafka 관련 유틸 서비스 (단계 전이 등)
-│   │   │   ├── producer      # Kafka Producer (AI 분석 요청 전송)
+│   │   │   ├── kafka         # Kafka 관련 유틸 서비스
+│   │   │   ├── producer      # Kafka Producer
 │   │   │   ├── repository    # AI 상태 저장용 Repository
-│   │   │   │   └── queryDSL  # QueryDSL 기반 커스텀 쿼리 정의
 │   │   │   └── service       # AI HTTP 요청 로직 구현체
-│   │   ├── album             # 앨범 도메인 (앨범 생성, 초대, 댓글, 좋아요 등)
+│   │   ├── album             # 앨범 도메인
 │   │   │   ├── controller    # 앨범, 댓글, 좋아요 API 엔드포인트
 │   │   │   ├── dto           # 앨범 관련 요청/응답 DTO
 │   │   │   ├── entity        # 앨범, 사진, 클러스터 등 도메인 엔티티
@@ -53,7 +52,7 @@ main
 │   │   │   ├── repository    # 앨범 관련 데이터 접근 레이어
 │   │   │   ├── schedule      # 좋아요 동기화 등 정기 작업 Scheduler
 │   │   │   └── service       # 앨범 도메인 서비스 로직
-│   │   ├── auth              # 인증/인가 모듈 (Kakao OAuth 연동 포함)
+│   │   ├── auth              # 인증/인가 모듈
 │   │   │   ├── config        # Kakao API 설정 클래스
 │   │   │   ├── controller    # 로그인, 토큰 재발급 API
 │   │   │   ├── dto           # 로그인 관련 요청/응답 DTO
@@ -77,17 +76,16 @@ main
 │   │       ├── exception     # 사용자 예외
 │   │       ├── repository    # 사용자 저장소
 │   │       └── service       # 사용자 서비스
-│   ├── cache                 # 캐시 관련 모듈 (Redis)
+│   ├── cache                 # 캐시 관련 모듈
 │   │   ├── album             # 앨범 캐싱 서비스
 │   │   ├── event             # 캐시 관련 도메인 이벤트
 │   │   └── user              # 사용자 캐싱 서비스
 │   ├── global                # 공통 유틸 및 설정 모듈
 │   │   ├── cache             # 공통 Redis 유틸
-│   │   ├── config            # 공통 Config 클래스들 (WebClient, Retry, Redis 등)
+│   │   ├── config            # 공통 Config 클래스들
 │   │   ├── eventlistener     # 전역 도메인 이벤트 리스너
 │   │   ├── exception         # 인증/보안 등 전역 예외
 │   │   │   └── handler       # 예외 핸들러
-│   │   ├── executor          # 트랜잭션 후 실행기 (after commit)
 │   │   ├── kafka             # Kafka 리스너 설정
 │   │   ├── s3                # S3 Presigned URL 발급 기능
 │   │   │   └── dto           # Presigned URL 요청/응답 DTO
